@@ -8,10 +8,12 @@ const PORT = process.env.PORT || 4000;
 const MONGO_URI =
   "mongodb+srv://Schooling:Schooling123$@schooling.sacte.mongodb.net/Schooling?retryWrites=true&w=majority";
 
-console.log(MONGO_URI);
+console.log(MONGO_URI, process.env.MONGO_URI_CLOUD);
 
 connectDB(MONGO_URI).then(() => {
   app.listen(PORT, () => {
-    console.log(`Server is running on http://localhost:${PORT}`);
+    console.log(
+      `Server is running on http://localhost:${PORT} ${process.env.MONGO_URI_CLOUD}`
+    );
   });
 });
