@@ -1,0 +1,33 @@
+export interface IUser extends Document {
+  username?: string;
+  email: string;
+  phone?: string;
+  picture?: string;
+  role?: string;
+  signupIp?: string;
+  userStatus?: string;
+  residentCountry?: string;
+  postVisibility?: string;
+  commentAbility?: string;
+  residentState?: string;
+  originCountry?: string;
+  origintState?: string;
+  signupCountry?: string;
+  signupCountryFlag?: string;
+  level: number;
+  isDocument: boolean;
+  isOrigin: boolean;
+  isContact: boolean;
+  isBio: boolean;
+  isEducationDocument: boolean;
+  isEducationHistory: boolean;
+  isEducation: boolean;
+  isFinancial: boolean;
+  isSuspendeded: boolean;
+  isDeleted: boolean;
+  isFirstTime: boolean;
+  createdAt: Date;
+  passwordResetToken?: string;
+  password?: string;
+  passwordExpiresAt?: Date;
+}
