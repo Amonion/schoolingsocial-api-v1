@@ -34,7 +34,7 @@ app.use(
   })
 );
 app.use(bodyParser.json());
-app.use("/api/v1/places", placeRoutes);
+// app.use("/api/v1/places", placeRoutes);
 app.use("/api/v1/users", userRoutes);
 
 app.use((req, res, next) => {
