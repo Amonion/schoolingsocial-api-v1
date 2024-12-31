@@ -10,7 +10,7 @@ const MONGO_URI =
     ? process.env.MONGO_URI_CLOUD || ""
     : process.env.MONGO_URI || ""; // const MONGO_URI =
 
-console.log(process.env.NODE_ENV, MONGO_URI);
+console.log(process.env.NODE_ENV);
 
 connectDB(MONGO_URI).then(() => {
   app.listen(PORT, () => {
