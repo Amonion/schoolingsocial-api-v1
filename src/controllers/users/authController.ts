@@ -26,11 +26,10 @@ export const loginUser = async (req: Request, res: Response): Promise<void> => {
       return;
     }
 
-    // Generate JWT token
     const token = jwt.sign(
-      { userId: user._id, email: user.email }, // Payload (user's ID and email)
-      JWT_SECRET, // Secret key for signing the token
-      { expiresIn: "30d" } // Token expiration time (1 hour in this case)
+      { userId: user._id, email: user.email },
+      JWT_SECRET,
+      { expiresIn: "30d" }
     );
 
     res.status(200).json({
@@ -42,7 +41,7 @@ export const loginUser = async (req: Request, res: Response): Promise<void> => {
       },
       token,
     });
-  } catch (error) {
-    handleError(error, res);
+  } catch (error: unknown) {
+    handleError(res, undefined, undefined, error);
   }
 };

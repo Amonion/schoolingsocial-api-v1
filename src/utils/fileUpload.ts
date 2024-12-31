@@ -38,7 +38,7 @@ export const uploadFileToS3 = async (
   return new Promise((resolve, reject) => {
     form.parse(req, async (err, fields, files) => {
       if (err) {
-        handleError(err, res);
+        handleError(res, undefined, undefined, err);
         // return reject({ error: "Error parsing form data", details: err });
       }
 
@@ -102,7 +102,7 @@ export const uploadFileToS3 = async (
         req.body = { ...req.body, ...fields };
         next();
       } catch (error) {
-        handleError(error, res);
+        handleError(res, undefined, undefined, error);
         // reject({ error: "Error uploading file", details: error });
       }
     });
@@ -122,5 +122,5 @@ const determineFolder = (mimeType: string, res: Response) => {
     return "documents";
   }
   const error = new Error("Unsupported file type");
-  handleError(error, res);
+  handleError(res, undefined, undefined, error);
 };
