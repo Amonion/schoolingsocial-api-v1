@@ -1,13 +1,18 @@
 import express from "express";
 import multer from "multer";
-import { loginUser } from "../controllers/users/authController";
+import { loginUser } from "../../controllers/users/authController";
 import {
   getUserById,
   getUsers,
   updateUser,
   deleteUser,
   createUser,
-} from "../controllers/users/userController";
+} from "../../controllers/users/userController";
+import {
+  getStaffById,
+  getStaffs,
+  updateStaff,
+} from "../../controllers/team/staffController";
 
 const router = express.Router();
 const storage = multer.memoryStorage();
@@ -19,10 +24,9 @@ router
   .get(getUsers) // Fetch all users
   .post(upload, createUser); // Create a new user
 
-router
-  .route("/users/:id")
-  .get(getUserById) // Fetch a single user
-  .put(updateUser) // Update a user
-  .delete(deleteUser);
+router.route("/staffs").get(getStaffs);
+router.route("/staffs/:id").get(getStaffById).patch(updateStaff);
+
+router.route("/:id").get(getUserById).patch(updateUser).delete(deleteUser);
 
 export default router;

@@ -1,79 +1,76 @@
 import { Request, Response } from "express";
-import { User } from "../../models/users/userModel";
+import { Place } from "../../models/team/placeModel";
+import { IPlace } from "../../utils/teamInterface";
 import { handleError } from "../../utils/errorHandler";
-import bcrypt from "bcryptjs";
+import { queryData } from "../../utils/query";
 
-export const createUser = async (
+export const createPlace = async (
   req: Request,
   res: Response
 ): Promise<void> => {
   try {
-    const { email, phone, signupIp, password } = req.body;
-    const newUser = new User({
-      email,
-      phone,
-      signupIp,
-      password: await bcrypt.hash(password, 10),
+    const { ...fields } = req.body;
+    const newPlace = new Place({
+      ...fields,
     });
-    await newUser.save();
+    await newPlace.save();
 
     res.status(201).json({
-      message: "User created successfully",
-      user: newUser,
+      message: "Place created successfully",
+      data: newPlace,
     });
   } catch (error: any) {
-    handleError(error, res);
+    handleError(res, undefined, undefined, error);
   }
 };
 
-export const getUserById = async (
+export const getPlaceById = async (
   req: Request,
   res: Response
 ): Promise<Response | void> => {
   try {
-    const user = await User.findById(req.params.id);
-    if (!user) {
-      return res.status(404).json({ message: "User not found" });
+    const place = await Place.findById(req.params.id);
+    if (!place) {
+      return res.status(404).json({ message: "Place not found" });
     }
-    res.status(200).json(user);
+    res.status(200).json(place);
   } catch (error) {
-    handleError(error, res);
+    handleError(res, undefined, undefined, error);
   }
 };
 
-export const getUsers = async (req: Request, res: Response) => {
+export const getPlaces = async (req: Request, res: Response) => {
   try {
-    const users = await User.find();
-    res.status(200).json(users);
+    const result = await queryData<IPlace>(Place, req);
+    res.status(200).json(result);
   } catch (error) {
-    handleError(error, res);
+    handleError(res, undefined, undefined, error);
   }
 };
 
-// Update a record
-export const updateUser = async (req: Request, res: Response) => {
+export const updatePlace = async (req: Request, res: Response) => {
   try {
-    const user = await User.findByIdAndUpdate(req.params.id, req.body, {
+    const place = await Place.findByIdAndUpdate(req.params.id, req.body, {
       new: true,
       runValidators: true,
     });
-    if (!user) {
-      return res.status(404).json({ message: "User not found" });
+    if (!place) {
+      return res.status(404).json({ message: "Place not found" });
     }
-    res.status(200).json(user);
+    res.status(200).json(place);
   } catch (error) {
-    handleError(error, res);
+    handleError(res, undefined, undefined, error);
   }
 };
 
-export const deleteUser = async (req: Request, res: Response) => {
+export const deletePlace = async (req: Request, res: Response) => {
   try {
-    const user = await User.findByIdAndDelete(req.params.id);
-    if (!user) {
-      return res.status(404).json({ message: "User not found" });
+    const place = await Place.findByIdAndDelete(req.params.id);
+    if (!place) {
+      return res.status(404).json({ message: "Place not found" });
     }
-    res.status(200).json({ message: "User deleted successfully" });
+    res.status(200).json({ message: "Place deleted successfully" });
   } catch (error) {
-    handleError(error, res);
+    handleError(res, undefined, undefined, error);
   }
 };

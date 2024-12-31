@@ -7,11 +7,13 @@ import express, {
 } from "express";
 import cors from "cors";
 import bodyParser from "body-parser";
-import userRoutes from "./routes/userRoutes";
+import { handleError } from "./utils/errorHandler";
+
+import placeRoutes from "./routes/team/placeRoutes";
+import userRoutes from "./routes/users/userRoutes";
 
 const app: Application = express();
 
-// Middleware to log requests
 const requestLogger: RequestHandler = (
   req: Request,
   res: Response,
@@ -25,6 +27,15 @@ app.use(requestLogger);
 
 app.use(cors());
 app.use(bodyParser.json());
+app.use("/api/v1/places", placeRoutes);
 app.use("/api/v1/users", userRoutes);
+
+app.use((req, res, next) => {
+  handleError(
+    res,
+    404,
+    `Request not found, cannot ${req.method} ${req.originalUrl}`
+  );
+});
 
 export default app;

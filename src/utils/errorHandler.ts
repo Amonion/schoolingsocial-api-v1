@@ -1,9 +1,20 @@
 import { Response } from "express";
 
-export const handleError = (error: any, res: Response) => {
+export const handleError = (
+  res: Response,
+  statusCode?: number,
+  customMessage?: string,
+  error?: any
+) => {
+  if (statusCode && customMessage) {
+    return res.status(statusCode).json({
+      message: customMessage,
+    });
+  }
+
   if (error.code === 11000) {
-    const field = Object.keys(error.keyValue)[0]; // Extracting the field name causing the error
-    const value = error.keyValue[field]; // Extracting the duplicate value
+    const field = Object.keys(error.keyValue)[0];
+    const value = error.keyValue[field];
     return res.status(400).json({
       message: `A user with the ${field} "${value}" already exists`,
     });

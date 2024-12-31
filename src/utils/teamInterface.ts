@@ -9,3 +9,21 @@ export interface IPlace extends Document {
   countryFlag: string;
   createdAt: Date;
 }
+export interface IStaff extends Document {
+  userId: string;
+  areaId: string;
+  salary: number;
+  level: number;
+  username: string;
+  picture: string;
+  email: string;
+  phone: string;
+  position: string;
+  role: string;
+  area: string;
+  state: string;
+  country: string;
+  continent: string;
+  isActive: boolean;
+  createdAt: Date;
+}
