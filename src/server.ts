@@ -4,7 +4,7 @@ import connectDB from "./database/connection";
 
 dotenv.config();
 
-const PORT = process.env.PORT || 8000;
+const PORT = process.env.PORT || 8080;
 const MONGO_URI =
   process.env.NODE_ENV === "production"
     ? process.env.MONGO_URI_CLOUD || ""
