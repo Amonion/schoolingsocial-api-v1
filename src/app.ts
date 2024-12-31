@@ -26,6 +26,13 @@ const requestLogger: RequestHandler = (
 app.use(requestLogger);
 
 app.use(cors());
+app.use(
+  cors({
+    origin: "http://localhost:3000", // Replace with your frontend URL in production
+    methods: "GET,POST,PUT,DELETE", // Allowed HTTP methods
+    credentials: true, // Allow cookies to be sent
+  })
+);
 app.use(bodyParser.json());
 app.use("/api/v1/places", placeRoutes);
 app.use("/api/v1/users", userRoutes);
