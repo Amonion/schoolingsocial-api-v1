@@ -1,18 +1,23 @@
 import express from "express";
+import multer from "multer";
+import { loginUser } from "../controllers/users/authController";
 import {
   getUserById,
   getUsers,
   updateUser,
   deleteUser,
   createUser,
-} from "../controllers/userController";
+} from "../controllers/users/userController";
 
 const router = express.Router();
+const storage = multer.memoryStorage();
+const upload = multer({ storage }).none();
+router.route("/login").post(upload, loginUser);
 
 router
-  .route("/users")
+  .route("/")
   .get(getUsers) // Fetch all users
-  .post(createUser); // Create a new user
+  .post(upload, createUser); // Create a new user
 
 router
   .route("/users/:id")

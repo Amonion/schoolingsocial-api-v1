@@ -1,5 +1,6 @@
 import { Request, Response } from "express";
-import { User } from "../models/users/userModel";
+import { User } from "../../models/users/userModel";
+import { handleError } from "../../utils/errorHandler";
 import bcrypt from "bcryptjs";
 
 export const createUser = async (
@@ -7,11 +8,11 @@ export const createUser = async (
   res: Response
 ): Promise<void> => {
   try {
-    const { email, username, phone, password } = req.body;
+    const { email, phone, signupIp, password } = req.body;
     const newUser = new User({
       email,
-      username,
       phone,
+      signupIp,
       password: await bcrypt.hash(password, 10),
     });
     await newUser.save();
@@ -21,24 +22,10 @@ export const createUser = async (
       user: newUser,
     });
   } catch (error: any) {
-    if (error.code === 11000) {
-      const field = Object.keys(error.keyValue)[0];
-      const value = error.keyValue[field];
-      res.status(400).json({
-        message: `A user with the ${field} "${value}" already exists`,
-      });
-    } else if (error.errors) {
-      const validationMessages = Object.values(error.errors).map(
-        (err: any) => err.message
-      );
-      res.status(400).json({ message: validationMessages.join(", ") });
-    } else {
-      res.status(500).json({ message: "Server error", error });
-    }
+    handleError(error, res);
   }
 };
 
-// Fetch a single record
 export const getUserById = async (
   req: Request,
   res: Response
@@ -50,17 +37,16 @@ export const getUserById = async (
     }
     res.status(200).json(user);
   } catch (error) {
-    res.status(500).json({ message: "Server error", error });
+    handleError(error, res);
   }
 };
 
-// Fetch multiple records
 export const getUsers = async (req: Request, res: Response) => {
   try {
     const users = await User.find();
     res.status(200).json(users);
   } catch (error) {
-    res.status(500).json({ message: "Server error", error });
+    handleError(error, res);
   }
 };
 
@@ -76,11 +62,10 @@ export const updateUser = async (req: Request, res: Response) => {
     }
     res.status(200).json(user);
   } catch (error) {
-    res.status(500).json({ message: "Server error", error });
+    handleError(error, res);
   }
 };
 
-// Delete a record
 export const deleteUser = async (req: Request, res: Response) => {
   try {
     const user = await User.findByIdAndDelete(req.params.id);
@@ -89,6 +74,6 @@ export const deleteUser = async (req: Request, res: Response) => {
     }
     res.status(200).json({ message: "User deleted successfully" });
   } catch (error) {
-    res.status(500).json({ message: "Server error", error });
+    handleError(error, res);
   }
 };

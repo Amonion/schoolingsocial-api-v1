@@ -1,8 +1,8 @@
 import mongoose, { Schema } from "mongoose";
-import { IUser } from "../../utils/userInterface";
+import { IPlace } from "../../utils/teamInterface";
 // Define an interface for the User document
 
-const UserSchema: Schema = new Schema(
+const PlaceSchema: Schema = new Schema(
   {
     email: {
       type: String,
@@ -57,4 +57,4 @@ const UserSchema: Schema = new Schema(
   }
 );
 
-export const User = mongoose.model<IUser>("User", UserSchema);
+export const Place = mongoose.model<IPlace>("Place", PlaceSchema);
