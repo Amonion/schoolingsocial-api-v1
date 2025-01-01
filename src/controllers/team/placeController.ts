@@ -79,34 +79,34 @@ export const deletePlace = async (req: Request, res: Response) => {
   }
 };
 
-const getUniquePlacesByCountry = async () => {
-  try {
-    const places = await Place.aggregate([
-      // Group by country and get the first place for each country
-      {
-        $group: {
-          _id: "$country", // Group by the 'country' field
-          place: { $first: "$$ROOT" }, // Get the first place document for each country
-        },
-      },
-      // Optionally sort by country name (or any other field)
-      {
-        $sort: { _id: 1 }, // Sorting by country name, ascending
-      },
-      // Limit to 13 places
-      {
-        $limit: 13,
-      },
-      // Optionally, you can reshape the documents to return the actual place data
-      {
-        $replaceRoot: { newRoot: "$place" },
-      },
-    ]);
+// const getUniquePlacesByCountry = async () => {
+//   try {
+//     const places = await Place.aggregate([
+//       // Group by country and get the first place for each country
+//       {
+//         $group: {
+//           _id: "$country", // Group by the 'country' field
+//           place: { $first: "$$ROOT" }, // Get the first place document for each country
+//         },
+//       },
+//       // Optionally sort by country name (or any other field)
+//       {
+//         $sort: { _id: 1 }, // Sorting by country name, ascending
+//       },
+//       // Limit to 13 places
+//       {
+//         $limit: 13,
+//       },
+//       // Optionally, you can reshape the documents to return the actual place data
+//       {
+//         $replaceRoot: { newRoot: "$place" },
+//       },
+//     ]);
 
-    console.log("Unique Places:", places);
-    return places;
-  } catch (error) {
-    console.error("Error fetching unique places:", error);
-    throw error;
-  }
-};
+//     console.log("Unique Places:", places);
+//     return places;
+//   } catch (error) {
+//     console.error("Error fetching unique places:", error);
+//     throw error;
+//   }
+// };

@@ -1,3 +1,12 @@
+export interface IEmail extends Document {
+  content: string;
+  banner: string;
+  title: string;
+  name: string;
+  note: string;
+  createdAt: Date;
+}
+
 export interface IPlace extends Document {
   continent: string;
   country: string;
@@ -12,6 +21,7 @@ export interface IPlace extends Document {
   currencySymbol: string;
   createdAt: Date;
 }
+
 export interface IStaff extends Document {
   userId: string;
   areaId: string;
