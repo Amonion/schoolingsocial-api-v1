@@ -7,6 +7,7 @@ import express, {
 } from "express";
 import cors from "cors";
 import bodyParser from "body-parser";
+import dotenv from "dotenv";
 import { handleError } from "./utils/errorHandler";
 
 import placeRoutes from "./routes/team/placeRoutes";
@@ -24,17 +25,20 @@ const requestLogger: RequestHandler = (
 };
 
 app.use(requestLogger);
-
+dotenv.config();
 app.use(cors());
 app.use(
   cors({
-    origin: "http://localhost:3000", // Replace with your frontend URL in production
-    methods: "GET,POST,PUT,DELETE", // Allowed HTTP methods
+    origin:
+      process.env.NODE_ENV === "production"
+        ? "https://schoolingsocial.netlify.app"
+        : "http://localhost:3000", // Replace with your frontend URL in production
+    methods: "GET,POST, PATCH, PUT,DELETE", // Allowed HTTP methods
     credentials: true, // Allow cookies to be sent
   })
 );
 app.use(bodyParser.json());
-// app.use("/api/v1/places", placeRoutes);
+app.use("/api/v1/places", placeRoutes);
 app.use("/api/v1/users", userRoutes);
 
 app.use((req, res, next) => {
