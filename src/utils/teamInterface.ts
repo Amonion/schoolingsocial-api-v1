@@ -7,6 +7,9 @@ export interface IPlace extends Document {
   zipCode: string;
   countryCode: string;
   countryFlag: string;
+  countrySymbol: string;
+  currency: string;
+  currencySymbol: string;
   createdAt: Date;
 }
 export interface IStaff extends Document {
