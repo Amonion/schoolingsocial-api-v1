@@ -7,6 +7,21 @@ export interface IEmail extends Document {
   createdAt: Date;
 }
 
+export interface IPayment extends Document {
+  name: string;
+  amount: number;
+  charge: number;
+  logo: string;
+  description: string;
+  placeId: string;
+  country: string;
+  countryFlag: string;
+  countrySymbol: string;
+  currency: string;
+  currencySymbol: string;
+  createdAt: Date;
+}
+
 export interface IPlace extends Document {
   continent: string;
   country: string;

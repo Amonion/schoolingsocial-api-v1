@@ -70,22 +70,15 @@ export const updateUser = async (req: Request, res: Response) => {
         await Staff.create(req.body);
       }
     }
-    const respond = req.query.return;
-    if (respond === "many") {
-      const result = await queryData<IUser>(User, req);
-      const { page, page_size, count, results } = result;
-      res.status(200).json({
-        message: "User was updated successfully",
-        results,
-        count,
-        page,
-        page_size,
-      });
-    } else {
-      res
-        .status(200)
-        .json({ message: "User was updated successfully", data: user });
-    }
+    const result = await queryData<IUser>(User, req);
+    const { page, page_size, count, results } = result;
+    res.status(200).json({
+      message: "User was updated successfully",
+      results,
+      count,
+      page,
+      page_size,
+    });
   } catch (error) {
     handleError(res, undefined, undefined, error);
   }

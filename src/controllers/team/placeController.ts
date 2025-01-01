@@ -10,14 +10,25 @@ export const createPlace = async (
   res: Response
 ): Promise<void> => {
   try {
-    const uploadedFiles = await uploadFilesToS3(req);
-    uploadedFiles.forEach((file) => {
-      req.body[file.fieldName] = file.s3Url;
-    });
-    const newPlace = await Place.create(req.body);
-    res.status(201).json({
-      message: "Place created successfully",
-      data: newPlace,
+    const existingPlace = await Place.findOne({ country: req.body.country });
+    if (existingPlace) {
+      req.body.countryFlag = existingPlace.countryFlag; // Replace with the existing countryFlag
+    } else {
+      const uploadedFiles = await uploadFilesToS3(req);
+      uploadedFiles.forEach((file) => {
+        req.body[file.fieldName] = file.s3Url;
+      });
+    }
+
+    await Place.create(req.body);
+    const result = await queryData<IPlace>(Place, req);
+    const { page, page_size, count, results } = result;
+    res.status(200).json({
+      message: "Place is created successfully",
+      results,
+      count,
+      page,
+      page_size,
     });
   } catch (error: any) {
     handleError(res, undefined, undefined, error);
@@ -29,11 +40,11 @@ export const getPlaceById = async (
   res: Response
 ): Promise<Response | void> => {
   try {
-    const place = await Place.findById(req.params.id);
-    if (!place) {
+    const result = await Place.findById(req.params.id);
+    if (!result) {
       return res.status(404).json({ message: "Place not found" });
     }
-    res.status(200).json(place);
+    res.status(200).json(result);
   } catch (error) {
     handleError(res, undefined, undefined, error);
   }
@@ -50,17 +61,22 @@ export const getPlaces = async (req: Request, res: Response) => {
 
 export const updatePlace = async (req: Request, res: Response) => {
   try {
-    const place = await Place.findByIdAndUpdate(req.params.id, req.body, {
+    const result = await Place.findByIdAndUpdate(req.params.id, req.body, {
       new: true,
       runValidators: true,
     });
-    if (!place) {
+    if (!result) {
       return res.status(404).json({ message: "Place not found" });
     }
 
-    res.status(201).json({
+    const item = await queryData<IPlace>(Place, req);
+    const { page, page_size, count, results } = item;
+    res.status(200).json({
       message: "Place was updated successfully",
-      data: place,
+      results,
+      count,
+      page,
+      page_size,
     });
   } catch (error) {
     handleError(res, undefined, undefined, error);
@@ -69,8 +85,8 @@ export const updatePlace = async (req: Request, res: Response) => {
 
 export const deletePlace = async (req: Request, res: Response) => {
   try {
-    const place = await Place.findByIdAndDelete(req.params.id);
-    if (!place) {
+    const result = await Place.findByIdAndDelete(req.params.id);
+    if (!result) {
       return res.status(404).json({ message: "Place not found" });
     }
     res.status(200).json({ message: "Place deleted successfully" });

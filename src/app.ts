@@ -11,6 +11,7 @@ import dotenv from "dotenv";
 import { handleError } from "./utils/errorHandler";
 
 import messageRoutes from "./routes/team/messageRoutes";
+import paymentRoutes from "./routes/team/paymentRoutes";
 import placeRoutes from "./routes/team/placeRoutes";
 import userRoutes from "./routes/users/userRoutes";
 
@@ -40,6 +41,7 @@ app.use(
 );
 app.use(bodyParser.json());
 app.use("/api/v1/messages", messageRoutes);
+app.use("/api/v1/payments", paymentRoutes);
 app.use("/api/v1/places", placeRoutes);
 app.use("/api/v1/users", userRoutes);
 

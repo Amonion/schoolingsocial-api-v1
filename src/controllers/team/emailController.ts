@@ -14,10 +14,15 @@ export const createEmail = async (
     uploadedFiles.forEach((file) => {
       req.body[file.fieldName] = file.s3Url;
     });
-    const newEmail = await Email.create(req.body);
-    res.status(201).json({
-      message: "Email created successfully",
-      data: newEmail,
+    await Email.create(req.body);
+    const item = await queryData<IEmail>(Email, req);
+    const { page, page_size, count, results } = item;
+    res.status(200).json({
+      message: "Email was created successfully",
+      results,
+      count,
+      page,
+      page_size,
     });
   } catch (error: any) {
     handleError(res, undefined, undefined, error);
@@ -58,9 +63,14 @@ export const updateEmail = async (req: Request, res: Response) => {
       return res.status(404).json({ message: "Email not found" });
     }
 
-    res.status(201).json({
+    const item = await queryData<IEmail>(Email, req);
+    const { page, page_size, count, results } = item;
+    res.status(200).json({
       message: "Email was updated successfully",
-      data: email,
+      results,
+      count,
+      page,
+      page_size,
     });
   } catch (error) {
     handleError(res, undefined, undefined, error);
