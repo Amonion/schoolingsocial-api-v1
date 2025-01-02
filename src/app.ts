@@ -35,7 +35,8 @@ app.use(
         ? "https://schoolingsocial.netlify.app"
         : "http://localhost:3000", // Replace with your frontend URL in production
     methods: "GET,POST, PATCH, PUT,DELETE", // Allowed HTTP methods
-    credentials: true, // Allow cookies to be sent
+    credentials: true,
+    allowedHeaders: ["Content-Type", "Authorization"],
   })
 );
 app.use(bodyParser.json());

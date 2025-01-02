@@ -25,7 +25,7 @@ router.route("/search").get(searchPlace);
 router.route("/payments").get(getPayments).post(upload.any(), createPayment);
 
 router
-  .route("payments/:id")
+  .route("/payments/:id")
   .get(getPaymentById)
   .patch(upload.any(), updatePayment)
   .delete(deletePayment);
