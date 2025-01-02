@@ -11,7 +11,6 @@ import dotenv from "dotenv";
 import { handleError } from "./utils/errorHandler";
 
 import messageRoutes from "./routes/team/messageRoutes";
-import paymentRoutes from "./routes/team/paymentRoutes";
 import placeRoutes from "./routes/team/placeRoutes";
 import userRoutes from "./routes/users/userRoutes";
 
@@ -33,7 +32,7 @@ app.use(
   cors({
     origin:
       process.env.NODE_ENV === "production"
-        ? "https://schoolingsocial.netlify.app"
+        ? "http://localhost:3000"
         : "http://localhost:3000", // Replace with your frontend URL in production
     methods: "GET,POST, PATCH, PUT,DELETE", // Allowed HTTP methods
     credentials: true, // Allow cookies to be sent
@@ -41,7 +40,6 @@ app.use(
 );
 app.use(bodyParser.json());
 app.use("/api/v1/messages", messageRoutes);
-app.use("/api/v1/payments", paymentRoutes);
 app.use("/api/v1/places", placeRoutes);
 app.use("/api/v1/users", userRoutes);
 
