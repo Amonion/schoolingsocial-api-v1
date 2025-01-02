@@ -32,7 +32,7 @@ app.use(
   cors({
     origin:
       process.env.NODE_ENV === "production"
-        ? "http://localhost:3000"
+        ? "https://schoolingsocial.netlify.app"
         : "http://localhost:3000", // Replace with your frontend URL in production
     methods: "GET,POST, PATCH, PUT,DELETE", // Allowed HTTP methods
     credentials: true, // Allow cookies to be sent
