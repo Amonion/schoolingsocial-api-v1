@@ -77,17 +77,20 @@ async function uploadToS3(
     Body: file.buffer,
     ContentType: file.mimetype,
   };
-  console.log("uploadin to s3");
+  console.log("uploading to s3");
 
-  const data = await s3.upload(uploadParams).promise();
-  if (data) {
+  try {
+    const data = await s3.upload(uploadParams).promise();
     console.log("uploaded to s3 successfully", data);
-  }
 
-  return {
-    fieldName,
-    s3Url: data.Location,
-  };
+    return {
+      fieldName,
+      s3Url: data.Location,
+    };
+  } catch (error) {
+    console.error("S3 upload failed:", error);
+    throw new Error("Failed to upload file to S3");
+  }
 }
 
 /**
