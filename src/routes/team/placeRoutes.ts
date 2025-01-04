@@ -23,7 +23,7 @@ const router = express.Router();
 router.route("/").get(getPlaces).post(upload.any(), createPlace);
 router.route("/search").get(searchPlace);
 
-router.route("/payments").get(getPayments).post(createPayment);
+router.route("/payments").get(getPayments).post(upload.any(), createPayment);
 
 router
   .route("/payments/:id")
