@@ -27,7 +27,6 @@ const requestLogger: RequestHandler = (
 };
 app.use(requestLogger);
 dotenv.config();
-app.use(cors());
 // app.use(
 //   cors({
 //     origin: (origin, callback) => {
@@ -52,13 +51,8 @@ app.use(cors());
 // );
 app.use(
   cors({
-    origin:
-      process.env.NODE_ENV === "production"
-        ? "https://schoolingsocial.com"
-        : "http://localhost:3000", // Replace with your frontend URL in production
-    methods: "GET,POST, PATCH, PUT,DELETE", // Allowed HTTP methods
-    credentials: true,
-    allowedHeaders: ["Content-Type", "Authorization"],
+    origin: "*",
+    methods: "GET,POST, PATCH, PUT,DELETE",
   })
 );
 app.use(bodyParser.json());
