@@ -1,6 +1,6 @@
 import express from "express";
 import multer from "multer";
-const upload = multer();
+// const upload = multer();
 import {
   getPaymentById,
   getPayments,
@@ -8,6 +8,7 @@ import {
   deletePayment,
   createPayment,
 } from "../../controllers/team/paymentController";
+
 import {
   getPlaceById,
   getPlaces,
@@ -19,7 +20,9 @@ import {
 
 const router = express.Router();
 
-router.route("/").get(getPlaces).post(upload.any(), createPlace);
+const app = express();
+const upload = multer({ dest: "uploads/" });
+router.route("/").get(getPlaces).post(upload.single("file"), createPlace);
 router.route("/search").get(searchPlace);
 
 router.route("/payments").get(getPayments).post(upload.any(), createPayment);
