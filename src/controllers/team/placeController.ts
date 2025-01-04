@@ -10,9 +10,25 @@ export const createPlace = async (
   res: Response
 ): Promise<void> => {
   try {
-    const existingPlace = await Place.findOne({ country: req.body.country });
+    const existingPlace = await Place.findOne({
+      country: req.body.country,
+      $and: [{ countryFlag: { $ne: null } }, { countryFlag: { $ne: "" } }],
+    });
     if (existingPlace) {
-      req.body.countryFlag = existingPlace.countryFlag; // Replace with the existing countryFlag
+      if (
+        !existingPlace.countryCode ||
+        !existingPlace.currency ||
+        !existingPlace.currencySymbol ||
+        existingPlace.countrySymbol
+      ) {
+        handleError(
+          res,
+          500,
+          `Please fill in all fields for ${existingPlace.country}`,
+          ""
+        );
+      }
+      req.body.countryFlag = existingPlace.countryFlag;
     } else {
       const uploadedFiles = await uploadFilesToS3(req);
       uploadedFiles.forEach((file) => {
