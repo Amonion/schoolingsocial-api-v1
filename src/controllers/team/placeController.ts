@@ -82,6 +82,10 @@ export const getPlaces = async (req: Request, res: Response) => {
 
 export const updatePlace = async (req: Request, res: Response) => {
   try {
+    const uploadedFiles = await uploadFilesToS3(req);
+    uploadedFiles.forEach((file) => {
+      req.body[file.fieldName] = file.s3Url;
+    });
     const result = await Place.findByIdAndUpdate(req.params.id, req.body, {
       new: true,
       runValidators: true,

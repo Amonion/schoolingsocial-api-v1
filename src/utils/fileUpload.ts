@@ -81,7 +81,7 @@ async function uploadToS3(
 
   const data = await s3.upload(uploadParams).promise();
   if (data) {
-    console.log("uploaded to s3 successfully");
+    console.log("uploaded to s3 successfully", data);
   }
 
   return {
