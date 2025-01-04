@@ -42,6 +42,7 @@ export const loginUser = async (req: Request, res: Response): Promise<void> => {
         email: user.email,
         username: user.username,
         phone: user.phone,
+        userStatus: user.userStatus,
       },
       token,
     });

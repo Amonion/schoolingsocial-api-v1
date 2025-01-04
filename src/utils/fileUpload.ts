@@ -1,73 +1,3 @@
-// import AWS from "aws-sdk";
-// import { Request } from "express";
-
-// const s3 = new AWS.S3({
-//   accessKeyId: process.env.AWS_ACCESS_KEY_ID,
-//   secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
-//   region: process.env.AWS_REGION,
-// });
-
-// interface S3UploadResult {
-//   fieldName: string;
-//   s3Url: string;
-// }
-
-// interface CustomRequest extends Request {
-//   files?:
-//     | { [fieldname: string]: Express.Multer.File[] }
-//     | Express.Multer.File[];
-// }
-
-// export async function uploadFilesToS3(
-//   req: CustomRequest,
-//   fileFieldNames: string[]
-// ): Promise<S3UploadResult[]> {
-//   const bucketName = process.env.AWS_S3_BUCKET_NAME;
-
-//   if (!bucketName) {
-//     throw new Error("S3 bucket name is not defined in environment variables.");
-//   }
-
-//   const uploadPromises: Promise<S3UploadResult>[] = [];
-
-//   for (const fieldName of fileFieldNames) {
-//     let files: Express.Multer.File[] | undefined;
-
-//     if (Array.isArray(req.files)) {
-//       files = req.files as Express.Multer.File[];
-//     } else if (req.files && typeof req.files === "object") {
-//       files = req.files[fieldName];
-//     }
-
-//     if (!files) {
-//       throw new Error(
-//         `File with field name ${fieldName} not found in the request.`
-//       );
-//     }
-
-//     for (const singleFile of files) {
-//       const uploadParams = {
-//         Bucket: bucketName,
-//         Key: `${Date.now()}_${singleFile.originalname}`, // Unique key for each file
-//         Body: singleFile.buffer,
-//         ContentType: singleFile.mimetype,
-//       };
-
-//       const uploadPromise = s3
-//         .upload(uploadParams)
-//         .promise()
-//         .then((data) => ({
-//           fieldName,
-//           s3Url: data.Location,
-//         }));
-
-//       uploadPromises.push(uploadPromise);
-//     }
-//   }
-
-//   return Promise.all(uploadPromises);
-// }
-
 import AWS from "aws-sdk";
 import { Request } from "express";
 
@@ -156,3 +86,28 @@ async function uploadToS3(
     s3Url: data.Location,
   };
 }
+
+/**
+ * Deletes files from an S3 bucket based on a model instance and specified fields.
+ * @param modelInstance The model instance containing fields with S3 keys.
+ * @param fields An array of field names that contain S3 keys.
+ */
+export const deleteFilesFromS3 = async (
+  modelInstance: any,
+  fields: string[]
+): Promise<void> => {
+  const keysToDelete = fields
+    .map((field) => modelInstance[field])
+    .filter((key) => key);
+
+  if (keysToDelete.length > 0) {
+    const deleteParams = {
+      Bucket: process.env.AWS_S3_BUCKET_NAME || "", // Ensure bucket name is in env
+      Delete: {
+        Objects: keysToDelete.map((Key) => ({ Key })),
+      },
+    };
+
+    await s3.deleteObjects(deleteParams).promise();
+  }
+};

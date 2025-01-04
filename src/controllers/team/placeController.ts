@@ -3,7 +3,7 @@ import { Place } from "../../models/team/placeModel";
 import { IPlace } from "../../utils/teamInterface";
 import { handleError } from "../../utils/errorHandler";
 import { queryData } from "../../utils/query";
-import { uploadFilesToS3 } from "../../utils/fileUpload"; // Adjust path to where the function is defined
+import { uploadFilesToS3, deleteFilesFromS3 } from "../../utils/fileUpload"; // Adjust path to where the function is defined
 
 export const createPlace = async (
   req: Request,
@@ -105,6 +105,9 @@ export const deletePlace = async (req: Request, res: Response) => {
     if (!result) {
       return res.status(404).json({ message: "Place not found" });
     }
+    const s3Fields = ["countryFlag"];
+    await deleteFilesFromS3(Place, s3Fields);
+
     res.status(200).json({ message: "Place deleted successfully" });
   } catch (error) {
     handleError(res, undefined, undefined, error);
