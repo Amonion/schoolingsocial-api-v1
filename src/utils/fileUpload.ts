@@ -34,7 +34,7 @@ export async function uploadFilesToS3(
   const uploadPromises: Promise<S3UploadResult>[] = [];
 
   if (Array.isArray(req.files)) {
-    // If files are in an array format
+    console.log("files exist for upload");
     for (const singleFile of req.files) {
       const uploadPromise = uploadToS3(
         singleFile,
@@ -44,7 +44,6 @@ export async function uploadFilesToS3(
       uploadPromises.push(uploadPromise);
     }
   } else if (typeof req.files === "object") {
-    // If files are in an object format
     for (const fieldName in req.files) {
       const files = req.files[fieldName];
 
@@ -78,8 +77,12 @@ async function uploadToS3(
     Body: file.buffer,
     ContentType: file.mimetype,
   };
+  console.log("uploadin to s3");
 
   const data = await s3.upload(uploadParams).promise();
+  if (data) {
+    console.log("uploaded to s3 successfully");
+  }
 
   return {
     fieldName,
