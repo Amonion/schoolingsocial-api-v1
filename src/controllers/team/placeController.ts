@@ -10,31 +10,35 @@ export const createPlace = async (
   res: Response
 ): Promise<void> => {
   try {
-    const existingPlace = await Place.findOne({
-      country: req.body.country,
-      $and: [{ countryFlag: { $ne: null } }, { countryFlag: { $ne: "" } }],
+    // const existingPlace = await Place.findOne({
+    //   country: req.body.country,
+    //   $and: [{ countryFlag: { $ne: null } }, { countryFlag: { $ne: "" } }],
+    // });
+    // if (existingPlace) {
+    //   if (
+    //     !existingPlace.countryCode ||
+    //     !existingPlace.currency ||
+    //     !existingPlace.currencySymbol ||
+    //     existingPlace.countrySymbol
+    //   ) {
+    //     handleError(
+    //       res,
+    //       500,
+    //       `Please fill in all fields for ${existingPlace.country}`,
+    //       ""
+    //     );
+    //   }
+    //   req.body.countryFlag = existingPlace.countryFlag;
+    // } else {
+    //   const uploadedFiles = await uploadFilesToS3(req);
+    //   uploadedFiles.forEach((file) => {
+    //     req.body[file.fieldName] = file.s3Url;
+    //   });
+    // }
+    const uploadedFiles = await uploadFilesToS3(req);
+    uploadedFiles.forEach((file) => {
+      req.body[file.fieldName] = file.s3Url;
     });
-    if (existingPlace) {
-      if (
-        !existingPlace.countryCode ||
-        !existingPlace.currency ||
-        !existingPlace.currencySymbol ||
-        existingPlace.countrySymbol
-      ) {
-        handleError(
-          res,
-          500,
-          `Please fill in all fields for ${existingPlace.country}`,
-          ""
-        );
-      }
-      req.body.countryFlag = existingPlace.countryFlag;
-    } else {
-      const uploadedFiles = await uploadFilesToS3(req);
-      uploadedFiles.forEach((file) => {
-        req.body[file.fieldName] = file.s3Url;
-      });
-    }
 
     await Place.create(req.body);
     const result = await queryData<IPlace>(Place, req);
