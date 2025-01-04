@@ -35,6 +35,7 @@ export const createPlace = async (
     //     req.body[file.fieldName] = file.s3Url;
     //   });
     // }
+    console.log("cool");
     const uploadedFiles = await uploadFilesToS3(req);
     uploadedFiles.forEach((file) => {
       req.body[file.fieldName] = file.s3Url;
