@@ -1,6 +1,5 @@
 import mongoose, { Schema } from "mongoose";
 import { IUser } from "../../utils/userInterface";
-// Define an interface for the User document
 
 const UserSchema: Schema = new Schema(
   {
@@ -49,11 +48,12 @@ const UserSchema: Schema = new Schema(
       type: String,
       required: [true, "Password is required"],
       minlength: [6, "Password must be at least 6 characters long"],
+      select: false,
     },
     passwordExpiresAt: { type: Date, default: null },
   },
   {
-    timestamps: true, // Automatically handle createdAt and updatedAt
+    timestamps: true,
   }
 );
 

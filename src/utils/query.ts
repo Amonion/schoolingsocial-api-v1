@@ -8,40 +8,19 @@ interface PaginationResult<T> {
   page_size: number; // Rows per page
 }
 
-// const buildFilterQuery = (req: Request): Record<string, any> => {
-//   const filters: Record<string, any> = {};
-
-//   for (const [key, value] of Object.entries(req.query)) {
-//     if (key !== "page_size" && key !== "page" && key !== "ordering") {
-//       if (typeof value === "string") {
-//         if (value.toLowerCase() === "true" || value.toLowerCase() === "false") {
-//           filters[key] = value.toLowerCase() === "true";
-//         } else {
-//           filters[key] = { $regex: value, $options: "i" };
-//         }
-//       } else if (value && typeof value === "object" && !Array.isArray(value)) {
-//         filters[key] = value;
-//       } else if (Array.isArray(value)) {
-//         filters[key] = { $in: value };
-//       } else {
-//         filters[key] = value;
-//       }
-//     }
-//   }
-
-//   return filters;
-// };
-
-import { ParsedQs } from "qs";
-
 const buildFilterQuery = (req: Request): Record<string, any> => {
   const filters: Record<string, any> = {};
 
   for (const [key, value] of Object.entries(req.query)) {
     if (key !== "page_size" && key !== "page" && key !== "ordering") {
       if (typeof value === "string") {
-        // Always use regex for strings
-        filters[key] = { $regex: value, $options: "i" };
+        if (value === "true" || value === "false") {
+          // Convert boolean-like strings to actual booleans
+          filters[key] = value === "true";
+        } else {
+          // Use regex for other strings
+          filters[key] = { $regex: value, $options: "i" };
+        }
       } else if (Array.isArray(value)) {
         // Map each item in the array to a regex, ensuring it is a string
         filters[key] = {
@@ -49,12 +28,18 @@ const buildFilterQuery = (req: Request): Record<string, any> => {
             .filter((item): item is string => typeof item === "string")
             .map((item) => new RegExp(item, "i")),
         };
+      } else if (typeof value === "boolean") {
+        // Directly handle boolean fields
+        filters[key] = value;
+      } else if (typeof value === "number") {
+        // Handle numbers directly
+        filters[key] = value;
       } else if (value && typeof value === "object") {
         // Handle plain objects
         filters[key] = value;
       } else {
-        // Handle other cases
-        filters[key] = value;
+        // Ignore unsupported or undefined types
+        continue;
       }
     }
   }

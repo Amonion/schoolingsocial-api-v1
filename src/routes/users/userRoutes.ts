@@ -1,6 +1,6 @@
 import express from "express";
 import multer from "multer";
-import { loginUser } from "../../controllers/users/authController";
+import { loginUser, getAuthUser } from "../../controllers/users/authController";
 import {
   getUserById,
   getUsers,
@@ -18,6 +18,7 @@ const router = express.Router();
 const storage = multer.memoryStorage();
 const upload = multer({ storage }).none();
 router.route("/login").post(upload, loginUser);
+router.route("/auth/:id").get(getAuthUser);
 
 router
   .route("/")
