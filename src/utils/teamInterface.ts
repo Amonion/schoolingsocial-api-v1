@@ -1,3 +1,16 @@
+export interface IAcademicLevel extends Document {
+  country: string;
+  countryFlag: string;
+  placeId: string;
+  level: number;
+  maxLevel: number;
+  levelName: string;
+  certificate: string;
+  certificateName: string;
+  description: string;
+  createdAt: Date;
+}
+
 export interface IEmail extends Document {
   content: string;
   banner: string;

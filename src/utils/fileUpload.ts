@@ -91,7 +91,7 @@ export const deleteFilesFromS3 = async (
 
   if (keysToDelete.length > 0) {
     const deleteParams = {
-      Bucket: process.env.AWS_S3_BUCKET_NAME || "", // Ensure bucket name is in env
+      Bucket: process.env.AWS_S3_BUCKET_NAME || "",
       Delete: {
         Objects: keysToDelete.map((Key) => ({ Key })),
       },

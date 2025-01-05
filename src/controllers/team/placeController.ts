@@ -2,29 +2,29 @@ import { Request, Response } from "express";
 import { Place } from "../../models/team/placeModel";
 import { IPlace } from "../../utils/teamInterface";
 import { handleError } from "../../utils/errorHandler";
-import { queryData } from "../../utils/query";
-import { uploadFilesToS3, deleteFilesFromS3 } from "../../utils/fileUpload"; // Adjust path to where the function is defined
+import { queryData, deleteItem, deleteItems } from "../../utils/query";
+import { uploadFilesToS3 } from "../../utils/fileUpload"; // Adjust path to where the function is defined
 
 export const createPlace = async (
   req: Request,
   res: Response
 ): Promise<void> => {
   try {
-    const body = handleUpload(req, res);
+    const body = await handleUpload(req, res);
     if (!body) {
       return;
+    } else {
+      await Place.create(body);
+      const result = await queryData<IPlace>(Place, req);
+      const { page, page_size, count, results } = result;
+      res.status(200).json({
+        message: "Place is created successfully",
+        results,
+        count,
+        page,
+        page_size,
+      });
     }
-
-    await Place.create(body);
-    const result = await queryData<IPlace>(Place, req);
-    const { page, page_size, count, results } = result;
-    res.status(200).json({
-      message: "Place is created successfully",
-      results,
-      count,
-      page,
-      page_size,
-    });
   } catch (error: any) {
     handleError(res, undefined, undefined, error);
   }
@@ -56,46 +56,48 @@ export const getPlaces = async (req: Request, res: Response) => {
 
 export const updatePlace = async (req: Request, res: Response) => {
   try {
-    const body = handleUpload(req, res);
+    const body = await handleUpload(req, res);
     if (!body) {
       return;
-    }
+    } else {
+      const result = await Place.findByIdAndUpdate(req.params.id, body, {
+        new: true,
+        runValidators: true,
+      });
+      if (!result) {
+        return res.status(404).json({ message: "Place not found" });
+      }
 
-    const result = await Place.findByIdAndUpdate(req.params.id, body, {
-      new: true,
-      runValidators: true,
-    });
-    if (!result) {
-      return res.status(404).json({ message: "Place not found" });
+      const item = await queryData<IPlace>(Place, req);
+      const { page, page_size, count, results } = item;
+      res.status(200).json({
+        message: "Place was updated successfully",
+        results,
+        count,
+        page,
+        page_size,
+      });
     }
-
-    const item = await queryData<IPlace>(Place, req);
-    const { page, page_size, count, results } = item;
-    res.status(200).json({
-      message: "Place was updated successfully",
-      results,
-      count,
-      page,
-      page_size,
-    });
   } catch (error) {
     handleError(res, undefined, undefined, error);
   }
 };
 
 export const deletePlace = async (req: Request, res: Response) => {
-  try {
-    const result = await Place.findByIdAndDelete(req.params.id);
-    if (!result) {
-      return res.status(404).json({ message: "Place not found" });
-    }
-    const s3Fields = ["countryFlag"];
-    await deleteFilesFromS3(Place, s3Fields);
-
-    res.status(200).json({ message: "Place deleted successfully" });
-  } catch (error) {
-    handleError(res, undefined, undefined, error);
+  const result = await Place.findById(req.params.id);
+  const existingPlaces = await Place.find({
+    country: result?.country,
+    $and: [{ countryFlag: { $ne: null } }, { countryFlag: { $ne: "" } }],
+  });
+  if (existingPlaces.length > 1) {
+    await deleteItem(req, res, Place, [], "Place not found");
+  } else {
+    await deleteItem(req, res, Place, ["countryFlag"], "Place not found");
   }
+};
+
+export const deletePlaces = async (req: Request, res: Response) => {
+  await deleteItems(req, res, Place, ["countryFlag"], "Place not found");
 };
 
 export const searchPlace = async (req: Request, res: Response) => {
@@ -129,7 +131,11 @@ export const searchPlace = async (req: Request, res: Response) => {
 
 const handleUpload = async (req: Request, res: Response) => {
   try {
-    if (req.files || req.file) {
+    if (!req.body.country) {
+      handleError(res, 400, `Error, no country submitted.`, "");
+      return null;
+    }
+    if (req.files?.length || req.file) {
       const existingPlace = await Place.findOne({
         country: req.body.country,
         $and: [{ countryFlag: { $ne: null } }, { countryFlag: { $ne: "" } }],
@@ -161,7 +167,37 @@ const handleUpload = async (req: Request, res: Response) => {
         return req.body;
       }
     } else {
-      req.body;
+      const existingPlace = await Place.findOne({
+        country: req.body.country,
+        $and: [{ countryFlag: { $ne: null } }, { countryFlag: { $ne: "" } }],
+      });
+      if (existingPlace) {
+        if (
+          (!existingPlace.countryCode ||
+            !existingPlace.currency ||
+            !existingPlace.currencySymbol ||
+            !existingPlace.countrySymbol) &&
+          (!req.body.countryCode ||
+            !req.body.currency ||
+            !req.body.currencySymbol ||
+            !req.body.countrySymbol)
+        ) {
+          handleError(
+            res,
+            400,
+            `Please edit ${existingPlace.country} and fill in all fields to continue.`,
+            ""
+          );
+          return null;
+        } else {
+          req.body.countryFlag = existingPlace.countryFlag;
+          return req.body;
+        }
+      } else {
+        console.log(`Dont Exist`);
+        handleError(res, 400, `Error, please submit all necessary fields.`, "");
+        return null;
+      }
     }
   } catch (error) {
     handleError(res, undefined, undefined, error);

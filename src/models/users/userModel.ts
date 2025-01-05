@@ -30,7 +30,7 @@ const UserSchema: Schema = new Schema(
     origintState: { type: String, default: "" },
     signupCountry: { type: String, default: "" },
     signupCountryFlag: { type: String, default: "" },
-    level: { type: Number, default: 11 },
+    level: { type: Number, default: 1 },
     isDocument: { type: Boolean, default: false },
     isOrigin: { type: Boolean, default: false },
     isContact: { type: Boolean, default: false },

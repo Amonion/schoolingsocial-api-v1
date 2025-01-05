@@ -1,11 +1,11 @@
 import { Request, Response } from "express";
-import { Payment } from "../../models/team/paymentModel";
-import { IPayment } from "../../utils/teamInterface";
+import { AcademicLevel } from "../../models/team/academicLevelModel";
+import { IAcademicLevel } from "../../utils/teamInterface";
 import { handleError } from "../../utils/errorHandler";
 import { queryData, deleteItem } from "../../utils/query";
 import { uploadFilesToS3 } from "../../utils/fileUpload"; // Adjust path to where the function is defined
 
-export const createPayment = async (
+export const createAcademicLevel = async (
   req: Request,
   res: Response
 ): Promise<void> => {
@@ -14,8 +14,8 @@ export const createPayment = async (
     uploadedFiles.forEach((file) => {
       req.body[file.fieldName] = file.s3Url;
     });
-    await Payment.create(req.body);
-    const item = await queryData<IPayment>(Payment, req);
+    await AcademicLevel.create(req.body);
+    const item = await queryData<IAcademicLevel>(AcademicLevel, req);
     const { page, page_size, count, results } = item;
     res.status(200).json({
       message: "Payment was updated successfully",
@@ -29,14 +29,14 @@ export const createPayment = async (
   }
 };
 
-export const getPaymentById = async (
+export const getAcademicLevelById = async (
   req: Request,
   res: Response
 ): Promise<Response | void> => {
   try {
-    const item = await Payment.findById(req.params.id);
+    const item = await AcademicLevel.findById(req.params.id);
     if (!item) {
-      return res.status(404).json({ message: "Payment not found" });
+      return res.status(404).json({ message: "AcademicLevel not found" });
     }
     res.status(200).json(item);
   } catch (error) {
@@ -44,36 +44,46 @@ export const getPaymentById = async (
   }
 };
 
-export const getPayments = async (req: Request, res: Response) => {
+export const getAcademicLevels = async (req: Request, res: Response) => {
   try {
-    const result = await queryData<IPayment>(Payment, req);
+    const result = await queryData<IAcademicLevel>(AcademicLevel, req);
     res.status(200).json(result);
   } catch (error) {
     handleError(res, undefined, undefined, error);
   }
 };
 
-export const updatePayment = async (req: Request, res: Response) => {
+export const updateAcademicLevel = async (req: Request, res: Response) => {
   try {
     if (req.files?.length || req.file) {
       const uploadedFiles = await uploadFilesToS3(req);
       uploadedFiles.forEach((file) => {
         req.body[file.fieldName] = file.s3Url;
       });
-      await deleteItem(req, res, Payment, ["logo"], "Payment not found");
+      await deleteItem(
+        req,
+        res,
+        AcademicLevel,
+        ["logo"],
+        "AcademicLevel not found"
+      );
     }
-    const result = await Payment.findByIdAndUpdate(req.params.id, req.body, {
-      new: true,
-      runValidators: true,
-    });
+    const result = await AcademicLevel.findByIdAndUpdate(
+      req.params.id,
+      req.body,
+      {
+        new: true,
+        runValidators: true,
+      }
+    );
     if (!result) {
-      return res.status(404).json({ message: "Payment not found" });
+      return res.status(404).json({ message: "AcademicLevel not found" });
     }
 
-    const item = await queryData<IPayment>(Payment, req);
+    const item = await queryData<IAcademicLevel>(AcademicLevel, req);
     const { page, page_size, count, results } = item;
     res.status(200).json({
-      message: "Payment was updated successfully",
+      message: "AcademicLevel was updated successfully",
       results,
       count,
       page,
@@ -84,6 +94,12 @@ export const updatePayment = async (req: Request, res: Response) => {
   }
 };
 
-export const deletePayment = async (req: Request, res: Response) => {
-  await deleteItem(req, res, Payment, ["logo"], "Payment not found");
+export const deleteAcademicLevel = async (req: Request, res: Response) => {
+  await deleteItem(
+    req,
+    res,
+    AcademicLevel,
+    ["logo"],
+    "AcademicLevel not found"
+  );
 };

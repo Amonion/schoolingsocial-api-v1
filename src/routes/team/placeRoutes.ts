@@ -2,6 +2,13 @@ import express from "express";
 import multer from "multer";
 const upload = multer();
 import {
+  getAcademicLevelById,
+  getAcademicLevels,
+  updateAcademicLevel,
+  deleteAcademicLevel,
+  createAcademicLevel,
+} from "../../controllers/team/academicLevelController";
+import {
   getPaymentById,
   getPayments,
   updatePayment,
@@ -24,6 +31,16 @@ router.route("/").get(getPlaces).post(upload.any(), createPlace);
 router.route("/search").get(searchPlace);
 
 router.route("/payments").get(getPayments).post(upload.any(), createPayment);
+router
+  .route("/academic-levels")
+  .get(getAcademicLevels)
+  .post(upload.any(), createAcademicLevel);
+
+router
+  .route("/academic-levels/:id")
+  .get(getAcademicLevelById)
+  .patch(upload.any(), updateAcademicLevel)
+  .delete(deleteAcademicLevel);
 
 router
   .route("/payments/:id")

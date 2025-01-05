@@ -1,5 +1,7 @@
 import { Model } from "mongoose";
-import { Request } from "express";
+import { Request, Response } from "express";
+import { deleteFilesFromS3 } from "./fileUpload";
+import { handleError } from "./errorHandler";
 
 interface PaginationResult<T> {
   count: number; // Total number of records
@@ -87,4 +89,66 @@ export const queryData = async <T>(
     page,
     page_size,
   };
+};
+
+export const deleteItem = async <T extends Document>(
+  req: Request,
+  res: Response,
+  model: Model<T>,
+  fields: string[],
+  message: string
+) => {
+  try {
+    const result = await model.findById(req.params.id);
+    await model.findByIdAndDelete(req.params.id);
+    if (!result) {
+      return res.status(404).json({ message });
+    }
+
+    if (fields.length > 0) {
+      await deleteFilesFromS3(result, fields);
+    }
+    const results = await queryData(model, req);
+    res.status(200).json(results);
+  } catch (error) {
+    handleError(res, undefined, undefined, error);
+  }
+};
+
+export const deleteItems = async <T extends Document>(
+  req: Request,
+  res: Response,
+  model: Model<T>,
+  fields: Array<keyof T>,
+  message: string
+) => {
+  try {
+    const items = req.body;
+    for (let i = 0; i < items.length; i++) {
+      const el = items[i];
+      const result = await model.findById(el.id);
+      await model.findByIdAndDelete(el.id);
+      if (!result) {
+        return res.status(404).json({ message });
+      }
+
+      if (fields.length > 0) {
+        const s3Fields: string[] = [];
+        fields.forEach((field) => {
+          const value = result[field];
+          if (value !== undefined) {
+            s3Fields.push(String(value));
+          }
+        });
+        await deleteFilesFromS3(result, s3Fields);
+      }
+
+      if (i + 1 === items.length) {
+        const results = await queryData(model, req);
+        res.status(200).json(results);
+      }
+    }
+  } catch (error) {
+    handleError(res, undefined, undefined, error);
+  }
 };
