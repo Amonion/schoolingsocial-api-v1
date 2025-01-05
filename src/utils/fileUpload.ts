@@ -28,13 +28,12 @@ export async function uploadFilesToS3(
   }
 
   if (!req.files) {
-    throw new Error("No files found in the request.");
+    return Promise.all([]);
   }
 
   const uploadPromises: Promise<S3UploadResult>[] = [];
 
   if (Array.isArray(req.files)) {
-    console.log("files exist for upload");
     for (const singleFile of req.files) {
       const uploadPromise = uploadToS3(
         singleFile,
@@ -59,13 +58,6 @@ export async function uploadFilesToS3(
   return Promise.all(uploadPromises);
 }
 
-/**
- * Uploads a single file to S3.
- * @param file - The file to upload.
- * @param bucketName - The S3 bucket name.
- * @param fieldName - The field name of the file.
- * @returns A promise resolving to an S3UploadResult.
- */
 async function uploadToS3(
   file: Express.Multer.File,
   bucketName: string,
@@ -77,27 +69,18 @@ async function uploadToS3(
     Body: file.buffer,
     ContentType: file.mimetype,
   };
-  console.log("uploading to s3");
-
   try {
     const data = await s3.upload(uploadParams).promise();
-    console.log("uploaded to s3 successfully", data);
-
     return {
       fieldName,
       s3Url: data.Location,
     };
   } catch (error) {
     console.error("S3 upload failed:", error);
-    throw new Error("Failed to upload file to S3");
+    throw new Error(`Failed to upload file to S3: ${error}`);
   }
 }
 
-/**
- * Deletes files from an S3 bucket based on a model instance and specified fields.
- * @param modelInstance The model instance containing fields with S3 keys.
- * @param fields An array of field names that contain S3 keys.
- */
 export const deleteFilesFromS3 = async (
   modelInstance: any,
   fields: string[]

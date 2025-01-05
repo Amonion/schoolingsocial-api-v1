@@ -10,38 +10,12 @@ export const createPlace = async (
   res: Response
 ): Promise<void> => {
   try {
-    // const existingPlace = await Place.findOne({
-    //   country: req.body.country,
-    //   $and: [{ countryFlag: { $ne: null } }, { countryFlag: { $ne: "" } }],
-    // });
-    // if (existingPlace) {
-    //   if (
-    //     !existingPlace.countryCode ||
-    //     !existingPlace.currency ||
-    //     !existingPlace.currencySymbol ||
-    //     existingPlace.countrySymbol
-    //   ) {
-    //     handleError(
-    //       res,
-    //       500,
-    //       `Please fill in all fields for ${existingPlace.country}`,
-    //       ""
-    //     );
-    //   }
-    //   req.body.countryFlag = existingPlace.countryFlag;
-    // } else {
-    //   const uploadedFiles = await uploadFilesToS3(req);
-    //   uploadedFiles.forEach((file) => {
-    //     req.body[file.fieldName] = file.s3Url;
-    //   });
-    // }
-    // console.log("cool", req.body, req.files, req.file);
-    const uploadedFiles = await uploadFilesToS3(req);
-    uploadedFiles.forEach((file) => {
-      req.body[file.fieldName] = file.s3Url;
-    });
+    const body = handleUpload(req, res);
+    if (!body) {
+      return;
+    }
 
-    await Place.create(req.body);
+    await Place.create(body);
     const result = await queryData<IPlace>(Place, req);
     const { page, page_size, count, results } = result;
     res.status(200).json({
@@ -82,11 +56,12 @@ export const getPlaces = async (req: Request, res: Response) => {
 
 export const updatePlace = async (req: Request, res: Response) => {
   try {
-    const uploadedFiles = await uploadFilesToS3(req);
-    uploadedFiles.forEach((file) => {
-      req.body[file.fieldName] = file.s3Url;
-    });
-    const result = await Place.findByIdAndUpdate(req.params.id, req.body, {
+    const body = handleUpload(req, res);
+    if (!body) {
+      return;
+    }
+
+    const result = await Place.findByIdAndUpdate(req.params.id, body, {
       new: true,
       runValidators: true,
     });
@@ -149,5 +124,47 @@ export const searchPlace = async (req: Request, res: Response) => {
   } catch (error) {
     console.error("Error fetching unique places:", error);
     throw error;
+  }
+};
+
+const handleUpload = async (req: Request, res: Response) => {
+  try {
+    if (req.files || req.file) {
+      const existingPlace = await Place.findOne({
+        country: req.body.country,
+        $and: [{ countryFlag: { $ne: null } }, { countryFlag: { $ne: "" } }],
+      });
+
+      if (existingPlace) {
+        if (
+          !existingPlace.countryCode ||
+          !existingPlace.currency ||
+          !existingPlace.currencySymbol ||
+          !existingPlace.countrySymbol
+        ) {
+          handleError(
+            res,
+            400,
+            `Please edit ${existingPlace.country} and fill in all fields to continue.`,
+            ""
+          );
+          return null;
+        } else {
+          req.body.countryFlag = existingPlace.countryFlag;
+          return req.body;
+        }
+      } else {
+        const uploadedFiles = await uploadFilesToS3(req);
+        uploadedFiles.forEach((file) => {
+          req.body[file.fieldName] = file.s3Url;
+        });
+        return req.body;
+      }
+    } else {
+      req.body;
+    }
+  } catch (error) {
+    handleError(res, undefined, undefined, error);
+    return null;
   }
 };

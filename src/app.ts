@@ -9,8 +9,6 @@ import cors from "cors";
 import bodyParser from "body-parser";
 import dotenv from "dotenv";
 import { handleError } from "./utils/errorHandler";
-import jwt from "jsonwebtoken";
-
 import messageRoutes from "./routes/team/messageRoutes";
 import placeRoutes from "./routes/team/placeRoutes";
 import userRoutes from "./routes/users/userRoutes";
@@ -27,34 +25,29 @@ const requestLogger: RequestHandler = (
 };
 app.use(requestLogger);
 dotenv.config();
-// app.use(
-//   cors({
-//     origin: (origin, callback) => {
-//       const allowedOrigins = [
-//         "https://schoolingsocial.netlify.app",
-//         "https://anotherdomain.com",
-//       ];
-//       if (process.env.NODE_ENV === "production") {
-//         if (origin && allowedOrigins.includes(origin)) {
-//           callback(null, true);
-//         } else {
-//           callback(new Error("Not allowed by CORS")); // Reject the origin
-//         }
-//       } else {
-//         callback(null, true);
-//       }
-//     },
-//     methods: "GET,POST, PATCH, PUT,DELETE", // Allowed HTTP methods
-//     credentials: true,
-//     allowedHeaders: ["Content-Type", "Authorization"],
-//   })
-// );
 app.use(
   cors({
-    origin: "*",
+    origin: (origin, callback) => {
+      const allowedOrigins = [
+        "https://schoolingsocial.netlify.app",
+        "https://schoolingsocial.com",
+      ];
+      if (process.env.NODE_ENV === "production") {
+        if (origin && allowedOrigins.includes(origin)) {
+          callback(null, true);
+        } else {
+          callback(new Error("Not allowed by CORS"));
+        }
+      } else {
+        callback(null, true);
+      }
+    },
     methods: "GET,POST, PATCH, PUT,DELETE",
+    credentials: true,
+    allowedHeaders: ["Content-Type", "Authorization"],
   })
 );
+
 app.use(bodyParser.json());
 app.use("/api/v1/messages", messageRoutes);
 app.use("/api/v1/places", placeRoutes);
