@@ -121,8 +121,9 @@ export const searchPlace = async (req: Request, res: Response) => {
       },
     ]);
 
-    console.log("Unique Places:", places);
-    return places;
+    res.status(200).json({
+      results: places,
+    });
   } catch (error) {
     console.error("Error fetching unique places:", error);
     throw error;

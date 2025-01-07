@@ -11,6 +11,16 @@ export interface IAcademicLevel extends Document {
   createdAt: Date;
 }
 
+export interface IDocument extends Document {
+  picture: string;
+  name: string;
+  description: string;
+  country: string;
+  countryFlag: string;
+  placeId: string;
+  createdAt: Date;
+}
+
 export interface IEmail extends Document {
   content: string;
   banner: string;

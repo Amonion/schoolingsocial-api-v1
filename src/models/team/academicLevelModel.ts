@@ -3,7 +3,7 @@ import { IAcademicLevel } from "../../utils/teamInterface";
 
 const AcademicLevelSchema: Schema = new Schema(
   {
-    certificate: { type: Number, default: "" },
+    certificate: { type: String, default: "" },
     certificateName: { type: String, default: "" },
     level: { type: Number, default: 0 },
     maxLevel: { type: Number, default: 0 },
