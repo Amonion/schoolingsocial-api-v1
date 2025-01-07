@@ -60,6 +60,23 @@ export interface IPlace extends Document {
   createdAt: Date;
 }
 
+export interface ISchool extends Document {
+  country: string;
+  state: string;
+  area: string;
+  name: string;
+  username: string;
+  type: string;
+  logo: string;
+  media: string;
+  picture: string;
+  continent: string;
+  landmark: string;
+  countryFlag: string;
+  longitude: number;
+  latitude: number;
+}
+
 export interface IStaff extends Document {
   userId: string;
   areaId: string;

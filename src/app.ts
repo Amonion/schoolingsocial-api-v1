@@ -11,6 +11,7 @@ import dotenv from "dotenv";
 import { handleError } from "./utils/errorHandler";
 import messageRoutes from "./routes/team/messageRoutes";
 import placeRoutes from "./routes/team/placeRoutes";
+import schoolRoutes from "./routes/team/schoolRoutes";
 import userRoutes from "./routes/users/userRoutes";
 
 const app: Application = express();
@@ -51,6 +52,7 @@ app.use(
 app.use(bodyParser.json());
 app.use("/api/v1/messages", messageRoutes);
 app.use("/api/v1/places", placeRoutes);
+app.use("/api/v1/schools", schoolRoutes);
 app.use("/api/v1/users", userRoutes);
 
 app.use((req, res, next) => {
