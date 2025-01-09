@@ -78,6 +78,7 @@ export const Faculty = mongoose.model<IFaculty>("Faculty", FacultySchema);
 const DepartmentSchema: Schema = new Schema(
   {
     period: { type: Number },
+    schoolId: { type: String },
     facultyId: { type: String },
     faculty: { type: String },
     name: { type: String, default: "" },

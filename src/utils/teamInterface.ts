@@ -31,6 +31,7 @@ export interface ICourse extends Document {
 export interface IDepartment extends Document {
   period: number;
   facultyId: number;
+  schoolId: number;
   faculty: string;
   name: string;
   username: string;
