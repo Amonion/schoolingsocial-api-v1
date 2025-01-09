@@ -1,32 +1,31 @@
 import { Request, Response } from "express";
-import { School } from "../../models/team/schoolModel";
-import { ISchool } from "../../utils/teamInterface";
 import { handleError } from "../../utils/errorHandler";
-import { queryData, deleteItem } from "../../utils/query";
-import { uploadFilesToS3 } from "../../utils/fileUpload"; // Adjust path to where the function is defined
+import {
+  School,
+  SchoolPayment,
+  Faculty,
+  Department,
+  Course,
+} from "../../models/team/schoolModel";
+import {
+  ISchool,
+  ISchoolPayment,
+  IFaculty,
+  IDepartment,
+  ICourse,
+} from "../../utils/teamInterface";
+import {
+  queryData,
+  deleteItem,
+  updateItem,
+  createItem,
+} from "../../utils/query";
 
 export const createSchool = async (
   req: Request,
   res: Response
 ): Promise<void> => {
-  try {
-    const uploadedFiles = await uploadFilesToS3(req);
-    uploadedFiles.forEach((file) => {
-      req.body[file.fieldName] = file.s3Url;
-    });
-    await School.create(req.body);
-    const item = await queryData<ISchool>(School, req);
-    const { page, page_size, count, results } = item;
-    res.status(200).json({
-      message: "School was updated successfully",
-      results,
-      count,
-      page,
-      page_size,
-    });
-  } catch (error: any) {
-    handleError(res, undefined, undefined, error);
-  }
+  createItem(req, res, School, "School was created successfully");
 };
 
 export const getSchoolById = async (
@@ -55,36 +54,13 @@ export const getSchools = async (req: Request, res: Response) => {
 
 export const updateSchool = async (req: Request, res: Response) => {
   try {
-    if (req.files?.length || req.file) {
-      const uploadedFiles = await uploadFilesToS3(req);
-      uploadedFiles.forEach((file) => {
-        req.body[file.fieldName] = file.s3Url;
-      });
-      await deleteItem(
-        req,
-        res,
-        School,
-        ["logo", "media", "picture"],
-        "School not found"
-      );
-    }
-    const result = await School.findByIdAndUpdate(req.params.id, req.body, {
-      new: true,
-      runValidators: true,
-    });
-    if (!result) {
-      return res.status(404).json({ message: "School not found" });
-    }
-
-    const item = await queryData<ISchool>(School, req);
-    const { page, page_size, count, results } = item;
-    res.status(200).json({
-      message: "School was updated successfully",
-      results,
-      count,
-      page,
-      page_size,
-    });
+    updateItem(
+      req,
+      res,
+      School,
+      ["logo", "media", "picture"],
+      ["School not found", "School was updated successfully"]
+    );
   } catch (error) {
     handleError(res, undefined, undefined, error);
   }
@@ -105,24 +81,12 @@ export const createSchoolPayment = async (
   req: Request,
   res: Response
 ): Promise<void> => {
-  try {
-    const uploadedFiles = await uploadFilesToS3(req);
-    uploadedFiles.forEach((file) => {
-      req.body[file.fieldName] = file.s3Url;
-    });
-    await School.create(req.body);
-    const item = await queryData<ISchool>(School, req);
-    const { page, page_size, count, results } = item;
-    res.status(200).json({
-      message: "School was updated successfully",
-      results,
-      count,
-      page,
-      page_size,
-    });
-  } catch (error: any) {
-    handleError(res, undefined, undefined, error);
-  }
+  createItem(
+    req,
+    res,
+    SchoolPayment,
+    "School payment was created successfully"
+  );
 };
 
 export const getSchoolPaymentById = async (
@@ -130,9 +94,9 @@ export const getSchoolPaymentById = async (
   res: Response
 ): Promise<Response | void> => {
   try {
-    const item = await School.findById(req.params.id);
+    const item = await SchoolPayment.findById(req.params.id);
     if (!item) {
-      return res.status(404).json({ message: "School not found" });
+      return res.status(404).json({ message: "School payment not found" });
     }
     res.status(200).json(item);
   } catch (error) {
@@ -142,7 +106,7 @@ export const getSchoolPaymentById = async (
 
 export const getSchoolPayments = async (req: Request, res: Response) => {
   try {
-    const result = await queryData<ISchool>(School, req);
+    const result = await queryData<ISchoolPayment>(SchoolPayment, req);
     res.status(200).json(result);
   } catch (error) {
     handleError(res, undefined, undefined, error);
@@ -151,49 +115,50 @@ export const getSchoolPayments = async (req: Request, res: Response) => {
 
 export const updateSchoolPayment = async (req: Request, res: Response) => {
   try {
-    if (req.files?.length || req.file) {
-      const uploadedFiles = await uploadFilesToS3(req);
-      uploadedFiles.forEach((file) => {
-        req.body[file.fieldName] = file.s3Url;
-      });
-      await deleteItem(
-        req,
-        res,
-        School,
-        ["logo", "media", "picture"],
-        "School not found"
-      );
-    }
-    const result = await School.findByIdAndUpdate(req.params.id, req.body, {
-      new: true,
-      runValidators: true,
-    });
-    if (!result) {
-      return res.status(404).json({ message: "School not found" });
-    }
-
-    const item = await queryData<ISchool>(School, req);
-    const { page, page_size, count, results } = item;
-    res.status(200).json({
-      message: "School was updated successfully",
-      results,
-      count,
-      page,
-      page_size,
-    });
+    updateItem(
+      req,
+      res,
+      SchoolPayment,
+      [],
+      ["School payment not found", "School payment was updated successfully"]
+    );
   } catch (error) {
     handleError(res, undefined, undefined, error);
   }
 };
 
 export const deleteSchoolPayment = async (req: Request, res: Response) => {
-  await deleteItem(
-    req,
-    res,
-    School,
-    ["logo", "media", "picture"],
-    "School not found"
-  );
+  await deleteItem(req, res, SchoolPayment, [], "School payment not found");
+};
+
+export const searchSchools = async (req: Request, res: Response) => {
+  try {
+    const name = req.query.name;
+    const schools = await School.aggregate([
+      {
+        $group: {
+          _id: name ? `$${name}` : "$name",
+          place: { $first: "$$ROOT" },
+        },
+      },
+      {
+        $sort: { _id: 1 },
+      },
+      {
+        $limit: 10,
+      },
+      {
+        $replaceRoot: { newRoot: "$place" },
+      },
+    ]);
+
+    res.status(200).json({
+      results: schools,
+    });
+  } catch (error) {
+    console.error("Error fetching unique places:", error);
+    throw error;
+  }
 };
 
 //-----------------COURSES--------------------//
@@ -201,24 +166,7 @@ export const createCourse = async (
   req: Request,
   res: Response
 ): Promise<void> => {
-  try {
-    const uploadedFiles = await uploadFilesToS3(req);
-    uploadedFiles.forEach((file) => {
-      req.body[file.fieldName] = file.s3Url;
-    });
-    await School.create(req.body);
-    const item = await queryData<ISchool>(School, req);
-    const { page, page_size, count, results } = item;
-    res.status(200).json({
-      message: "School was updated successfully",
-      results,
-      count,
-      page,
-      page_size,
-    });
-  } catch (error: any) {
-    handleError(res, undefined, undefined, error);
-  }
+  createItem(req, res, Course, "Course was created successfully");
 };
 
 export const getCourseById = async (
@@ -226,9 +174,9 @@ export const getCourseById = async (
   res: Response
 ): Promise<Response | void> => {
   try {
-    const item = await School.findById(req.params.id);
+    const item = await Course.findById(req.params.id);
     if (!item) {
-      return res.status(404).json({ message: "School not found" });
+      return res.status(404).json({ message: "Course not found" });
     }
     res.status(200).json(item);
   } catch (error) {
@@ -238,7 +186,7 @@ export const getCourseById = async (
 
 export const getCourses = async (req: Request, res: Response) => {
   try {
-    const result = await queryData<ISchool>(School, req);
+    const result = await queryData<ICourse>(Course, req);
     res.status(200).json(result);
   } catch (error) {
     handleError(res, undefined, undefined, error);
@@ -247,49 +195,20 @@ export const getCourses = async (req: Request, res: Response) => {
 
 export const updateCourse = async (req: Request, res: Response) => {
   try {
-    if (req.files?.length || req.file) {
-      const uploadedFiles = await uploadFilesToS3(req);
-      uploadedFiles.forEach((file) => {
-        req.body[file.fieldName] = file.s3Url;
-      });
-      await deleteItem(
-        req,
-        res,
-        School,
-        ["logo", "media", "picture"],
-        "School not found"
-      );
-    }
-    const result = await School.findByIdAndUpdate(req.params.id, req.body, {
-      new: true,
-      runValidators: true,
-    });
-    if (!result) {
-      return res.status(404).json({ message: "School not found" });
-    }
-
-    const item = await queryData<ISchool>(School, req);
-    const { page, page_size, count, results } = item;
-    res.status(200).json({
-      message: "School was updated successfully",
-      results,
-      count,
-      page,
-      page_size,
-    });
+    updateItem(
+      req,
+      res,
+      Course,
+      ["media", "picture"],
+      ["Course not found", "Course was updated successfully"]
+    );
   } catch (error) {
     handleError(res, undefined, undefined, error);
   }
 };
 
 export const deleteCourse = async (req: Request, res: Response) => {
-  await deleteItem(
-    req,
-    res,
-    School,
-    ["logo", "media", "picture"],
-    "School not found"
-  );
+  await deleteItem(req, res, Course, ["media", "picture"], "Course not found");
 };
 
 //-----------------DEPARTMENTS--------------------//
@@ -297,24 +216,7 @@ export const createDepartment = async (
   req: Request,
   res: Response
 ): Promise<void> => {
-  try {
-    const uploadedFiles = await uploadFilesToS3(req);
-    uploadedFiles.forEach((file) => {
-      req.body[file.fieldName] = file.s3Url;
-    });
-    await School.create(req.body);
-    const item = await queryData<ISchool>(School, req);
-    const { page, page_size, count, results } = item;
-    res.status(200).json({
-      message: "School was updated successfully",
-      results,
-      count,
-      page,
-      page_size,
-    });
-  } catch (error: any) {
-    handleError(res, undefined, undefined, error);
-  }
+  createItem(req, res, Department, "Department was created successfully");
 };
 
 export const getDepartmentById = async (
@@ -322,9 +224,9 @@ export const getDepartmentById = async (
   res: Response
 ): Promise<Response | void> => {
   try {
-    const item = await School.findById(req.params.id);
+    const item = await Department.findById(req.params.id);
     if (!item) {
-      return res.status(404).json({ message: "School not found" });
+      return res.status(404).json({ message: "Department not found" });
     }
     res.status(200).json(item);
   } catch (error) {
@@ -334,7 +236,7 @@ export const getDepartmentById = async (
 
 export const getDepartments = async (req: Request, res: Response) => {
   try {
-    const result = await queryData<ISchool>(School, req);
+    const result = await queryData<IDepartment>(Department, req);
     res.status(200).json(result);
   } catch (error) {
     handleError(res, undefined, undefined, error);
@@ -343,36 +245,13 @@ export const getDepartments = async (req: Request, res: Response) => {
 
 export const updateDepartment = async (req: Request, res: Response) => {
   try {
-    if (req.files?.length || req.file) {
-      const uploadedFiles = await uploadFilesToS3(req);
-      uploadedFiles.forEach((file) => {
-        req.body[file.fieldName] = file.s3Url;
-      });
-      await deleteItem(
-        req,
-        res,
-        School,
-        ["logo", "media", "picture"],
-        "School not found"
-      );
-    }
-    const result = await School.findByIdAndUpdate(req.params.id, req.body, {
-      new: true,
-      runValidators: true,
-    });
-    if (!result) {
-      return res.status(404).json({ message: "School not found" });
-    }
-
-    const item = await queryData<ISchool>(School, req);
-    const { page, page_size, count, results } = item;
-    res.status(200).json({
-      message: "School was updated successfully",
-      results,
-      count,
-      page,
-      page_size,
-    });
+    updateItem(
+      req,
+      res,
+      Department,
+      ["media", "picture"],
+      ["Department not found", "Department was updated successfully"]
+    );
   } catch (error) {
     handleError(res, undefined, undefined, error);
   }
@@ -382,9 +261,9 @@ export const deleteDepartment = async (req: Request, res: Response) => {
   await deleteItem(
     req,
     res,
-    School,
-    ["logo", "media", "picture"],
-    "School not found"
+    Department,
+    ["media", "picture"],
+    "Department not found"
   );
 };
 
@@ -393,24 +272,7 @@ export const createFaculty = async (
   req: Request,
   res: Response
 ): Promise<void> => {
-  try {
-    const uploadedFiles = await uploadFilesToS3(req);
-    uploadedFiles.forEach((file) => {
-      req.body[file.fieldName] = file.s3Url;
-    });
-    await School.create(req.body);
-    const item = await queryData<ISchool>(School, req);
-    const { page, page_size, count, results } = item;
-    res.status(200).json({
-      message: "School was updated successfully",
-      results,
-      count,
-      page,
-      page_size,
-    });
-  } catch (error: any) {
-    handleError(res, undefined, undefined, error);
-  }
+  createItem(req, res, Faculty, "Faculty was created successfully");
 };
 
 export const getFacultyById = async (
@@ -418,9 +280,9 @@ export const getFacultyById = async (
   res: Response
 ): Promise<Response | void> => {
   try {
-    const item = await School.findById(req.params.id);
+    const item = await Faculty.findById(req.params.id);
     if (!item) {
-      return res.status(404).json({ message: "School not found" });
+      return res.status(404).json({ message: "Faculty not found" });
     }
     res.status(200).json(item);
   } catch (error) {
@@ -430,7 +292,7 @@ export const getFacultyById = async (
 
 export const getFaculties = async (req: Request, res: Response) => {
   try {
-    const result = await queryData<ISchool>(School, req);
+    const result = await queryData<IFaculty>(Faculty, req);
     res.status(200).json(result);
   } catch (error) {
     handleError(res, undefined, undefined, error);
@@ -439,36 +301,13 @@ export const getFaculties = async (req: Request, res: Response) => {
 
 export const updateFaculty = async (req: Request, res: Response) => {
   try {
-    if (req.files?.length || req.file) {
-      const uploadedFiles = await uploadFilesToS3(req);
-      uploadedFiles.forEach((file) => {
-        req.body[file.fieldName] = file.s3Url;
-      });
-      await deleteItem(
-        req,
-        res,
-        School,
-        ["logo", "media", "picture"],
-        "School not found"
-      );
-    }
-    const result = await School.findByIdAndUpdate(req.params.id, req.body, {
-      new: true,
-      runValidators: true,
-    });
-    if (!result) {
-      return res.status(404).json({ message: "School not found" });
-    }
-
-    const item = await queryData<ISchool>(School, req);
-    const { page, page_size, count, results } = item;
-    res.status(200).json({
-      message: "School was updated successfully",
-      results,
-      count,
-      page,
-      page_size,
-    });
+    updateItem(
+      req,
+      res,
+      Faculty,
+      ["media", "picture"],
+      ["Faculty not found", "Faculty was updated successfully"]
+    );
   } catch (error) {
     handleError(res, undefined, undefined, error);
   }
@@ -478,8 +317,8 @@ export const deleteFaculty = async (req: Request, res: Response) => {
   await deleteItem(
     req,
     res,
-    School,
-    ["logo", "media", "picture"],
-    "School not found"
+    Faculty,
+    ["media", "picture"],
+    "Faculty not found"
   );
 };

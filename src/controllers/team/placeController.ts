@@ -103,21 +103,12 @@ export const deletePlaces = async (req: Request, res: Response) => {
 export const searchPlace = async (req: Request, res: Response) => {
   try {
     const field = req.query.field;
+
     const places = await Place.aggregate([
       {
         $group: {
-          _id: field ? `$${field}` : "$country",
-          place: { $first: "$$ROOT" },
+          _id: "$country",
         },
-      },
-      {
-        $sort: { _id: 1 },
-      },
-      {
-        $limit: 10,
-      },
-      {
-        $replaceRoot: { newRoot: "$place" },
       },
     ]);
 

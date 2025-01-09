@@ -7,6 +7,7 @@ import {
   updateSchool,
   deleteSchool,
   createSchool,
+  searchSchools,
   getSchoolPaymentById,
   getSchoolPayments,
   updateSchoolPayment,
@@ -31,6 +32,7 @@ import {
 
 const router = express.Router();
 
+router.route("/search").get(searchSchools);
 router.route("/").get(getSchools).post(upload.any(), createSchool);
 router
   .route("/payments")
@@ -50,7 +52,7 @@ router
   .delete(deleteFaculty);
 
 router
-  .route("/documents/:id")
+  .route("/departments/:id")
   .get(getDepartmentById)
   .patch(upload.any(), updateDepartment)
   .delete(deleteDepartment);

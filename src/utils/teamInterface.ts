@@ -11,6 +11,34 @@ export interface IAcademicLevel extends Document {
   createdAt: Date;
 }
 
+export interface ICourse extends Document {
+  schoolId: string;
+  facultyId: string;
+  level: number;
+  semester: number;
+  courseCode: string;
+  load: number;
+  departmentId: number;
+  department: string;
+  name: string;
+  picture: string;
+  media: string;
+  description: string;
+  isChecked?: boolean;
+  isActive?: boolean;
+}
+
+export interface IDepartment extends Document {
+  period: number;
+  facultyId: number;
+  faculty: string;
+  name: string;
+  username: string;
+  profilePicture: string;
+  media: string;
+  description: string;
+}
+
 export interface IDocument extends Document {
   picture: string;
   name: string;
@@ -27,6 +55,16 @@ export interface IEmail extends Document {
   title: string;
   name: string;
   note: string;
+  createdAt: Date;
+}
+
+export interface IFaculty extends Document {
+  schoolId: string;
+  school: string;
+  name: string;
+  picture: string;
+  media: string;
+  description: string;
   createdAt: Date;
 }
 
@@ -75,6 +113,23 @@ export interface ISchool extends Document {
   countryFlag: string;
   longitude: number;
   latitude: number;
+}
+
+export interface ISchoolPayment extends Document {
+  name: string;
+  amount: number;
+  charge: number;
+  schoolLogo: string;
+  school: string;
+  schoolId: string;
+  description: string;
+  placeId: string;
+  country: string;
+  countryFlag: string;
+  countrySymbol: string;
+  currency: string;
+  currencySymbol: string;
+  createdAt: Date;
 }
 
 export interface IStaff extends Document {
