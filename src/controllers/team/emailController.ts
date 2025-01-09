@@ -1,32 +1,19 @@
 import { Request, Response } from "express";
-import { Email } from "../../models/team/emailModel";
-import { IEmail } from "../../utils/teamInterface";
+import { Email, Notification, Sms } from "../../models/team/emailModel";
+import { IEmail, INotification, ISms } from "../../utils/teamInterface";
 import { handleError } from "../../utils/errorHandler";
-import { queryData } from "../../utils/query";
-import { uploadFilesToS3 } from "../../utils/fileUpload"; // Adjust path to where the function is defined
+import {
+  queryData,
+  deleteItem,
+  updateItem,
+  createItem,
+} from "../../utils/query";
 
 export const createEmail = async (
   req: Request,
   res: Response
 ): Promise<void> => {
-  try {
-    const uploadedFiles = await uploadFilesToS3(req);
-    uploadedFiles.forEach((file) => {
-      req.body[file.fieldName] = file.s3Url;
-    });
-    await Email.create(req.body);
-    const item = await queryData<IEmail>(Email, req);
-    const { page, page_size, count, results } = item;
-    res.status(200).json({
-      message: "Email was created successfully",
-      results,
-      count,
-      page,
-      page_size,
-    });
-  } catch (error: any) {
-    handleError(res, undefined, undefined, error);
-  }
+  createItem(req, res, Email, "Email was created successfully");
 };
 
 export const getEmailById = async (
@@ -87,4 +74,54 @@ export const deleteEmail = async (req: Request, res: Response) => {
   } catch (error) {
     handleError(res, undefined, undefined, error);
   }
+};
+
+//-----------------NOTIFICATION--------------------//
+export const createNotification = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
+  createItem(req, res, Notification, "Notification was created successfully");
+};
+
+export const getNotificationById = async (
+  req: Request,
+  res: Response
+): Promise<Response | void> => {
+  try {
+    const item = await Notification.findById(req.params.id);
+    if (!item) {
+      return res.status(404).json({ message: "Notification not found" });
+    }
+    res.status(200).json(item);
+  } catch (error) {
+    handleError(res, undefined, undefined, error);
+  }
+};
+
+export const getNotifications = async (req: Request, res: Response) => {
+  try {
+    const result = await queryData<INotification>(Notification, req);
+    res.status(200).json(result);
+  } catch (error) {
+    handleError(res, undefined, undefined, error);
+  }
+};
+
+export const updateNotification = async (req: Request, res: Response) => {
+  try {
+    updateItem(
+      req,
+      res,
+      Notification,
+      [],
+      ["Notification not found", "Notification was updated successfully"]
+    );
+  } catch (error) {
+    handleError(res, undefined, undefined, error);
+  }
+};
+
+export const deleteNotification = async (req: Request, res: Response) => {
+  await deleteItem(req, res, Notification, [], "Notification not found");
 };

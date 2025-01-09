@@ -52,7 +52,7 @@ export interface IDocument extends Document {
 
 export interface IEmail extends Document {
   content: string;
-  banner: string;
+  picture: string;
   title: string;
   name: string;
   note: string;
@@ -66,6 +66,13 @@ export interface IFaculty extends Document {
   picture: string;
   media: string;
   description: string;
+  createdAt: Date;
+}
+
+export interface INotification extends Document {
+  content: string;
+  title: string;
+  name: string;
   createdAt: Date;
 }
 
@@ -130,6 +137,12 @@ export interface ISchoolPayment extends Document {
   countrySymbol: string;
   currency: string;
   currencySymbol: string;
+  createdAt: Date;
+}
+
+export interface ISms extends Document {
+  content: string;
+  name: string;
   createdAt: Date;
 }
 
