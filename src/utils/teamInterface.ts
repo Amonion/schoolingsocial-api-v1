@@ -11,6 +11,15 @@ export interface IAcademicLevel extends Document {
   createdAt: Date;
 }
 
+export interface ICompany extends Document {
+  name: string;
+  domain: string;
+  email: string;
+  phone: string;
+  headqauters: string;
+  createdAt: Date;
+}
+
 export interface ICourse extends Document {
   schoolId: string;
   facultyId: string;
@@ -59,6 +68,34 @@ export interface IEmail extends Document {
   createdAt: Date;
 }
 
+export interface IExam extends Document {
+  title: string;
+  instruction: string;
+  country: string;
+  subtitle: string;
+  continent: string;
+  type: string;
+  randomize: boolean;
+  simultaneous: boolean;
+  showResult: boolean;
+  state: string;
+  stateId: number;
+  publishedAt: Date;
+  duration: number;
+  questionsPerPage: number;
+  optionsPerQuestion: number;
+  status: string;
+  createdAt: Date;
+}
+
+export interface IExpenses extends Document {
+  name: string;
+  amount: number;
+  receipt: string;
+  description: string;
+  createdAt: Date;
+}
+
 export interface IFaculty extends Document {
   schoolId: string;
   school: string;
@@ -69,11 +106,45 @@ export interface IFaculty extends Document {
   createdAt: Date;
 }
 
+export interface ILeague extends Document {
+  title: string;
+  instruction: string;
+  country: string;
+  schools: string;
+  students: string;
+  continent: string;
+  level: string;
+  price: number;
+  media: string;
+  picture: string;
+  state: string;
+  placeId: string;
+  publishedAt: Date;
+  endAt: Date;
+  subjects: string[];
+  createdAt: Date;
+}
+
 export interface INotification extends Document {
   content: string;
   title: string;
   name: string;
   createdAt: Date;
+}
+
+export interface IObjective extends Document {
+  index: number;
+  paperId: string;
+  leagueId: string;
+  question: IOption[];
+  options: string;
+  createdAt: Date;
+}
+
+export interface IOption {
+  index: number;
+  value: string;
+  isSelected: boolean;
 }
 
 export interface IPayment extends Document {
@@ -103,6 +174,35 @@ export interface IPlace extends Document {
   countrySymbol: string;
   currency: string;
   currencySymbol: string;
+  createdAt: Date;
+}
+
+export interface IPaper extends Document {
+  title: string;
+  instruction: string;
+  country: string;
+  subtitle: string;
+  continent: string;
+  type: string;
+  randomize: boolean;
+  simultaneous: boolean;
+  showResult: boolean;
+  state: string;
+  placeId: string;
+  publishedAt: Date;
+  duration: number;
+  questionsPerPage: number;
+  optionsPerQuestion: number;
+  status: string;
+  createdAt: Date;
+}
+
+export interface IPosition extends Document {
+  level: number;
+  position: string;
+  region: string;
+  salary: number;
+  role: string;
   createdAt: Date;
 }
 
@@ -162,5 +262,25 @@ export interface IStaff extends Document {
   country: string;
   continent: string;
   isActive: boolean;
+  createdAt: Date;
+}
+
+export interface IWeekend extends Document {
+  title: string;
+  instruction: string;
+  country: string;
+  videoUrl: string;
+  continent: string;
+  levels: string;
+  answer: string;
+  price: number;
+  video: string;
+  picture: string;
+  state: string;
+  placeId: number;
+  publishedAt: Date;
+  duration: number;
+  status: string;
+  category: string;
   createdAt: Date;
 }

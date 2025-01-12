@@ -13,15 +13,27 @@ import {
   updateNotification,
   deleteNotification,
   createNotification,
+  getSmsById,
+  getSms,
+  updateSms,
+  deleteSms,
+  createSms,
 } from "../../controllers/team/emailController";
 
 const router = express.Router();
 
 router.route("/").get(getEmails).post(upload.any(), createEmail);
+router.route("/sms").get(getSms).post(upload.any(), createSms);
 router
   .route("/notifications")
   .get(getNotifications)
   .post(upload.any(), createNotification);
+
+router
+  .route("/sms/:id")
+  .get(getSmsById)
+  .patch(upload.any(), updateSms)
+  .delete(deleteSms);
 
 router
   .route("/notifications/:id")

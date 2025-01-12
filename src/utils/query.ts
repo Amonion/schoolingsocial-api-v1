@@ -186,8 +186,9 @@ export const updateItem = async <T extends Document>(
   if (!result) {
     return res.status(404).json({ message: messages[0] });
   }
-  deleteFilesFromS3(result, files);
-
+  if (req.files?.length || req.file) {
+    deleteFilesFromS3(result, files);
+  }
   const item = await queryData(model, req);
   const { page, page_size, count, results } = item;
   res.status(200).json({

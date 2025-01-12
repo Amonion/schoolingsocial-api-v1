@@ -125,3 +125,50 @@ export const updateNotification = async (req: Request, res: Response) => {
 export const deleteNotification = async (req: Request, res: Response) => {
   await deleteItem(req, res, Notification, [], "Notification not found");
 };
+
+//-----------------SMS--------------------//
+export const createSms = async (req: Request, res: Response): Promise<void> => {
+  createItem(req, res, Sms, "Sms was created successfully");
+};
+
+export const getSmsById = async (
+  req: Request,
+  res: Response
+): Promise<Response | void> => {
+  try {
+    const item = await Sms.findById(req.params.id);
+    if (!item) {
+      return res.status(404).json({ message: "Sms not found" });
+    }
+    res.status(200).json(item);
+  } catch (error) {
+    handleError(res, undefined, undefined, error);
+  }
+};
+
+export const getSms = async (req: Request, res: Response) => {
+  try {
+    const result = await queryData<ISms>(Sms, req);
+    res.status(200).json(result);
+  } catch (error) {
+    handleError(res, undefined, undefined, error);
+  }
+};
+
+export const updateSms = async (req: Request, res: Response) => {
+  try {
+    updateItem(
+      req,
+      res,
+      Sms,
+      [],
+      ["Sms not found", "Sms was updated successfully"]
+    );
+  } catch (error) {
+    handleError(res, undefined, undefined, error);
+  }
+};
+
+export const deleteSms = async (req: Request, res: Response) => {
+  await deleteItem(req, res, Sms, [], "Sms not found");
+};

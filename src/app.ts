@@ -9,6 +9,8 @@ import cors from "cors";
 import bodyParser from "body-parser";
 import dotenv from "dotenv";
 import { handleError } from "./utils/errorHandler";
+import competitionRoutes from "./routes/team/competitionRoutes";
+import companyRoutes from "./routes/team/companyRoutes";
 import messageRoutes from "./routes/team/messageRoutes";
 import placeRoutes from "./routes/team/placeRoutes";
 import schoolRoutes from "./routes/team/schoolRoutes";
@@ -50,6 +52,8 @@ app.use(
 );
 
 app.use(bodyParser.json());
+app.use("/api/v1/competitions", competitionRoutes);
+app.use("/api/v1/company", companyRoutes);
 app.use("/api/v1/messages", messageRoutes);
 app.use("/api/v1/places", placeRoutes);
 app.use("/api/v1/schools", schoolRoutes);
