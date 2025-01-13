@@ -200,6 +200,7 @@ export interface IPaper extends Document {
 export interface IPosition extends Document {
   level: number;
   position: string;
+  duties: string;
   region: string;
   salary: number;
   role: string;

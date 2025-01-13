@@ -5,6 +5,7 @@ const PositionSchema: Schema = new Schema(
   {
     role: { type: String },
     position: { type: String },
+    duties: { type: String },
     level: { type: Number },
     salary: { type: Number },
     createdAt: { type: Date, default: Date.now },
