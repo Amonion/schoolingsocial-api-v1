@@ -74,7 +74,7 @@ export interface IExam extends Document {
   country: string;
   subtitle: string;
   continent: string;
-  type: string;
+  types: string;
   randomize: boolean;
   simultaneous: boolean;
   showResult: boolean;

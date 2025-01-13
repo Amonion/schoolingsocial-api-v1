@@ -26,7 +26,7 @@ router
   .post(upload, createUser); // Create a new user
 
 router.route("/staffs").get(getStaffs);
-router.route("/staffs/:id").get(getStaffById).patch(updateStaff);
+router.route("/staffs/:id").get(getStaffById).patch(upload, updateStaff);
 
 router.route("/:id").get(getUserById).patch(updateUser).delete(deleteUser);
 

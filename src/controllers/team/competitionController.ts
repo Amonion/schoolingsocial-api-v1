@@ -207,7 +207,6 @@ export const createObjective = async (
   const questions = JSON.parse(req.body.questions);
   for (let i = 0; i < questions.length; i++) {
     const el = questions[i];
-    console.log(el.question);
     await Objective.updateOne(
       { index: el.index, paperId: el.paperId },
       {
