@@ -11,6 +11,24 @@ export interface IAcademicLevel extends Document {
   createdAt: Date;
 }
 
+export interface IAd extends Document {
+  category: string;
+  picture: string;
+  name: string;
+  description: string;
+  price: number;
+  duration: number;
+  postNumber: number;
+  continent: string;
+  country: string;
+  currency: string;
+  currencySymbol: string;
+  countrySymbol: string;
+  placeId: string;
+  isChecked?: boolean;
+  isActive?: boolean;
+}
+
 export interface ICompany extends Document {
   name: string;
   domain: string;

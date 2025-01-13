@@ -1,10 +1,64 @@
 import { Request, Response } from "express";
-import { Place } from "../../models/team/placeModel";
-import { IPlace } from "../../utils/teamInterface";
+import { Place, Ad } from "../../models/team/placeModel";
+import { IPlace, IAd } from "../../utils/teamInterface";
 import { handleError } from "../../utils/errorHandler";
-import { queryData, deleteItem, deleteItems } from "../../utils/query";
+import {
+  queryData,
+  deleteItem,
+  deleteItems,
+  createItem,
+  updateItem,
+} from "../../utils/query";
 import { uploadFilesToS3 } from "../../utils/fileUpload"; // Adjust path to where the function is defined
 
+//--------------------ADS-----------------------//
+export const createAd = async (req: Request, res: Response): Promise<void> => {
+  createItem(req, res, Ad, "Ads was created successfully");
+};
+
+export const getAdById = async (
+  req: Request,
+  res: Response
+): Promise<Response | void> => {
+  try {
+    const result = await Ad.findById(req.params.id);
+    if (!result) {
+      return res.status(404).json({ message: "Ad not found" });
+    }
+    res.status(200).json(result);
+  } catch (error) {
+    handleError(res, undefined, undefined, error);
+  }
+};
+
+export const getAds = async (req: Request, res: Response) => {
+  try {
+    const result = await queryData<IAd>(Ad, req);
+    res.status(200).json(result);
+  } catch (error) {
+    handleError(res, undefined, undefined, error);
+  }
+};
+
+export const updateAd = async (req: Request, res: Response) => {
+  try {
+    updateItem(
+      req,
+      res,
+      Ad,
+      ["picture"],
+      ["Ad not found", "Ad was updated successfully"]
+    );
+  } catch (error) {
+    handleError(res, undefined, undefined, error);
+  }
+};
+
+export const deleteAd = async (req: Request, res: Response) => {
+  await deleteItems(req, res, Place, ["countryFlag"], "Place not found");
+};
+
+//--------------------PLACE-----------------------//
 export const createPlace = async (
   req: Request,
   res: Response

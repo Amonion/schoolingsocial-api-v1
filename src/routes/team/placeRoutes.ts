@@ -32,15 +32,26 @@ import {
   deletePlace,
   createPlace,
   searchPlace,
+  getAdById,
+  getAds,
+  updateAd,
+  deleteAd,
+  createAd,
 } from "../../controllers/team/placeController";
 
 const router = express.Router();
 
 router.route("/").get(getPlaces).post(upload.any(), createPlace);
 router.route("/search").get(searchPlace);
-
 router.route("/payments").get(getPayments).post(upload.any(), createPayment);
+router.route("/ads").get(getAds).post(upload.any(), createAd);
 router.route("/documents").get(getDocuments).post(upload.any(), createDocument);
+
+router
+  .route("/ads/:id")
+  .get(getAdById)
+  .patch(upload.any(), updateAd)
+  .delete(deleteAd);
 
 router
   .route("/documents/:id")
