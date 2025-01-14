@@ -156,8 +156,6 @@ export const deletePlaces = async (req: Request, res: Response) => {
 
 export const searchPlace = async (req: Request, res: Response) => {
   try {
-    const field = req.query.field;
-
     const places = await Place.aggregate([
       {
         $group: {
@@ -165,7 +163,6 @@ export const searchPlace = async (req: Request, res: Response) => {
         },
       },
     ]);
-
     res.status(200).json({
       results: places,
     });
