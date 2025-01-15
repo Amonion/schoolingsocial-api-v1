@@ -118,6 +118,7 @@ export interface IFaculty extends Document {
   schoolId: string;
   school: string;
   name: string;
+  username: string;
   picture: string;
   media: string;
   description: string;

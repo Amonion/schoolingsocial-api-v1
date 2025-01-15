@@ -166,6 +166,36 @@ export const createItem = async <T extends Document>(
   }
 };
 
+export const getItemById = async <T extends Document>(
+  req: Request,
+  res: Response,
+  model: Model<T>,
+  message: string
+): Promise<Response | void> => {
+  try {
+    const item = await model.findById(req.params.id);
+    if (!item) {
+      return res.status(404).json({ message: message });
+    }
+    res.status(200).json(item);
+  } catch (error) {
+    handleError(res, undefined, undefined, error);
+  }
+};
+
+export const getItems = async <T extends Document>(
+  req: Request,
+  res: Response,
+  model: Model<T>
+): Promise<Response | void> => {
+  try {
+    const result = await queryData(model, req);
+    res.status(200).json(result);
+  } catch (error) {
+    handleError(res, undefined, undefined, error);
+  }
+};
+
 export const updateItem = async <T extends Document>(
   req: Request,
   res: Response,
@@ -173,31 +203,35 @@ export const updateItem = async <T extends Document>(
   files: string[],
   messages: string[]
 ) => {
-  if (req.files?.length || req.file) {
-    const uploadedFiles = await uploadFilesToS3(req);
-    uploadedFiles.forEach((file) => {
-      req.body[file.fieldName] = file.s3Url;
+  try {
+    if (req.files?.length || req.file) {
+      const uploadedFiles = await uploadFilesToS3(req);
+      uploadedFiles.forEach((file) => {
+        req.body[file.fieldName] = file.s3Url;
+      });
+    }
+    const result = await model.findByIdAndUpdate(req.params.id, req.body, {
+      new: true,
+      runValidators: true,
     });
+    if (!result) {
+      return res.status(404).json({ message: messages[0] });
+    }
+    if (req.files?.length || req.file) {
+      deleteFilesFromS3(result, files);
+    }
+    const item = await queryData(model, req);
+    const { page, page_size, count, results } = item;
+    res.status(200).json({
+      message: messages[1],
+      results,
+      count,
+      page,
+      page_size,
+    });
+  } catch (error) {
+    handleError(res, undefined, undefined, error);
   }
-  const result = await model.findByIdAndUpdate(req.params.id, req.body, {
-    new: true,
-    runValidators: true,
-  });
-  if (!result) {
-    return res.status(404).json({ message: messages[0] });
-  }
-  if (req.files?.length || req.file) {
-    deleteFilesFromS3(result, files);
-  }
-  const item = await queryData(model, req);
-  const { page, page_size, count, results } = item;
-  res.status(200).json({
-    message: messages[1],
-    results,
-    count,
-    page,
-    page_size,
-  });
 };
 
 export const deleteItem = async <T extends Document>(

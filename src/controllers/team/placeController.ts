@@ -1,6 +1,12 @@
 import { Request, Response } from "express";
+import { AcademicLevel } from "../../models/team/academicLevelModel";
+import { Document } from "../../models/team/documentModel";
 import { Place, Ad } from "../../models/team/placeModel";
+import { Payment } from "../../models/team/paymentModel";
+import { IPayment } from "../../utils/teamInterface";
 import { IPlace, IAd } from "../../utils/teamInterface";
+import { IAcademicLevel } from "../../utils/teamInterface";
+import { IDocument } from "../../utils/teamInterface";
 import { handleError } from "../../utils/errorHandler";
 import {
   queryData,
@@ -8,8 +14,43 @@ import {
   deleteItems,
   createItem,
   updateItem,
+  getItemById,
+  getItems,
 } from "../../utils/query";
-import { uploadFilesToS3 } from "../../utils/fileUpload"; // Adjust path to where the function is defined
+import { uploadFilesToS3 } from "../../utils/fileUpload";
+
+//--------------------PAYMENTS-----------------------//
+export const createPayment = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
+  createItem(req, res, Payment, "Payments was created successfully");
+};
+
+export const getPaymentById = async (
+  req: Request,
+  res: Response
+): Promise<Response | void> => {
+  getItemById(req, res, Payment, "Payment was not found");
+};
+
+export const getPayments = async (req: Request, res: Response) => {
+  getItems(req, res, Payment);
+};
+
+export const updatePayment = async (req: Request, res: Response) => {
+  updateItem(
+    req,
+    res,
+    Payment,
+    ["logo"],
+    ["Payment not found", "Payment was updated successfully"]
+  );
+};
+
+export const deletePayment = async (req: Request, res: Response) => {
+  await deleteItem(req, res, Payment, ["logo"], "Payment not found");
+};
 
 //--------------------ADS-----------------------//
 export const createAd = async (req: Request, res: Response): Promise<void> => {
@@ -56,6 +97,117 @@ export const updateAd = async (req: Request, res: Response) => {
 
 export const deleteAd = async (req: Request, res: Response) => {
   await deleteItems(req, res, Place, ["countryFlag"], "Place not found");
+};
+
+//-----------------ACADEMIC LEVEL--------------------//
+export const createAcademicLevel = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
+  createItem(
+    req,
+    res,
+    AcademicLevel,
+    "Academic Level was created successfully"
+  );
+};
+
+export const updateAcademicLevel = async (req: Request, res: Response) => {
+  try {
+    updateItem(
+      req,
+      res,
+      AcademicLevel,
+      ["logo"],
+      ["Academic Level not found", "Academic Level was updated successfully"]
+    );
+  } catch (error) {
+    handleError(res, undefined, undefined, error);
+  }
+};
+
+export const getAcademicLevelById = async (
+  req: Request,
+  res: Response
+): Promise<Response | void> => {
+  try {
+    const item = await AcademicLevel.findById(req.params.id);
+    if (!item) {
+      return res.status(404).json({ message: "AcademicLevel not found" });
+    }
+    res.status(200).json(item);
+  } catch (error) {
+    handleError(res, undefined, undefined, error);
+  }
+};
+
+export const getAcademicLevels = async (req: Request, res: Response) => {
+  try {
+    const result = await queryData<IAcademicLevel>(AcademicLevel, req);
+    res.status(200).json(result);
+  } catch (error) {
+    handleError(res, undefined, undefined, error);
+  }
+};
+
+export const deleteAcademicLevel = async (req: Request, res: Response) => {
+  await deleteItem(
+    req,
+    res,
+    AcademicLevel,
+    ["logo"],
+    "AcademicLevel not found"
+  );
+};
+
+//-----------------DOCUMENT--------------------//
+export const createDocument = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
+  createItem(req, res, Document, "Document was created successfully");
+};
+
+export const updateDocument = async (req: Request, res: Response) => {
+  try {
+    updateItem(
+      req,
+      res,
+      Document,
+      [],
+      ["Document  not found", "Document was updated successfully"]
+    );
+  } catch (error) {
+    handleError(res, undefined, undefined, error);
+  }
+};
+
+export const getDocuments = async (req: Request, res: Response) => {
+  try {
+    const result = await queryData<IDocument>(Document, req);
+    res.status(200).json(result);
+  } catch (error) {
+    handleError(res, undefined, undefined, error);
+  }
+};
+
+export const getDocumentById = async (
+  req: Request,
+  res: Response
+): Promise<Response | void> => {
+  try {
+    const item = await Document.findById(req.params.id);
+    if (!item) {
+      return res.status(404).json({ message: "Document not found" });
+    }
+    res.status(200).json(item);
+  } catch (error) {
+    handleError(res, undefined, undefined, error);
+  }
+};
+
+export const deleteDocument = async (req: Request, res: Response) => {
+  await deleteItem(req, res, Document, [], "Document not found");
 };
 
 //--------------------PLACE-----------------------//

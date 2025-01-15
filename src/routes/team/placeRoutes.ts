@@ -1,21 +1,6 @@
 import express from "express";
 import multer from "multer";
 const upload = multer();
-import {
-  getDocumentById,
-  getDocuments,
-  updateDocument,
-  deleteDocument,
-  createDocument,
-} from "../../controllers/team/academicLevelController";
-
-import {
-  getAcademicLevelById,
-  getAcademicLevels,
-  updateAcademicLevel,
-  deleteAcademicLevel,
-  createAcademicLevel,
-} from "../../controllers/team/academicLevelController";
 
 import {
   getPaymentById,
@@ -23,9 +8,16 @@ import {
   updatePayment,
   deletePayment,
   createPayment,
-} from "../../controllers/team/paymentController";
-
-import {
+  getDocumentById,
+  getDocuments,
+  updateDocument,
+  deleteDocument,
+  createDocument,
+  getAcademicLevelById,
+  getAcademicLevels,
+  updateAcademicLevel,
+  deleteAcademicLevel,
+  createAcademicLevel,
   getPlaceById,
   getPlaces,
   updatePlace,
@@ -44,8 +36,11 @@ const router = express.Router();
 router.route("/").get(getPlaces).post(upload.any(), createPlace);
 router.route("/search").get(searchPlace);
 router.route("/payments").get(getPayments).post(upload.any(), createPayment);
+router.route("/payments/mass-delete").post(upload.any(), createPayment);
 router.route("/ads").get(getAds).post(upload.any(), createAd);
+router.route("/ads/mass-delete").post(upload.any(), createAd);
 router.route("/documents").get(getDocuments).post(upload.any(), createDocument);
+router.route("/documents/mass-delete").post(upload.any(), createDocument);
 
 router
   .route("/ads/:id")
@@ -78,7 +73,7 @@ router
 
 router
   .route("/:id")
-  .get(getPlaceById) // Fetch a single user
+  .get(getPlaceById)
   .patch(upload.any(), updatePlace) // Update a user
   .delete(deletePlace);
 

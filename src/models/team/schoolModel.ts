@@ -92,6 +92,7 @@ const DepartmentSchema: Schema = new Schema(
     timestamps: true,
   }
 );
+
 export const Department = mongoose.model<IDepartment>(
   "Department",
   DepartmentSchema
