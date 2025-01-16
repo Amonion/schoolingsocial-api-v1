@@ -144,6 +144,33 @@ export interface ILeague extends Document {
   createdAt: Date;
 }
 
+export interface INews extends Document {
+  placeId: string;
+  title: string;
+  content: string;
+  author: string;
+  publishedAt: Date | null | string;
+  status: string;
+  state: string;
+  level: string;
+  country: string;
+  interests: number;
+  saves: number;
+  likes: number;
+  comments: number;
+  tags: string;
+  continent: string;
+  picture: string;
+  video: string;
+  videoUrl: string;
+  category: string;
+  subtitle: string;
+  source: string;
+  isFeatured: boolean;
+  seoTitle: string;
+  seoDescription: string;
+}
+
 export interface INotification extends Document {
   content: string;
   title: string;

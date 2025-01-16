@@ -3,7 +3,6 @@ import { AcademicLevel } from "../../models/team/academicLevelModel";
 import { Document } from "../../models/team/documentModel";
 import { Place, Ad } from "../../models/team/placeModel";
 import { Payment } from "../../models/team/paymentModel";
-import { IPayment } from "../../utils/teamInterface";
 import { IPlace, IAd } from "../../utils/teamInterface";
 import { IAcademicLevel } from "../../utils/teamInterface";
 import { IDocument } from "../../utils/teamInterface";
