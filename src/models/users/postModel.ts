@@ -3,7 +3,7 @@ import { IAccount, IUserInterest, IFollower } from "../../utils/userInterface";
 
 const AccountSchema: Schema = new Schema(
   {
-    display: { type: String },
+    displayName: { type: String },
     username: { type: String },
     picture: { type: String, default: "" },
     media: { type: String, default: null },

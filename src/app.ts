@@ -14,6 +14,7 @@ import companyRoutes from "./routes/team/companyRoutes";
 import messageRoutes from "./routes/team/messageRoutes";
 import newsRoutes from "./routes/team/newsRoutes";
 import placeRoutes from "./routes/team/placeRoutes";
+import postRoutes from "./routes/users/postRoutes";
 import schoolRoutes from "./routes/team/schoolRoutes";
 import userRoutes from "./routes/users/userRoutes";
 
@@ -58,6 +59,7 @@ app.use("/api/v1/company", companyRoutes);
 app.use("/api/v1/messages", messageRoutes);
 app.use("/api/v1/news", newsRoutes);
 app.use("/api/v1/places", placeRoutes);
+app.use("/api/v1/posts", postRoutes);
 app.use("/api/v1/schools", schoolRoutes);
 app.use("/api/v1/users", userRoutes);
 
