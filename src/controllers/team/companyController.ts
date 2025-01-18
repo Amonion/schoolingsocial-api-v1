@@ -1,7 +1,17 @@
 import { Request, Response } from "express";
 import { handleError } from "../../utils/errorHandler";
-import { Company, Expenses, Position } from "../../models/team/companyModel";
-import { ICompany, IExpenses, IPosition } from "../../utils/teamInterface";
+import {
+  Company,
+  Expenses,
+  Position,
+  Interest,
+} from "../../models/team/companyModel";
+import {
+  ICompany,
+  IExpenses,
+  IPosition,
+  IInterest,
+} from "../../utils/teamInterface";
 import { queryData, updateItem, createItem } from "../../utils/query";
 
 export const createCompany = async (
@@ -141,6 +151,34 @@ export const updatePosition = async (req: Request, res: Response) => {
   }
 };
 
-//-----------------DEPARTMENTS--------------------//
+//-----------------INTEREST--------------------//
+export const createInterest = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
+  createItem(req, res, Interest, "Interest was created successfully");
+};
 
+export const getInterests = async (req: Request, res: Response) => {
+  try {
+    const result = await queryData<IInterest>(Interest, req);
+    res.status(200).json(result);
+  } catch (error) {
+    handleError(res, undefined, undefined, error);
+  }
+};
+
+export const updateInterest = async (req: Request, res: Response) => {
+  try {
+    updateItem(
+      req,
+      res,
+      Interest,
+      ["receipt"],
+      ["Interest not found", "Interest was updated successfully"]
+    );
+  } catch (error) {
+    handleError(res, undefined, undefined, error);
+  }
+};
 //-----------------FACULTY--------------------//

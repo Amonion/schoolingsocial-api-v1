@@ -125,6 +125,11 @@ export interface IFaculty extends Document {
   createdAt: Date;
 }
 
+export interface IInterest extends Document {
+  name: string;
+  rank: number;
+}
+
 export interface ILeague extends Document {
   title: string;
   instruction: string;

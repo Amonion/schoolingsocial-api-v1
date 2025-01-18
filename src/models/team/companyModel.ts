@@ -1,5 +1,10 @@
 import mongoose, { Schema } from "mongoose";
-import { ICompany, IExpenses, IPosition } from "../../utils/teamInterface";
+import {
+  ICompany,
+  IExpenses,
+  IPosition,
+  IInterest,
+} from "../../utils/teamInterface";
 
 const PositionSchema: Schema = new Schema(
   {
@@ -44,3 +49,17 @@ const ExpensesSchema: Schema = new Schema(
   }
 );
 export const Expenses = mongoose.model<IExpenses>("Expenses", ExpensesSchema);
+
+const InterestSchema: Schema = new Schema(
+  {
+    name: { type: String, default: "" },
+    country: { type: String, default: "" },
+    rank: { type: Number, default: 0 },
+    createdAt: { type: Date, default: Date.now },
+  },
+  {
+    timestamps: true,
+  }
+);
+
+export const Interest = mongoose.model<IInterest>("Interest", InterestSchema);
