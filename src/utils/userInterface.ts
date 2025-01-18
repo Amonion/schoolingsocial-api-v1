@@ -1,3 +1,16 @@
+export interface IAccount extends Document {
+  username?: string;
+  description: string;
+  media: string;
+  picture: string;
+  followers: number;
+  posts: number;
+  following: number;
+  verification: number;
+  replies: number;
+  isVerified: boolean;
+}
+
 export interface IUser extends Document {
   username?: string;
   email: string;
@@ -30,4 +43,15 @@ export interface IUser extends Document {
   passwordResetToken?: string;
   password?: string;
   passwordExpiresAt?: Date;
+}
+
+export interface IUserInterest extends Document {
+  userId: string;
+  interests: string[];
+}
+
+export interface IFollower extends Document {
+  userId: string;
+  followersId: string[];
+  followingId: string[];
 }
