@@ -33,6 +33,7 @@ export interface ICompany extends Document {
   name: string;
   domain: string;
   email: string;
+  finalInstruction: string;
   phone: string;
   headqauters: string;
   createdAt: Date;

@@ -26,6 +26,7 @@ const CompanySchema: Schema = new Schema(
     name: { type: String },
     domain: { type: String },
     email: { type: String, default: "" },
+    finalInstruction: { type: String, default: "" },
     phone: { type: String, default: "" },
     headquaters: { type: String, default: "" },
     createdAt: { type: Date, default: Date.now },

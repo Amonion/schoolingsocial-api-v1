@@ -1,7 +1,8 @@
 import { Request, Response } from "express";
 import { Account, Follower } from "../../models/users/postModel";
-import { IAccount } from "../../utils/userInterface";
+import { uploadFilesToS3 } from "../../utils/fileUpload";
 import { handleError } from "../../utils/errorHandler";
+import { User } from "../../models/users/userModel";
 import {
   deleteItem,
   updateItem,
@@ -15,14 +16,37 @@ export const createAccount = async (
   res: Response
 ): Promise<void> => {
   try {
-    const { username, displayName, description, picture, followingsId } =
-      req.body;
+    const uploadedFiles = await uploadFilesToS3(req);
+    uploadedFiles.forEach((file) => {
+      req.body[file.fieldName] = file.s3Url;
+    });
+    const {
+      username,
+      displayName,
+      description,
+      picture,
+      followingsId,
+      interests,
+      userId,
+    } = req.body;
     const account = await Account.create({
       username,
       displayName,
       picture,
       description,
     });
+
+    const user = await User.findByIdAndUpdate(
+      userId,
+      {
+        picture: picture,
+        displayName: displayName,
+        isFirstTime: false,
+        username: username,
+        interests: interests,
+      },
+      { new: true }
+    );
 
     Follower.create({
       userId: account._id,
@@ -31,7 +55,7 @@ export const createAccount = async (
 
     res.status(201).json({
       message: "Account created successfully",
-      user: account,
+      user: user,
     });
   } catch (error: any) {
     handleError(res, undefined, undefined, error);
