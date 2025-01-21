@@ -53,6 +53,8 @@ export const createAccount = async (
       followingId: followingsId,
     });
 
+    console.log(user);
+
     res.status(201).json({
       message: "Account created successfully",
       user: user,
