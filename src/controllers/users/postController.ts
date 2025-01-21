@@ -48,7 +48,7 @@ export const createAccount = async (
       { new: true }
     );
 
-    Follower.create({
+    await Follower.create({
       userId: account._id,
       followingId: followingsId,
     });
