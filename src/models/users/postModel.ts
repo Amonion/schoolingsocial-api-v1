@@ -5,6 +5,7 @@ const AccountSchema: Schema = new Schema(
   {
     displayName: { type: String },
     username: { type: String },
+    userId: { type: String },
     picture: { type: String, default: "" },
     media: { type: String, default: null },
     description: { type: String, default: "" },

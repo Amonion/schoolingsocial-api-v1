@@ -1,5 +1,6 @@
 export interface IAccount extends Document {
   username: string;
+  userId: string;
   displayName: string;
   description: string;
   media: string;

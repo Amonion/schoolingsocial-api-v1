@@ -31,6 +31,7 @@ export const createAccount = async (
     } = req.body;
     const account = await Account.create({
       username,
+      userId,
       displayName,
       picture,
       description,
