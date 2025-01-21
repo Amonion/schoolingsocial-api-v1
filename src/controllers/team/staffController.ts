@@ -31,14 +31,13 @@ export const getStaffs = async (req: Request, res: Response) => {
 
 export const updateStaff = async (req: Request, res: Response) => {
   try {
-    if (req.body.isUser) {
-      const staff = await Staff.findById(req.params.id);
-      if (!staff) {
-        return res.status(404).json({ message: "Staff not found" });
-      }
-      const user = await User.findOne({ _id: staff.userId });
-      await User.findByIdAndUpdate(user?._id, req.body);
+    const staff = await Staff.findById(req.params.id);
+    if (!staff) {
+      return res.status(404).json({ message: "Staff not found" });
     }
+    const user = await User.findOne({ _id: staff.userId });
+    req.body.staffPositions = req.body.duties;
+    await User.findByIdAndUpdate(user?._id, req.body);
     updateItem(
       req,
       res,

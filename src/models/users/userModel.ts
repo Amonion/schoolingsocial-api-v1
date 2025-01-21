@@ -24,6 +24,7 @@ const UserSchema: Schema = new Schema(
     signupIp: { type: String, default: "" },
     interests: { type: Array, default: [] },
     userStatus: { type: String, default: "User" },
+    staffPositions: { type: String, default: "" },
     residentCountry: { type: String, default: "" },
     postVisibility: { type: String, default: "" },
     commentAbility: { type: String, default: "" },
