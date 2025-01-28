@@ -122,7 +122,7 @@ const ExamSchema: Schema = new Schema(
     simultaneous: { type: Boolean, default: false },
     types: { type: String, default: "" },
     name: { type: String, default: "" },
-    status: { type: String, default: "" },
+    status: { type: String, default: "Draft" },
     duration: { type: Number, default: 0 },
     questionsPerPage: { type: Number, default: 0 },
     optionsPerQuestion: { type: Number, default: 0 },

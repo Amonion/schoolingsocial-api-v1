@@ -220,8 +220,14 @@ export const createObjective = async (
       { upsert: true }
     );
   }
+
+  const result = await queryData(Objective, req);
+
   res.status(200).json({
     message: "The question was saved successfully",
+    count: result.count,
+    results: result.results,
+    page_size: result.page_size,
   });
 };
 
