@@ -7,6 +7,8 @@ import {
   updateUser,
   deleteUser,
   createUser,
+  updateUserInfo,
+  getUserInfoById,
 } from "../../controllers/users/userController";
 import {
   getStaffById,
@@ -26,7 +28,7 @@ router.route("/staffs").get(getStaffs);
 router.route("/staffs/:id").get(getStaffById).patch(upload, updateStaff);
 
 router.route("/info").get(getStaffs);
-router.route("/info/:id").get(getStaffById).patch(upload, updateStaff);
+router.route("/info/:id").get(getUserInfoById).post(upload, updateUserInfo);
 
 router.route("/:id").get(getUserById).patch(updateUser).delete(deleteUser);
 

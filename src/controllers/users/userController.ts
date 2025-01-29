@@ -102,7 +102,43 @@ export const updateUserInfo = async (
   req: Request,
   res: Response
 ): Promise<void> => {
-  await UserInfo.updateOne({ userId: req.body.userId }, req.body, {
-    upsert: true,
-  });
+  try {
+    const response = await UserInfo.updateOne(
+      { userId: req.params.id },
+      req.body,
+      {
+        new: true,
+        upsert: true,
+      }
+    );
+
+    const user = await User.findByIdAndUpdate(req.params.id, req.body, {
+      new: true,
+      runValidators: false,
+    });
+
+    console.log(user, req.params.id);
+
+    res.status(200).json({
+      user,
+      message: "your account is updated  successfully",
+    });
+  } catch (error) {
+    handleError(res, undefined, undefined, error);
+  }
+};
+
+export const getUserInfoById = async (
+  req: Request,
+  res: Response
+): Promise<Response | void> => {
+  try {
+    const user = await UserInfo.findOne({ userId: req.params.id });
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+    res.status(200).json(user);
+  } catch (error) {
+    handleError(res, undefined, undefined, error);
+  }
 };

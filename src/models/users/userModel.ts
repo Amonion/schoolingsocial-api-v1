@@ -38,6 +38,7 @@ const UserSchema: Schema = new Schema(
     isOrigin: { type: Boolean, default: false },
     isContact: { type: Boolean, default: false },
     isBio: { type: Boolean, default: false },
+    isRelated: { type: Boolean, default: false },
     isEducationDocument: { type: Boolean, default: false },
     isEducationHistory: { type: Boolean, default: false },
     isEducation: { type: Boolean, default: false },

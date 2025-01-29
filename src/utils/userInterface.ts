@@ -68,6 +68,7 @@ export interface IUserInfo extends Document {
   isOrigin: boolean;
   isContact: boolean;
   isBio: boolean;
+  isRelated: boolean;
   isEducationDocument: boolean;
   isEducationHistory: boolean;
   isEducation: boolean;
