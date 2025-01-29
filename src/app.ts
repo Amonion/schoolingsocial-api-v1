@@ -35,7 +35,7 @@ app.use(
     origin: (origin, callback) => {
       const allowedOrigins = [
         "https://schoolingsocial.netlify.app",
-        "https://schoolingsocials.netlify.app",
+        "https://schooling.up.railway.app",
         "https://schoolingsocial.com",
         "http://localhost:3000",
       ];

@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import { IUser } from "../../utils/userInterface";
 import { User } from "../../models/users/userModel";
+import { UserInfo } from "../../models/users/userInfoModel";
 import { Staff } from "../../models/team/staffModel";
 import { handleError } from "../../utils/errorHandler";
 import { queryData } from "../../utils/query";
@@ -94,4 +95,14 @@ export const deleteUser = async (req: Request, res: Response) => {
   } catch (error) {
     handleError(res, undefined, undefined, error);
   }
+};
+
+//-----------------INFO--------------------//
+export const updateUserInfo = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
+  await UserInfo.updateOne({ userId: req.body.userId }, req.body, {
+    upsert: true,
+  });
 };
