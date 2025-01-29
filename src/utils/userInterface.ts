@@ -48,22 +48,22 @@ export interface IUser extends Document {
 }
 
 export interface IUserInfo extends Document {
-  username?: string;
-  email: string;
+  userId: string;
+  firstName: string;
+  middleName: string;
+  lastName: string;
+  dob: string;
+  gender: string;
+  maritalStatus: string;
+  residentCountry: string;
+  residentState: string;
+  residentArea: string;
+  originCountry: string;
+  origintState: string;
+  origintArea: string;
   phone: string;
-  picture?: string;
-  role?: string;
-  signupIp?: string;
-  userStatus?: string;
-  residentCountry?: string;
-  postVisibility?: string;
-  commentAbility?: string;
-  residentState?: string;
-  originCountry?: string;
-  origintState?: string;
-  signupCountry?: string;
-  signupCountryFlag?: string;
-  level: number;
+  email: string;
+  passport: string;
   isDocument: boolean;
   isOrigin: boolean;
   isContact: boolean;

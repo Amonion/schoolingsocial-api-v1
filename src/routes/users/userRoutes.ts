@@ -20,13 +20,13 @@ const upload = multer({ storage }).none();
 router.route("/login").post(upload, loginUser);
 router.route("/auth/:id").get(getAuthUser);
 
-router
-  .route("/")
-  .get(getUsers) // Fetch all users
-  .post(upload, createUser); // Create a new user
+router.route("/").get(getUsers).post(upload, createUser);
 
 router.route("/staffs").get(getStaffs);
 router.route("/staffs/:id").get(getStaffById).patch(upload, updateStaff);
+
+router.route("/info").get(getStaffs);
+router.route("/info/:id").get(getStaffById).patch(upload, updateStaff);
 
 router.route("/:id").get(getUserById).patch(updateUser).delete(deleteUser);
 
