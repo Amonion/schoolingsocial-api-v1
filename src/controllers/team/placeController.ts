@@ -214,25 +214,7 @@ export const createPlace = async (
   req: Request,
   res: Response
 ): Promise<void> => {
-  try {
-    const body = await handleUpload(req, res);
-    if (!body) {
-      return;
-    } else {
-      await Place.create(body);
-      const result = await queryData<IPlace>(Place, req);
-      const { page, page_size, count, results } = result;
-      res.status(200).json({
-        message: "Place is created successfully",
-        results,
-        count,
-        page,
-        page_size,
-      });
-    }
-  } catch (error: any) {
-    handleError(res, undefined, undefined, error);
-  }
+  createItem(req, res, Place, "Country was created successfully");
 };
 
 export const getPlaceById = async (
@@ -261,28 +243,45 @@ export const getPlaces = async (req: Request, res: Response) => {
 
 export const updatePlace = async (req: Request, res: Response) => {
   try {
-    const body = await handleUpload(req, res);
-    if (!body) {
-      return;
-    } else {
-      const result = await Place.findByIdAndUpdate(req.params.id, body, {
-        new: true,
-        runValidators: true,
-      });
-      if (!result) {
-        return res.status(404).json({ message: "Place not found" });
-      }
-
-      const item = await queryData<IPlace>(Place, req);
-      const { page, page_size, count, results } = item;
-      res.status(200).json({
-        message: "Place was updated successfully",
-        results,
-        count,
-        page,
-        page_size,
+    if (req.files?.length || req.file) {
+      const uploadedFiles = await uploadFilesToS3(req);
+      uploadedFiles.forEach((file) => {
+        req.body[file.fieldName] = file.s3Url;
       });
     }
+
+    const place = await Place.findById(req.params.id);
+    const source = req.body.source;
+
+    if (source === "Country") {
+      if (place?.country === req.body.country) {
+        await Place.updateMany({ country: req.body.country }, req.body);
+      } else {
+        await Place.updateMany({ country: place?.country }, { $set: req.body });
+      }
+    } else if (source === "State") {
+      if (place?.state === req.body.state) {
+        await Place.updateMany({ state: req.body.state }, req.body);
+      } else {
+        await Place.updateMany({ state: place?.state }, { $set: req.body });
+      }
+    } else if (source === "Area") {
+      if (place?.area === req.body.area) {
+        await Place.updateMany({ area: req.body.area }, req.body);
+      } else {
+        await Place.updateMany({ area: place?.area }, { $set: req.body });
+      }
+    }
+
+    const item = await queryData<IPlace>(Place, req);
+    const { page, page_size, count, results } = item;
+    res.status(200).json({
+      message: "Place was updated successfully",
+      results,
+      count,
+      page,
+      page_size,
+    });
   } catch (error) {
     handleError(res, undefined, undefined, error);
   }
@@ -323,78 +322,145 @@ export const searchPlace = async (req: Request, res: Response) => {
   }
 };
 
-const handleUpload = async (req: Request, res: Response) => {
+export const searchPlaces = async (req: Request, res: Response) => {
   try {
-    if (!req.body.country) {
-      handleError(res, 400, `Error, no country submitted.`, "");
-      return null;
-    }
-    if (req.files?.length || req.file) {
-      const existingPlace = await Place.findOne({
-        country: req.body.country,
-        $and: [{ countryFlag: { $ne: null } }, { countryFlag: { $ne: "" } }],
-      });
+    const country = req.query.country;
+    const places = await Place.aggregate([
+      {
+        $match: {
+          country: { $regex: country, $options: "i" },
+        },
+      },
+      {
+        $group: {
+          _id: "$country",
+          countryFlag: { $first: "$countryFlag" },
+          continent: { $first: "$continent" },
+          countryCode: { $first: "$countryCode" },
+          currency: { $first: "$currency" },
+          currencySymbol: { $first: "$currencySymbol" },
+          countrySymbol: { $first: "$countrySymbol" },
+          id: { $first: "$_id" },
+        },
+      },
+      {
+        $project: {
+          _id: 0,
+          country: "$_id",
+          countryFlag: 1,
+          id: 1,
+        },
+      },
+      { $limit: 10 },
+    ]);
 
-      if (existingPlace) {
-        if (
-          !existingPlace.countryCode ||
-          !existingPlace.currency ||
-          !existingPlace.currencySymbol ||
-          !existingPlace.countrySymbol
-        ) {
-          handleError(
-            res,
-            400,
-            `Please edit ${existingPlace.country} and fill in all fields to continue.`,
-            ""
-          );
-          return null;
-        } else {
-          req.body.countryFlag = existingPlace.countryFlag;
-          return req.body;
-        }
-      } else {
-        const uploadedFiles = await uploadFilesToS3(req);
-        uploadedFiles.forEach((file) => {
-          req.body[file.fieldName] = file.s3Url;
-        });
-        return req.body;
-      }
-    } else {
-      const existingPlace = await Place.findOne({
-        country: req.body.country,
-        $and: [{ countryFlag: { $ne: null } }, { countryFlag: { $ne: "" } }],
-      });
-      if (existingPlace) {
-        if (
-          (!existingPlace.countryCode ||
-            !existingPlace.currency ||
-            !existingPlace.currencySymbol ||
-            !existingPlace.countrySymbol) &&
-          (!req.body.countryCode ||
-            !req.body.currency ||
-            !req.body.currencySymbol ||
-            !req.body.countrySymbol)
-        ) {
-          handleError(
-            res,
-            400,
-            `Please edit ${existingPlace.country} and fill in all fields to continue.`,
-            ""
-          );
-          return null;
-        } else {
-          req.body.countryFlag = existingPlace.countryFlag;
-          return req.body;
-        }
-      } else {
-        console.log(`Dont Exist`);
-        handleError(res, 400, `Error, please submit all necessary fields.`, "");
-        return null;
-      }
-    }
+    res.status(200).json({
+      results: places,
+    });
   } catch (error) {
-    handleError(res, undefined, undefined, error);
-    return null;
+    console.error("Error fetching unique places:", error);
+    throw error;
+  }
+};
+
+export const getUniquePlaces = async (req: Request, res: Response) => {
+  try {
+    const field = String(req.query.field);
+    const limit = parseInt(req.query.page_size as string) || 10;
+
+    const page = parseInt(req.query.page as string) || 1;
+    const sortBy = (req.query.sort as string) || "country";
+    const order = (req.query.order as string) === "asc" ? -1 : 1;
+
+    const skipValue = (page - 1) * limit;
+
+    const country = req.query.country;
+    const state = req.query.state;
+    const area = req.query.area;
+
+    const filters: Record<string, any> = {};
+
+    if (country) {
+      filters.country = { $regex: country, $options: "i" };
+    }
+    if (state) {
+      filters.state = { $regex: state, $options: "i" };
+    }
+    if (area) {
+      filters.area = { $regex: area, $options: "i" };
+    }
+
+    const matchStage =
+      Object.keys(filters).length > 0 ? { $match: filters } : null;
+
+    const aggregationPipeline: any[] = [];
+    if (matchStage) aggregationPipeline.push(matchStage);
+
+    aggregationPipeline.push(
+      {
+        $group: {
+          _id: `$${field}`,
+          countryFlag: { $first: "$countryFlag" },
+          continent: { $first: "$continent" },
+          country: { $first: "$country" },
+          countryCode: { $first: "$countryCode" },
+          currency: { $first: "$currency" },
+          currencySymbol: { $first: "$currencySymbol" },
+          countrySymbol: { $first: "$countrySymbol" },
+          state: { $first: "$state" },
+          stateCapital: { $first: "$stateCapital" },
+          stateLogo: { $first: "$stateLogo" },
+          area: { $first: "$area" },
+          zipCode: { $first: "$zipCode" },
+          id: { $first: "$_id" },
+        },
+      },
+      {
+        $project: {
+          _id: 0,
+          [field]: "$_id",
+          countryFlag: 1,
+          continent: 1,
+          countryCode: 1,
+          country: 1,
+          currency: 1,
+          currencySymbol: 1,
+          countrySymbol: 1,
+          state: 1,
+          stateCapital: 1,
+          stateLogo: 1,
+          area: 1,
+          zipCode: 1,
+          id: 1,
+        },
+      },
+      { $sort: { [sortBy]: order } },
+      { $skip: skipValue },
+      { $limit: limit }
+    );
+
+    const countPipeline = [...aggregationPipeline].filter(
+      (stage) => !("$limit" in stage || "$skip" in stage)
+    );
+
+    countPipeline.push({ $count: "totalCount" });
+    const [places, totalCountResult] = await Promise.all([
+      Place.aggregate(aggregationPipeline),
+      Place.aggregate(countPipeline),
+    ]);
+
+    const totalCount = totalCountResult.length
+      ? totalCountResult[0].totalCount
+      : 0;
+
+    res.status(200).json({
+      message: "Places fetched successfully",
+      results: places,
+      count: totalCount,
+      page_size: limit,
+    });
+  } catch (error) {
+    console.error("Error fetching unique places:", error);
+    throw error;
   }
 };

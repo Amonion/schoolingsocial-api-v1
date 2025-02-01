@@ -223,6 +223,8 @@ export interface IPlace extends Document {
   zipCode: string;
   countryCode: string;
   countryFlag: string;
+  stateCapital: string;
+  stateLogo: string;
   countrySymbol: string;
   currency: string;
   currencySymbol: string;

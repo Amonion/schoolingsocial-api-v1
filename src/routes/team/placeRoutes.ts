@@ -24,6 +24,8 @@ import {
   deletePlace,
   createPlace,
   searchPlace,
+  searchPlaces,
+  getUniquePlaces,
   getAdById,
   getAds,
   updateAd,
@@ -35,6 +37,10 @@ const router = express.Router();
 
 router.route("/").get(getPlaces).post(upload.any(), createPlace);
 router.route("/search").get(searchPlace);
+router.route("/find").get(searchPlaces);
+router.route("/countries").get(getUniquePlaces);
+router.route("/state").get(getUniquePlaces);
+router.route("/area").get(getUniquePlaces);
 router.route("/payments").get(getPayments).post(upload.any(), createPayment);
 router.route("/payments/mass-delete").post(upload.any(), createPayment);
 router.route("/ads").get(getAds).post(upload.any(), createAd);
@@ -74,7 +80,7 @@ router
 router
   .route("/:id")
   .get(getPlaceById)
-  .patch(upload.any(), updatePlace) // Update a user
+  .patch(upload.any(), updatePlace)
   .delete(deletePlace);
 
 export default router;

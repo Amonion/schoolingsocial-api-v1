@@ -12,6 +12,7 @@ const AcademicLevelSchema: Schema = new Schema(
     placeId: { type: String, default: "" },
     countryFlag: { type: String, default: "" },
     description: { type: String, default: "" },
+    inSchool: { type: Boolean, default: false },
     createdAt: { type: Date, default: Date.now },
   },
   {
