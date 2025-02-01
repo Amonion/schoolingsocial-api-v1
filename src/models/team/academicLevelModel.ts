@@ -7,6 +7,7 @@ const AcademicLevelSchema: Schema = new Schema(
     certificateName: { type: String, default: "" },
     level: { type: Number, default: 0 },
     maxLevel: { type: Number, default: 0 },
+    maxLevelName: { type: String, default: "" },
     levelName: { type: String, default: "" },
     country: { type: String, default: "" },
     placeId: { type: String, default: "" },

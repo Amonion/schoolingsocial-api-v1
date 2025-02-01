@@ -25,6 +25,17 @@ const UserInfoSchema: Schema = new Schema(
     address: { type: String, default: "" },
     placeId: { type: String, default: "" },
 
+    currentSchoolContinent: { type: String, default: "" },
+    currentSchoolCountry: { type: String, default: "" },
+    currentSchoolState: { type: String, default: "" },
+    currentSchoolArea: { type: String, default: "" },
+    currentSchool: { type: String, default: "" },
+    currentSchoolId: { type: String, default: "" },
+    currentAcademicLevel: { type: String, default: "" },
+    currentAcademicLevelName: { type: String, default: "" },
+    currentSchoolLevel: { type: String, default: "" },
+    currentSchoolPlaceId: { type: String, default: "" },
+
     motherName: { type: String, default: "" },
     occupation: { type: String, default: "" },
     nextKin: { type: String, default: "" },

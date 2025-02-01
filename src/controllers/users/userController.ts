@@ -103,21 +103,15 @@ export const updateUserInfo = async (
   res: Response
 ): Promise<void> => {
   try {
-    const response = await UserInfo.updateOne(
-      { userId: req.params.id },
-      req.body,
-      {
-        new: true,
-        upsert: true,
-      }
-    );
+    await UserInfo.updateOne({ userId: req.params.id }, req.body, {
+      new: true,
+      upsert: true,
+    });
 
     const user = await User.findByIdAndUpdate(req.params.id, req.body, {
       new: true,
       runValidators: false,
     });
-
-    console.log(user, req.params.id);
 
     res.status(200).json({
       user,
