@@ -29,7 +29,7 @@ const UserInfoSchema: Schema = new Schema(
     currentSchoolCountry: { type: String, default: "" },
     currentSchoolState: { type: String, default: "" },
     currentSchoolArea: { type: String, default: "" },
-    currentSchool: { type: String, default: "" },
+    currentSchoolName: { type: String, default: "" },
     currentSchoolId: { type: String, default: "" },
     currentAcademicLevel: { type: String, default: "" },
     currentAcademicLevelName: { type: String, default: "" },
