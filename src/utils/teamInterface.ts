@@ -29,6 +29,18 @@ export interface IAd extends Document {
   isActive?: boolean;
 }
 
+export interface IBank extends Document {
+  category: string;
+  picture: string;
+  name: string;
+  description: string;
+  username: string;
+  continent: string;
+  country: string;
+  countryFlag: string;
+  placeId: string;
+}
+
 export interface ICompany extends Document {
   name: string;
   domain: string;

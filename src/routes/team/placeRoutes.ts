@@ -13,6 +13,11 @@ import {
   updateDocument,
   deleteDocument,
   createDocument,
+  getBankById,
+  getBanks,
+  updateBank,
+  deleteBank,
+  createBank,
   getAcademicLevelById,
   getAcademicLevels,
   updateAcademicLevel,
@@ -45,6 +50,7 @@ router.route("/payments").get(getPayments).post(upload.any(), createPayment);
 router.route("/payments/mass-delete").post(upload.any(), createPayment);
 router.route("/ads").get(getAds).post(upload.any(), createAd);
 router.route("/ads/mass-delete").post(upload.any(), createAd);
+router.route("/banks").get(getBanks).post(upload.any(), createBank);
 router.route("/documents").get(getDocuments).post(upload.any(), createDocument);
 router.route("/documents/mass-delete").post(upload.any(), createDocument);
 
@@ -53,6 +59,12 @@ router
   .get(getAdById)
   .patch(upload.any(), updateAd)
   .delete(deleteAd);
+
+router
+  .route("/banks/:id")
+  .get(getBankById)
+  .patch(upload.any(), updateBank)
+  .delete(deleteBank);
 
 router
   .route("/documents/:id")
