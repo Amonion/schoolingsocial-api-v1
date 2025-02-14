@@ -5,6 +5,7 @@ import { UserInfo } from "../../models/users/userInfoModel";
 import { Staff } from "../../models/team/staffModel";
 import { handleError } from "../../utils/errorHandler";
 import { queryData } from "../../utils/query";
+import { uploadFilesToS3 } from "../../utils/fileUpload";
 import bcrypt from "bcryptjs";
 
 export const createUser = async (
@@ -103,6 +104,21 @@ export const updateUserInfo = async (
   res: Response
 ): Promise<void> => {
   try {
+    if (req.body.isEducationHistory) {
+      req.body.pastSchool = JSON.parse(req.body.pastSchools);
+    }
+
+    if (req.body.isEducationDocument) {
+      const pastSchools = JSON.parse(req.body.pastSchools);
+      const uploadedFiles = await uploadFilesToS3(req);
+      uploadedFiles.forEach((file) => {
+        req.body[file.fieldName] = file.s3Url;
+      });
+      pastSchools[req.body.number].schoolCertificate = req.body.certificate;
+      pastSchools[req.body.number].schoolTempCertificate = undefined;
+      req.body.pastSchool = pastSchools;
+      req.body.pastSchools = JSON.stringify(pastSchools);
+    }
     await UserInfo.updateOne({ userId: req.params.id }, req.body, {
       new: true,
       upsert: true,
@@ -115,6 +131,7 @@ export const updateUserInfo = async (
 
     res.status(200).json({
       user,
+      results: req.body.pastSchool,
       message: "your account is updated  successfully",
     });
   } catch (error) {

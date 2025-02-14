@@ -36,6 +36,9 @@ const UserInfoSchema: Schema = new Schema(
     currentSchoolLevel: { type: String, default: "" },
     currentSchoolPlaceId: { type: String, default: "" },
 
+    pastSchools: { type: String, default: "" },
+    pastSchool: { type: Array, default: [] },
+
     motherName: { type: String, default: "" },
     occupation: { type: String, default: "" },
     nextKin: { type: String, default: "" },

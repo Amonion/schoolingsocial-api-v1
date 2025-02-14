@@ -58,7 +58,7 @@ export async function uploadFilesToS3(
   return Promise.all(uploadPromises);
 }
 
-async function uploadToS3(
+export async function uploadToS3(
   file: Express.Multer.File,
   bucketName: string,
   fieldName: string
