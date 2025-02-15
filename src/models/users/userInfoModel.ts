@@ -39,6 +39,13 @@ const UserInfoSchema: Schema = new Schema(
     pastSchools: { type: String, default: "" },
     pastSchool: { type: Array, default: [] },
 
+    accountName: { type: String, default: "" },
+    accountNumber: { type: String, default: "" },
+    bankName: { type: String, default: "" },
+    bankId: { type: String, default: "" },
+    bankUsername: { type: String, default: "" },
+    bankLogo: { type: String, default: "" },
+
     motherName: { type: String, default: "" },
     occupation: { type: String, default: "" },
     nextKin: { type: String, default: "" },

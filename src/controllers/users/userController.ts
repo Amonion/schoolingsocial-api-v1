@@ -119,6 +119,7 @@ export const updateUserInfo = async (
       req.body.pastSchool = pastSchools;
       req.body.pastSchools = JSON.stringify(pastSchools);
     }
+
     await UserInfo.updateOne({ userId: req.params.id }, req.body, {
       new: true,
       upsert: true,
