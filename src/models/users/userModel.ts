@@ -31,6 +31,8 @@ const UserSchema: Schema = new Schema(
     residentState: { type: String, default: "" },
     originCountry: { type: String, default: "" },
     origintState: { type: String, default: "" },
+    notifications: { type: String, default: "" },
+    socials: { type: String, default: "" },
     signupCountry: { type: String, default: "" },
     signupCountryFlag: { type: String, default: "" },
     level: { type: Number, default: 1 },
