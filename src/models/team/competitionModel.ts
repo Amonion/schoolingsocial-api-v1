@@ -120,7 +120,7 @@ const ExamSchema: Schema = new Schema(
     randomize: { type: Boolean, default: false },
     showResult: { type: Boolean, default: false },
     simultaneous: { type: Boolean, default: false },
-    types: { type: String, default: "" },
+    types: { type: Array, default: "" },
     name: { type: String, default: "" },
     status: { type: String, default: "Draft" },
     duration: { type: Number, default: 0 },

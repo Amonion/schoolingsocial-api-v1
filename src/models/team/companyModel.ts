@@ -13,6 +13,7 @@ const PositionSchema: Schema = new Schema(
     duties: { type: String },
     level: { type: Number },
     salary: { type: Number },
+    allowSignup: { type: Boolean },
     createdAt: { type: Date, default: Date.now },
   },
   {

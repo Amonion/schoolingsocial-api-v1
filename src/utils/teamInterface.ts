@@ -47,6 +47,7 @@ export interface ICompany extends Document {
   email: string;
   finalInstruction: string;
   phone: string;
+  allowSignup: boolean;
   headqauters: string;
   createdAt: Date;
 }
