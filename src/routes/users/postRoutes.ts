@@ -10,9 +10,24 @@ import {
   createAccount,
 } from "../../controllers/users/postController";
 
+import {
+  getUploadById,
+  getUploads,
+  updateUpload,
+  deleteUpload,
+  createUpload,
+} from "../../controllers/users/uploadController";
+
 const router = express.Router();
 
+router.route("/uploads").get(getUploads).post(upload.any(), createUpload);
 router.route("/accounts").get(getAccounts).post(upload.any(), createAccount);
+router
+  .route("/uploads/:id")
+  .get(getUploadById)
+  .patch(upload.any(), updateUpload)
+  .delete(deleteUpload);
+
 router
   .route("/accounts/:id")
   .get(getAccountById)

@@ -13,6 +13,16 @@ export interface IAccount extends Document {
   isVerified: boolean;
 }
 
+export interface IUpload extends Document {
+  username: string;
+  mediaName: string;
+  media: string;
+  userStatus: string;
+  staffPosition: string;
+  userId: string;
+  createdAt: Date;
+}
+
 export interface IUser extends Document {
   username?: string;
   email: string;
