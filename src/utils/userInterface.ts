@@ -13,6 +13,27 @@ export interface IAccount extends Document {
   isVerified: boolean;
 }
 
+interface Media {
+  source: string;
+  type: string;
+}
+
+export interface IPost extends Document {
+  username: string;
+  userId: string;
+  displayName: string;
+  content: string;
+  media: Media[];
+  picture: string;
+  country: string;
+  isVerified: boolean;
+  shares: number;
+  replies: number;
+  views: number;
+  likes: number;
+  repost: number;
+}
+
 export interface IUpload extends Document {
   username: string;
   mediaName: string;

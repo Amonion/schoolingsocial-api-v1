@@ -8,6 +8,11 @@ import {
   updateAccount,
   deleteAccount,
   createAccount,
+  getPosts,
+  createPost,
+  getPostById,
+  deletePost,
+  updatePost,
 } from "../../controllers/users/postController";
 
 import {
@@ -22,6 +27,7 @@ const router = express.Router();
 
 router.route("/uploads").get(getUploads).post(upload.any(), createUpload);
 router.route("/accounts").get(getAccounts).post(upload.any(), createAccount);
+router.route("/").get(getPosts).post(upload.any(), createPost);
 router
   .route("/uploads/:id")
   .get(getUploadById)
@@ -33,5 +39,11 @@ router
   .get(getAccountById)
   .patch(upload.any(), updateAccount)
   .delete(deleteAccount);
+
+router
+  .route("/:id")
+  .get(getPostById)
+  .patch(upload.any(), updatePost)
+  .delete(deletePost);
 
 export default router;
