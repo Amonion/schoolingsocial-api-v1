@@ -45,8 +45,10 @@ export interface IUpload extends Document {
 }
 
 export interface IUser extends Document {
+  _id?: string;
   username?: string;
   email: string;
+  displayName: string;
   phone: string;
   picture?: string;
   role?: string;
@@ -65,6 +67,7 @@ export interface IUser extends Document {
   isOrigin: boolean;
   isContact: boolean;
   isBio: boolean;
+  isVerified: boolean;
   isEducationDocument: boolean;
   isEducationHistory: boolean;
   isEducation: boolean;
@@ -122,4 +125,19 @@ export interface IFollower extends Document {
   userId: string;
   followersId: string[];
   followingId: string[];
+}
+
+interface File {
+  name: string;
+  data: string;
+  type: string;
+}
+
+export interface Socket {
+  sender: IUser;
+  to: string;
+  content: string;
+  createdAt: Date;
+  media: File[];
+  types: string[];
 }

@@ -17,6 +17,13 @@ export const createUpload = async (
   createItem(req, res, Upload, "Uploads was created successfully");
 };
 
+export const createUploadVideo = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
+  createItem(req, res, Upload, "Uploads was created successfully");
+};
+
 export const getUploadById = async (
   req: Request,
   res: Response

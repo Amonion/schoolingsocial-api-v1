@@ -4,6 +4,7 @@ import { uploadFilesToS3 } from "../../utils/fileUpload";
 import { handleError } from "../../utils/errorHandler";
 import { User } from "../../models/users/userModel";
 import { updateItem, getItemById, getItems } from "../../utils/query";
+import { Socket } from "../../utils/userInterface";
 
 export const createAccount = async (
   req: Request,
@@ -93,37 +94,28 @@ export const deleteAccount = async (req: Request, res: Response) => {
 };
 
 /////////////////////////////// POST /////////////////////////////////
-export const createPost = async (
-  req: Request,
-  res: Response
-): Promise<void> => {
+
+export const createPost = async (data: Socket) => {
   try {
-    const uploadedFiles = await uploadFilesToS3(req);
+    const sender = data.sender;
+    const form = {
+      picture: sender.picture,
+      username: sender.username,
+      displayName: sender.displayName,
+      userId: sender._id,
+      content: data.content,
+      createdAt: data.createdAt,
+      media: data.media,
+      isVerified: sender.isVerified,
+    };
 
-    const media = [];
-
-    // console.log(req.body, uploadedFiles);
-
-    for (let i = 0; i < uploadedFiles.length; i++) {
-      const el = uploadedFiles[i];
-      media.push({
-        source: el.s3Url,
-        type: req.body.type[i],
-      });
-    }
-
-    req.body.media = media;
-
-    console.log(req.body);
-
-    const post = await Post.create(req.body);
-
-    res.status(201).json({
+    const post = await Post.create(form);
+    return {
       message: "Your post was created successfully",
       data: post,
-    });
-  } catch (error: any) {
-    handleError(res, undefined, undefined, error);
+    };
+  } catch (error) {
+    console.log(error);
   }
 };
 
