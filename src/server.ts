@@ -1,5 +1,5 @@
 import dotenv from "dotenv";
-import { app, server } from "./app"; // ✅ Import `server` instead of `app`
+import { server } from "./app"; // ✅ Import `server` instead of `app`
 import connectDB from "./database/connection";
 
 dotenv.config();

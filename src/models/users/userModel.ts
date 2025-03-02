@@ -18,6 +18,7 @@ const UserSchema: Schema = new Schema(
       match: [/^\d{10,15}$/, "Phone number must be between 10 and 15 digits"],
       unique: [true, "A user with this phone number already exists"],
     },
+    media: { type: String, default: "" },
     picture: { type: String, default: "" },
     displayName: { type: String, default: "" },
     role: { type: String, default: null },

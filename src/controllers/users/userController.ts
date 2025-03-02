@@ -57,6 +57,10 @@ export const getUsers = async (req: Request, res: Response) => {
 
 export const updateUser = async (req: Request, res: Response) => {
   try {
+    const uploadedFiles = await uploadFilesToS3(req);
+    uploadedFiles.forEach((file) => {
+      req.body[file.fieldName] = file.s3Url;
+    });
     const user = await User.findByIdAndUpdate(req.params.id, req.body, {
       new: true,
       runValidators: true,

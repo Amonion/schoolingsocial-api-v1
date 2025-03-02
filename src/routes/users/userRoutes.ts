@@ -36,6 +36,10 @@ router
   .get(getUserInfoById)
   .post(upload.any(), updateUserInfo);
 
-router.route("/:id").get(getUserById).patch(updateUser).delete(deleteUser);
+router
+  .route("/:id")
+  .get(getUserById)
+  .patch(upload.any(), updateUser)
+  .delete(deleteUser);
 
 export default router;
