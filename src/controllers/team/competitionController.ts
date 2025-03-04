@@ -207,18 +207,32 @@ export const createObjective = async (
   const questions = JSON.parse(req.body.questions);
   for (let i = 0; i < questions.length; i++) {
     const el = questions[i];
-    await Objective.updateOne(
-      { index: el.index, paperId: el.paperId },
-      {
-        $set: {
-          question: el.question,
-          options: el.options,
-          index: el.index,
-          paperId: el.paperId,
+    if (el._id) {
+      await Objective.updateOne(
+        { _id: el._id },
+        {
+          $set: {
+            question: el.question,
+            options: el.options,
+            index: el.index,
+            paperId: el.paperId,
+          },
         },
-      },
-      { upsert: true }
-    );
+        { upsert: true }
+      );
+    } else {
+      await Objective.updateOne(
+        { index: el.index, paperId: el.paperId },
+        {
+          $set: {
+            question: el.question,
+            options: el.options,
+            paperId: el.paperId,
+          },
+        },
+        { upsert: true }
+      );
+    }
   }
 
   const result = await queryData(Objective, req);
