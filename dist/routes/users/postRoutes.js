@@ -1,0 +1,30 @@
+"use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+const express_1 = __importDefault(require("express"));
+const multer_1 = __importDefault(require("multer"));
+const upload = (0, multer_1.default)();
+const postController_1 = require("../../controllers/users/postController");
+const uploadController_1 = require("../../controllers/users/uploadController");
+const router = express_1.default.Router();
+router.route("/uploads").get(uploadController_1.getUploads).post(upload.any(), uploadController_1.createUpload);
+router.route("/accounts").get(postController_1.getAccounts).post(upload.any(), postController_1.createAccount);
+router.route("/").get(postController_1.getPosts).post(upload.any(), postController_1.createPost);
+router
+    .route("/uploads/:id")
+    .get(uploadController_1.getUploadById)
+    .patch(upload.any(), uploadController_1.updateUpload)
+    .delete(uploadController_1.deleteUpload);
+router
+    .route("/accounts/:id")
+    .get(postController_1.getAccountById)
+    .patch(upload.any(), postController_1.updateAccount)
+    .delete(postController_1.deleteAccount);
+router
+    .route("/:id")
+    .get(postController_1.getPostById)
+    .patch(upload.any(), postController_1.updatePost)
+    .delete(postController_1.deletePost);
+exports.default = router;
