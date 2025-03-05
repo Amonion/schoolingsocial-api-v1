@@ -21,6 +21,7 @@ const UserSchema: Schema = new Schema(
     media: { type: String, default: "" },
     picture: { type: String, default: "" },
     displayName: { type: String, default: "" },
+    intro: { type: String, default: "" },
     role: { type: String, default: null },
     signupIp: { type: String, default: "" },
     interests: { type: Array, default: [] },

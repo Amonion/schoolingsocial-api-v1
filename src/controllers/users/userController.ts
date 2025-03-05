@@ -7,6 +7,7 @@ import { handleError } from "../../utils/errorHandler";
 import { queryData } from "../../utils/query";
 import { uploadFilesToS3 } from "../../utils/fileUpload";
 import bcrypt from "bcryptjs";
+import { Post } from "../../models/users/postModel";
 
 export const createUser = async (
   req: Request,
@@ -61,6 +62,7 @@ export const updateUser = async (req: Request, res: Response) => {
     uploadedFiles.forEach((file) => {
       req.body[file.fieldName] = file.s3Url;
     });
+
     const user = await User.findByIdAndUpdate(req.params.id, req.body, {
       new: true,
       runValidators: true,
@@ -69,7 +71,14 @@ export const updateUser = async (req: Request, res: Response) => {
       return res.status(404).json({ message: "User not found" });
     }
 
-    if (req.body.one) {
+    if (req.body.picture) {
+      await Post.updateMany(
+        { userId: req.params.id },
+        { picture: req.body.picture }
+      );
+    }
+
+    if (req.body.media || req.body.picture || req.body.intro) {
       res.status(200).json({
         message: "Your profile was updated successfully",
         data: user,

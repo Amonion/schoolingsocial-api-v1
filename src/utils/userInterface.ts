@@ -58,6 +58,7 @@ export interface IUser extends Document {
   username?: string;
   email: string;
   displayName: string;
+  intro: string;
   phone: string;
   picture?: string;
   role?: string;

@@ -20,6 +20,7 @@ const errorHandler_1 = require("../../utils/errorHandler");
 const query_1 = require("../../utils/query");
 const fileUpload_1 = require("../../utils/fileUpload");
 const bcryptjs_1 = __importDefault(require("bcryptjs"));
+const postModel_1 = require("../../models/users/postModel");
 const createUser = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const { email, phone, signupIp, password } = req.body;
@@ -76,7 +77,10 @@ const updateUser = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
         if (!user) {
             return res.status(404).json({ message: "User not found" });
         }
-        if (req.body.one) {
+        if (req.body.picture) {
+            yield postModel_1.Post.updateMany({ userId: req.params.id }, { picture: req.body.picture });
+        }
+        if (req.body.media || req.body.picture || req.body.intro) {
             res.status(200).json({
                 message: "Your profile was updated successfully",
                 data: user,
