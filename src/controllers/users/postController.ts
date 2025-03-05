@@ -105,16 +105,15 @@ export const createPost = async (data: IPost) => {
       displayName: sender.displayName,
       userId: sender._id,
       postId: data.postId,
+      postType: data.postType,
       content: data.content,
       createdAt: data.createdAt,
       media: data.media,
       isVerified: sender.isVerified,
     };
 
-    const post =
-      data.postType === "main"
-        ? await Post.create(form)
-        : await Comment.create(form);
+    const post = await Post.create(form);
+
     return {
       message: "Your post was created successfully",
       data: post,

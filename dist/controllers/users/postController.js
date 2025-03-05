@@ -9,7 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.deletePost = exports.updatePost = exports.getPosts = exports.getPostById = exports.createPost = exports.deleteAccount = exports.updateAccount = exports.getAccounts = exports.getAccountById = exports.createAccount = void 0;
+exports.deletePost = exports.updatePost = exports.getComments = exports.getPosts = exports.getPostById = exports.createPost = exports.deleteAccount = exports.updateAccount = exports.getAccounts = exports.getAccountById = exports.createAccount = void 0;
 const postModel_1 = require("../../models/users/postModel");
 const fileUpload_1 = require("../../utils/fileUpload");
 const errorHandler_1 = require("../../utils/errorHandler");
@@ -80,11 +80,14 @@ exports.deleteAccount = deleteAccount;
 const createPost = (data) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const sender = data.sender;
+        // const postType = data.type;
         const form = {
             picture: sender.picture,
             username: sender.username,
             displayName: sender.displayName,
             userId: sender._id,
+            postId: data.postId,
+            postType: data.postType,
             content: data.content,
             createdAt: data.createdAt,
             media: data.media,
@@ -109,6 +112,10 @@ const getPosts = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     (0, query_1.getItems)(req, res, postModel_1.Post);
 });
 exports.getPosts = getPosts;
+const getComments = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    (0, query_1.getItems)(req, res, postModel_1.Comment);
+});
+exports.getComments = getComments;
 const updatePost = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const uploadedFiles = yield (0, fileUpload_1.uploadFilesToS3)(req);

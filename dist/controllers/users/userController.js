@@ -76,24 +76,32 @@ const updateUser = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
         if (!user) {
             return res.status(404).json({ message: "User not found" });
         }
-        if (req.body.isStaff) {
-            const staff = yield staffModel_1.Staff.findOne({ userId: req.params.id });
-            if (staff) {
-                yield staffModel_1.Staff.findOneAndUpdate({ userId: req.body.id }, req.body);
-            }
-            else {
-                yield staffModel_1.Staff.create(req.body);
-            }
+        if (req.body.one) {
+            res.status(200).json({
+                message: "Your profile was updated successfully",
+                data: user,
+            });
         }
-        const result = yield (0, query_1.queryData)(userModel_1.User, req);
-        const { page, page_size, count, results } = result;
-        res.status(200).json({
-            message: "User was updated successfully",
-            results,
-            count,
-            page,
-            page_size,
-        });
+        else {
+            if (req.body.isStaff) {
+                const staff = yield staffModel_1.Staff.findOne({ userId: req.params.id });
+                if (staff) {
+                    yield staffModel_1.Staff.findOneAndUpdate({ userId: req.body.id }, req.body);
+                }
+                else {
+                    yield staffModel_1.Staff.create(req.body);
+                }
+            }
+            const result = yield (0, query_1.queryData)(userModel_1.User, req);
+            const { page, page_size, count, results } = result;
+            res.status(200).json({
+                message: "User was updated successfully",
+                results,
+                count,
+                page,
+                page_size,
+            });
+        }
     }
     catch (error) {
         (0, errorHandler_1.handleError)(res, undefined, undefined, error);

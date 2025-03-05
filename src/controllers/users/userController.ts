@@ -68,23 +68,31 @@ export const updateUser = async (req: Request, res: Response) => {
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
-    if (req.body.isStaff) {
-      const staff = await Staff.findOne({ userId: req.params.id });
-      if (staff) {
-        await Staff.findOneAndUpdate({ userId: req.body.id }, req.body);
-      } else {
-        await Staff.create(req.body);
+
+    if (req.body.one) {
+      res.status(200).json({
+        message: "Your profile was updated successfully",
+        data: user,
+      });
+    } else {
+      if (req.body.isStaff) {
+        const staff = await Staff.findOne({ userId: req.params.id });
+        if (staff) {
+          await Staff.findOneAndUpdate({ userId: req.body.id }, req.body);
+        } else {
+          await Staff.create(req.body);
+        }
       }
+      const result = await queryData<IUser>(User, req);
+      const { page, page_size, count, results } = result;
+      res.status(200).json({
+        message: "User was updated successfully",
+        results,
+        count,
+        page,
+        page_size,
+      });
     }
-    const result = await queryData<IUser>(User, req);
-    const { page, page_size, count, results } = result;
-    res.status(200).json({
-      message: "User was updated successfully",
-      results,
-      count,
-      page,
-      page_size,
-    });
   } catch (error) {
     handleError(res, undefined, undefined, error);
   }

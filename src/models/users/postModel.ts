@@ -38,6 +38,7 @@ const CommentSchema: Schema = new Schema(
     picture: { type: String, default: "" },
     media: { type: Array, default: [] },
     content: { type: String, default: "" },
+    postType: { type: String, default: "" },
     isVerified: { type: Boolean, default: false },
     replies: { type: Number, default: 0 },
     bookmarks: { type: Number, default: 0 },

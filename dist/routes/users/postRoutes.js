@@ -11,6 +11,7 @@ const uploadController_1 = require("../../controllers/users/uploadController");
 const router = express_1.default.Router();
 router.route("/uploads").get(uploadController_1.getUploads).post(upload.any(), uploadController_1.createUpload);
 router.route("/accounts").get(postController_1.getAccounts).post(upload.any(), postController_1.createAccount);
+router.route("/comments").get(postController_1.getComments);
 router.route("/").get(postController_1.getPosts).post(upload.any(), postController_1.createPost);
 router
     .route("/uploads/:id")
