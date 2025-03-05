@@ -221,17 +221,12 @@ export const createObjective = async (
         { upsert: true }
       );
     } else {
-      await Objective.updateOne(
-        { index: el.index, paperId: el.paperId },
-        {
-          $set: {
-            question: el.question,
-            options: el.options,
-            paperId: el.paperId,
-          },
-        },
-        { upsert: true }
-      );
+      await Objective.create({
+        question: el.question,
+        options: el.options,
+        paperId: el.paperId,
+        index: el.index,
+      });
     }
   }
 
