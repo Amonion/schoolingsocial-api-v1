@@ -13,14 +13,23 @@ export interface IAccount extends Document {
   isVerified: boolean;
 }
 
+export interface IStat extends Document {
+  userId: string;
+  postId: string;
+}
+
 interface Media {
   source: string;
   type: string;
 }
 
 export interface IPost extends Document {
+  postId: string;
+  createdAt: Date;
   username: string;
   userId: string;
+  sender: IUser;
+  postType: string;
   displayName: string;
   content: string;
   media: Media[];
@@ -136,6 +145,8 @@ interface File {
 export interface Socket {
   sender: IUser;
   to: string;
+  type: string;
+  postId: string;
   content: string;
   createdAt: Date;
   media: File[];

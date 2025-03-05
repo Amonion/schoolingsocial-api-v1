@@ -1,10 +1,10 @@
 import { Request, Response } from "express";
-import { Account, Follower, Post } from "../../models/users/postModel";
+import { Account, Follower, Post, Comment } from "../../models/users/postModel";
 import { uploadFilesToS3 } from "../../utils/fileUpload";
 import { handleError } from "../../utils/errorHandler";
 import { User } from "../../models/users/userModel";
 import { updateItem, getItemById, getItems } from "../../utils/query";
-import { Socket } from "../../utils/userInterface";
+import { Socket, IPost } from "../../utils/userInterface";
 
 export const createAccount = async (
   req: Request,
@@ -95,21 +95,26 @@ export const deleteAccount = async (req: Request, res: Response) => {
 
 /////////////////////////////// POST /////////////////////////////////
 
-export const createPost = async (data: Socket) => {
+export const createPost = async (data: IPost) => {
   try {
     const sender = data.sender;
+    // const postType = data.type;
     const form = {
       picture: sender.picture,
       username: sender.username,
       displayName: sender.displayName,
       userId: sender._id,
+      postId: data.postId,
       content: data.content,
       createdAt: data.createdAt,
       media: data.media,
       isVerified: sender.isVerified,
     };
 
-    const post = await Post.create(form);
+    const post =
+      data.postType === "main"
+        ? await Post.create(form)
+        : await Comment.create(form);
     return {
       message: "Your post was created successfully",
       data: post,
@@ -128,6 +133,10 @@ export const getPostById = async (
 
 export const getPosts = async (req: Request, res: Response) => {
   getItems(req, res, Post);
+};
+
+export const getComments = async (req: Request, res: Response) => {
+  getItems(req, res, Comment);
 };
 
 export const updatePost = async (req: Request, res: Response) => {

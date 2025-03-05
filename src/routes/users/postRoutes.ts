@@ -13,6 +13,7 @@ import {
   getPostById,
   deletePost,
   updatePost,
+  getComments,
 } from "../../controllers/users/postController";
 
 import {
@@ -27,6 +28,7 @@ const router = express.Router();
 
 router.route("/uploads").get(getUploads).post(upload.any(), createUpload);
 router.route("/accounts").get(getAccounts).post(upload.any(), createAccount);
+router.route("/comments").get(getComments);
 router.route("/").get(getPosts).post(upload.any(), createPost);
 router
   .route("/uploads/:id")

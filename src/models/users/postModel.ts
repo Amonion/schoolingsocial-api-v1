@@ -16,6 +16,7 @@ const PostSchema: Schema = new Schema(
     content: { type: String, default: "" },
     isVerified: { type: Boolean, default: false },
     replies: { type: Number, default: 0 },
+    bookmarks: { type: Number, default: 0 },
     shares: { type: Number, default: 0 },
     likes: { type: Number, default: 0 },
     views: { type: Number, default: 0 },
@@ -27,6 +28,30 @@ const PostSchema: Schema = new Schema(
   }
 );
 export const Post = mongoose.model<IPost>("Post", PostSchema);
+
+const CommentSchema: Schema = new Schema(
+  {
+    displayName: { type: String },
+    postId: { type: String },
+    username: { type: String },
+    userId: { type: String },
+    picture: { type: String, default: "" },
+    media: { type: Array, default: [] },
+    content: { type: String, default: "" },
+    isVerified: { type: Boolean, default: false },
+    replies: { type: Number, default: 0 },
+    bookmarks: { type: Number, default: 0 },
+    shares: { type: Number, default: 0 },
+    likes: { type: Number, default: 0 },
+    views: { type: Number, default: 0 },
+    reposts: { type: Number, default: 0 },
+    createdAt: { type: Date, default: Date.now },
+  },
+  {
+    timestamps: true,
+  }
+);
+export const Comment = mongoose.model<IPost>("Comment", CommentSchema);
 
 const AccountSchema: Schema = new Schema(
   {
