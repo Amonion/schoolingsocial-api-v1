@@ -176,13 +176,12 @@ const createObjective = (req, res) => __awaiter(void 0, void 0, void 0, function
             }, { upsert: true });
         }
         else {
-            yield competitionModel_1.Objective.updateOne({ index: el.index, paperId: el.paperId }, {
-                $set: {
-                    question: el.question,
-                    options: el.options,
-                    paperId: el.paperId,
-                },
-            }, { upsert: true });
+            yield competitionModel_1.Objective.create({
+                question: el.question,
+                options: el.options,
+                paperId: el.paperId,
+                index: el.index,
+            });
         }
     }
     const result = yield (0, query_1.queryData)(competitionModel_1.Objective, req);
