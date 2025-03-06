@@ -78,19 +78,12 @@ export const updateUser = async (req: Request, res: Response) => {
       );
     }
 
-    if (req.body.media || req.body.picture || req.body.intro) {
-      res.status(200).json({
-        message: "Your profile was updated successfully",
-        data: user,
-      });
-    } else {
-      if (req.body.isStaff) {
-        const staff = await Staff.findOne({ userId: req.params.id });
-        if (staff) {
-          await Staff.findOneAndUpdate({ userId: req.body.id }, req.body);
-        } else {
-          await Staff.create(req.body);
-        }
+    if (req.body.isStaff) {
+      const staff = await Staff.findOne({ userId: req.params.id });
+      if (staff) {
+        await Staff.findOneAndUpdate({ userId: req.body.id }, req.body);
+      } else {
+        await Staff.create(req.body);
       }
       const result = await queryData<IUser>(User, req);
       const { page, page_size, count, results } = result;
@@ -100,6 +93,11 @@ export const updateUser = async (req: Request, res: Response) => {
         count,
         page,
         page_size,
+      });
+    } else if (req.body.media || req.body.picture || req.body.intro) {
+      res.status(200).json({
+        message: "Your profile was updated successfully",
+        data: user,
       });
     }
   } catch (error) {
