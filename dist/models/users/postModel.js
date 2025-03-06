@@ -43,6 +43,7 @@ const PostSchema = new mongoose_1.Schema({
     media: { type: Array, default: [] },
     content: { type: String, default: "" },
     postType: { type: String, default: "main" },
+    postId: { type: String, default: "" },
     isVerified: { type: Boolean, default: false },
     replies: { type: Number, default: 0 },
     bookmarks: { type: Number, default: 0 },
