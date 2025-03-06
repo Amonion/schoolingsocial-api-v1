@@ -1,10 +1,10 @@
 import { Request, Response } from "express";
 import { Account, Follower, Post, Comment } from "../../models/users/postModel";
-import { uploadFilesToS3 } from "../../utils/fileUpload";
+import { deleteFileFromS3, uploadFilesToS3 } from "../../utils/fileUpload";
 import { handleError } from "../../utils/errorHandler";
 import { User } from "../../models/users/userModel";
 import { updateItem, getItemById, getItems } from "../../utils/query";
-import { Socket, IPost } from "../../utils/userInterface";
+import { IPost } from "../../utils/userInterface";
 
 export const createAccount = async (
   req: Request,
@@ -159,11 +159,23 @@ export const updatePost = async (req: Request, res: Response) => {
 
 export const deletePost = async (req: Request, res: Response) => {
   try {
-    const post = await Post.findByIdAndDelete(req.params.id);
+    const post = await Post.findById(req.params.id);
     if (!post) {
-      return res.status(404).json({ message: "Post not found" });
+      return res.status(404).json({ message: "This post has been deleted" });
     }
-    res.status(200).json({ message: "Post is deleted successfully" });
+
+    if (post.media.length > 0) {
+      for (let i = 0; i < post.media.length; i++) {
+        const el = post.media[i];
+        deleteFileFromS3(el.source);
+      }
+    }
+
+    await Post.findByIdAndDelete(req.params.id);
+
+    res.status(200).json({
+      message: "Post is deleted successfully",
+    });
   } catch (error) {
     handleError(res, undefined, undefined, error);
   }

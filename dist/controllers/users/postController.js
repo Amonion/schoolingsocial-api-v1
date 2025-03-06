@@ -135,11 +135,20 @@ const updatePost = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
 exports.updatePost = updatePost;
 const deletePost = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const post = yield postModel_1.Post.findByIdAndDelete(req.params.id);
+        const post = yield postModel_1.Post.findById(req.params.id);
         if (!post) {
-            return res.status(404).json({ message: "Post not found" });
+            return res.status(404).json({ message: "This post has been deleted" });
         }
-        res.status(200).json({ message: "Post is deleted successfully" });
+        if (post.media.length > 0) {
+            for (let i = 0; i < post.media.length; i++) {
+                const el = post.media[i];
+                (0, fileUpload_1.deleteFileFromS3)(el.source);
+            }
+        }
+        yield postModel_1.Post.findByIdAndDelete(req.params.id);
+        res.status(200).json({
+            message: "Post is deleted successfully",
+        });
     }
     catch (error) {
         (0, errorHandler_1.handleError)(res, undefined, undefined, error);

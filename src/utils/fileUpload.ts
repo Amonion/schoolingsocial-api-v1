@@ -181,6 +181,22 @@ export const removeFile = async (req: Request, res: Response) => {
 
 // });
 
+export const deleteFileFromS3 = async (url: string): Promise<void> => {
+  if (!url) return;
+
+  const bucketName = process.env.AWS_S3_BUCKET_NAME || "";
+  const fileKey = url.split(`${bucketName}/`)[1];
+
+  if (!fileKey) return;
+
+  const deleteParams = {
+    Bucket: bucketName,
+    Key: fileKey,
+  };
+
+  await s3.deleteObject(deleteParams).promise();
+};
+
 export const deleteFilesFromS3 = async (
   modelInstance: any,
   fields: string[]

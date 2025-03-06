@@ -12,7 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.deleteFilesFromS3 = exports.removeFile = exports.getPresignedUrl = void 0;
+exports.deleteFilesFromS3 = exports.deleteFileFromS3 = exports.removeFile = exports.getPresignedUrl = void 0;
 exports.uploadFilesToS3 = uploadFilesToS3;
 exports.socketUploadFilesToS3 = socketUploadFilesToS3;
 exports.uploadToS3 = uploadToS3;
@@ -158,6 +158,20 @@ const removeFile = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
 exports.removeFile = removeFile;
 // app.post("/s3-delete-file", async (req, res) => {
 // });
+const deleteFileFromS3 = (url) => __awaiter(void 0, void 0, void 0, function* () {
+    if (!url)
+        return;
+    const bucketName = process.env.AWS_S3_BUCKET_NAME || "";
+    const fileKey = url.split(`${bucketName}/`)[1];
+    if (!fileKey)
+        return;
+    const deleteParams = {
+        Bucket: bucketName,
+        Key: fileKey,
+    };
+    yield s3.deleteObject(deleteParams).promise();
+});
+exports.deleteFileFromS3 = deleteFileFromS3;
 const deleteFilesFromS3 = (modelInstance, fields) => __awaiter(void 0, void 0, void 0, function* () {
     const keysToDelete = fields
         .map((field) => modelInstance[field])
