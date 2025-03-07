@@ -163,6 +163,11 @@ exports.updatePaper = updatePaper;
 //-----------------OBJECTIVE--------------------//
 const createObjective = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const questions = JSON.parse(req.body.questions);
+    const deletedIDs = JSON.parse(req.body.deletedIDs);
+    for (let i = 0; i < deletedIDs.length; i++) {
+        const id = deletedIDs[i];
+        yield competitionModel_1.Objective.findByIdAndDelete(id);
+    }
     for (let i = 0; i < questions.length; i++) {
         const el = questions[i];
         if (el._id) {

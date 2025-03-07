@@ -205,6 +205,11 @@ export const createObjective = async (
   res: Response
 ): Promise<void> => {
   const questions = JSON.parse(req.body.questions);
+  const deletedIDs = JSON.parse(req.body.deletedIDs);
+  for (let i = 0; i < deletedIDs.length; i++) {
+    const id = deletedIDs[i];
+    await Objective.findByIdAndDelete(id);
+  }
   for (let i = 0; i < questions.length; i++) {
     const el = questions[i];
     if (el._id) {
