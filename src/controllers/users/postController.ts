@@ -1,10 +1,11 @@
 import { Request, Response } from "express";
-import { Account, Follower, Post, Comment } from "../../models/users/postModel";
+import { Account, Follower, Post } from "../../models/users/postModel";
 import { deleteFileFromS3, uploadFilesToS3 } from "../../utils/fileUpload";
 import { handleError } from "../../utils/errorHandler";
 import { User } from "../../models/users/userModel";
 import { updateItem, getItemById, getItems } from "../../utils/query";
 import { IPost } from "../../utils/userInterface";
+import { Bookmark, Like, Views } from "../../models/users/PostStatModel";
 
 export const createAccount = async (
   req: Request,
@@ -98,11 +99,11 @@ export const deleteAccount = async (req: Request, res: Response) => {
 export const createPost = async (data: IPost) => {
   try {
     const sender = data.sender;
-    // const postType = data.type;
     const form = {
       picture: sender.picture,
       username: sender.username,
       displayName: sender.displayName,
+      polls: data.polls,
       userId: sender._id,
       postId: data.postId,
       postType: data.postType,
@@ -113,6 +114,29 @@ export const createPost = async (data: IPost) => {
     };
 
     const post = await Post.create(form);
+
+    if (data.postType === "comment") {
+      await Post.updateOne(
+        { _id: data.postId },
+        {
+          $inc: { replies: 1 },
+          $push: { users: sender.username },
+        }
+      );
+    } else {
+      await Views.create({
+        postId: post._id,
+        userId: sender._id,
+      });
+
+      await Post.updateOne(
+        { _id: post._id },
+        {
+          $inc: { views: 1 },
+          $push: { users: sender.username },
+        }
+      );
+    }
 
     return {
       message: "Your post was created successfully",
@@ -132,10 +156,6 @@ export const getPostById = async (
 
 export const getPosts = async (req: Request, res: Response) => {
   getItems(req, res, Post);
-};
-
-export const getComments = async (req: Request, res: Response) => {
-  getItems(req, res, Comment);
 };
 
 export const updatePost = async (req: Request, res: Response) => {
@@ -177,6 +197,84 @@ export const deletePost = async (req: Request, res: Response) => {
       message: "Post is deleted successfully",
     });
   } catch (error) {
+    handleError(res, undefined, undefined, error);
+  }
+};
+
+export const updatePostStat = async (req: Request, res: Response) => {
+  try {
+    const { userId, id } = req.body;
+    let updateQuery: any = {};
+
+    const post = await Post.findById(id);
+
+    if (!post) {
+      return res.status(404).json({ message: "Post not found" });
+    }
+
+    if (req.body.likes !== undefined) {
+      if (!req.body.likes && post.likes <= 0) {
+        return res.status(400).json({ message: "Likes cannot be negative" });
+      }
+
+      updateQuery.$inc = { likes: req.body.likes ? 1 : -1 };
+
+      if (req.body.likes) {
+        await Like.create({ postId: id, userId });
+      } else {
+        await Like.deleteOne({ postId: id, userId });
+      }
+    }
+
+    if (req.body.bookmarks !== undefined) {
+      if (!req.body.bookmarks && post.bookmarks <= 0) {
+        return res
+          .status(400)
+          .json({ message: "Bookmarks cannot be negative" });
+      }
+
+      updateQuery.$inc = { bookmarks: req.body.bookmarks ? 1 : -1 };
+
+      if (req.body.bookmarks) {
+        await Bookmark.create({ postId: id, userId });
+      } else {
+        await Bookmark.deleteOne({ postId: id, userId });
+      }
+    }
+
+    if (req.body.views !== undefined) {
+      updateQuery.$inc = { views: 1 };
+    }
+
+    if (Object.keys(updateQuery).length > 0) {
+      const updatedPost = await Post.findByIdAndUpdate(id, updateQuery, {
+        new: true,
+      });
+      return res.status(201).json({
+        data: updatedPost,
+      });
+    } else {
+      return res
+        .status(400)
+        .json({ message: "No valid update parameters provided" });
+    }
+  } catch (error: any) {
+    handleError(res, undefined, undefined, error);
+  }
+};
+
+export const getPostStat = async (req: Request, res: Response) => {
+  try {
+    const { id, userId } = req.query;
+
+    const hasLiked = await Like.findOne({ postId: id, userId });
+    const hasBookmarked = await Bookmark.findOne({ postId: id, userId });
+
+    return res.status(200).json({
+      likes: hasLiked ? true : false,
+      bookmarks: hasBookmarked ? true : false,
+    });
+  } catch (error: any) {
     handleError(res, undefined, undefined, error);
   }
 };

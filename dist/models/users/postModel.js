@@ -33,7 +33,7 @@ var __importStar = (this && this.__importStar) || (function () {
     };
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.Follower = exports.UserInterest = exports.Account = exports.Comment = exports.Post = void 0;
+exports.Follower = exports.UserInterest = exports.Account = exports.Post = void 0;
 const mongoose_1 = __importStar(require("mongoose"));
 const PostSchema = new mongoose_1.Schema({
     displayName: { type: String },
@@ -41,6 +41,8 @@ const PostSchema = new mongoose_1.Schema({
     userId: { type: String },
     picture: { type: String, default: "" },
     media: { type: Array, default: [] },
+    polls: { type: Array, default: [] },
+    users: { type: Array, default: [] },
     content: { type: String, default: "" },
     postType: { type: String, default: "main" },
     postId: { type: String, default: "" },
@@ -56,27 +58,6 @@ const PostSchema = new mongoose_1.Schema({
     timestamps: true,
 });
 exports.Post = mongoose_1.default.model("Post", PostSchema);
-const CommentSchema = new mongoose_1.Schema({
-    displayName: { type: String },
-    postId: { type: String },
-    username: { type: String },
-    userId: { type: String },
-    picture: { type: String, default: "" },
-    media: { type: Array, default: [] },
-    content: { type: String, default: "" },
-    postType: { type: String, default: "main" },
-    isVerified: { type: Boolean, default: false },
-    replies: { type: Number, default: 0 },
-    bookmarks: { type: Number, default: 0 },
-    shares: { type: Number, default: 0 },
-    likes: { type: Number, default: 0 },
-    views: { type: Number, default: 0 },
-    reposts: { type: Number, default: 0 },
-    createdAt: { type: Date, default: Date.now },
-}, {
-    timestamps: true,
-});
-exports.Comment = mongoose_1.default.model("Comment", CommentSchema);
 const AccountSchema = new mongoose_1.Schema({
     displayName: { type: String },
     username: { type: String },

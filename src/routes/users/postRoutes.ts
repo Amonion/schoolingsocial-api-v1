@@ -13,7 +13,8 @@ import {
   getPostById,
   deletePost,
   updatePost,
-  getComments,
+  updatePostStat,
+  getPostStat,
 } from "../../controllers/users/postController";
 
 import {
@@ -28,7 +29,7 @@ const router = express.Router();
 
 router.route("/uploads").get(getUploads).post(upload.any(), createUpload);
 router.route("/accounts").get(getAccounts).post(upload.any(), createAccount);
-router.route("/comments").get(getComments);
+router.route("/stats").get(getPostStat).patch(updatePostStat);
 router.route("/").get(getPosts).post(upload.any(), createPost);
 router
   .route("/uploads/:id")

@@ -23,6 +23,13 @@ interface Media {
   type: string;
 }
 
+interface Poll {
+  picture: string;
+  text: string;
+  index: number;
+  percent: number;
+}
+
 export interface IPost extends Document {
   postId: string;
   createdAt: Date;
@@ -33,14 +40,17 @@ export interface IPost extends Document {
   displayName: string;
   content: string;
   media: Media[];
+  polls: Poll[];
+  users: string[];
   picture: string;
   country: string;
   isVerified: boolean;
   shares: number;
   replies: number;
   views: number;
+  bookmarks: number;
   likes: number;
-  repost: number;
+  reposts: number;
 }
 
 export interface IUpload extends Document {
