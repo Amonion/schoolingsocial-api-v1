@@ -40,6 +40,7 @@ const PlaceSchema = new mongoose_1.Schema({
     area: { type: String },
     state: { type: String, default: "" },
     country: { type: String, default: "" },
+    countryCapital: { type: String, default: "" },
     stateCapital: { type: String, default: "" },
     stateLogo: { type: String, default: "" },
     continent: { type: String, default: "" },

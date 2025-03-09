@@ -23,6 +23,10 @@ export const createUser = async (
     });
     await newUser.save();
 
+    if (newUser) {
+      await UserInfo.create({ userId: newUser._id });
+    }
+
     res.status(201).json({
       message: "User created successfully",
       user: newUser,

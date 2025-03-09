@@ -230,6 +230,7 @@ export interface IPayment extends Document {
 export interface IPlace extends Document {
   continent: string;
   country: string;
+  countryCapital: string;
   state: string;
   area: string;
   landmark: string;
