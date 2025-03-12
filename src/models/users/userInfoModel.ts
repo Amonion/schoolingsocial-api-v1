@@ -3,13 +3,12 @@ import { IUserInfo } from "../../utils/userInterface";
 
 const UserInfoSchema: Schema = new Schema(
   {
-    userId: { type: String, default: "" },
     firstName: { type: String, default: "" },
     middleName: { type: String, default: "" },
     lastName: { type: String, default: "" },
     passport: { type: String, default: "" },
     gender: { type: String, default: "" },
-    maritalStatus: { type: String, default: "User" },
+    maritalStatus: { type: String, default: "" },
 
     homeContinent: { type: String, default: "" },
     homeCountry: { type: String, default: "" },

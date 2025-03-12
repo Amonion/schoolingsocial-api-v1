@@ -36,13 +36,12 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.UserInfo = void 0;
 const mongoose_1 = __importStar(require("mongoose"));
 const UserInfoSchema = new mongoose_1.Schema({
-    userId: { type: String, default: "" },
     firstName: { type: String, default: "" },
     middleName: { type: String, default: "" },
     lastName: { type: String, default: "" },
     passport: { type: String, default: "" },
     gender: { type: String, default: "" },
-    maritalStatus: { type: String, default: "User" },
+    maritalStatus: { type: String, default: "" },
     homeContinent: { type: String, default: "" },
     homeCountry: { type: String, default: "" },
     homeState: { type: String, default: "" },

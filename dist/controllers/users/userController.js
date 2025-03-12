@@ -24,16 +24,16 @@ const postModel_1 = require("../../models/users/postModel");
 const createUser = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const { email, phone, signupIp, password } = req.body;
+        const userBio = new userInfoModel_1.UserInfo({ email, phone, signupIp });
+        yield userBio.save();
         const newUser = new userModel_1.User({
+            userId: userBio._id,
             email,
             phone,
             signupIp,
             password: yield bcryptjs_1.default.hash(password, 10),
         });
         yield newUser.save();
-        if (newUser) {
-            yield userInfoModel_1.UserInfo.create({ userId: newUser._id });
-        }
         res.status(201).json({
             message: "User created successfully",
             user: newUser,
@@ -143,11 +143,11 @@ const updateUserInfo = (req, res) => __awaiter(void 0, void 0, void 0, function*
             req.body.pastSchool = pastSchools;
             req.body.pastSchools = JSON.stringify(pastSchools);
         }
-        yield userInfoModel_1.UserInfo.updateOne({ userId: req.params.id }, req.body, {
+        yield userInfoModel_1.UserInfo.updateOne({ _id: req.params.id }, req.body, {
             new: true,
             upsert: true,
         });
-        const user = yield userModel_1.User.findByIdAndUpdate(req.params.id, req.body, {
+        const user = yield userModel_1.User.findByIdAndUpdate(req.body.ID, req.body, {
             new: true,
             runValidators: false,
         });
@@ -164,7 +164,7 @@ const updateUserInfo = (req, res) => __awaiter(void 0, void 0, void 0, function*
 exports.updateUserInfo = updateUserInfo;
 const getUserInfoById = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const user = yield userInfoModel_1.UserInfo.findOne({ userId: req.params.id });
+        const user = yield userInfoModel_1.UserInfo.findById(req.params.id);
         if (!user) {
             return res.status(404).json({ message: "User not found" });
         }

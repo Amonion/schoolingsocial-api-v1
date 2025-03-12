@@ -15,17 +15,18 @@ export const createUser = async (
 ): Promise<void> => {
   try {
     const { email, phone, signupIp, password } = req.body;
+
+    const userBio = new UserInfo({ email, phone, signupIp });
+    await userBio.save();
+
     const newUser = new User({
+      userId: userBio._id,
       email,
       phone,
       signupIp,
       password: await bcrypt.hash(password, 10),
     });
     await newUser.save();
-
-    if (newUser) {
-      await UserInfo.create({ userId: newUser._id });
-    }
 
     res.status(201).json({
       message: "User created successfully",
@@ -143,12 +144,12 @@ export const updateUserInfo = async (
       req.body.pastSchools = JSON.stringify(pastSchools);
     }
 
-    await UserInfo.updateOne({ userId: req.params.id }, req.body, {
+    await UserInfo.updateOne({ _id: req.params.id }, req.body, {
       new: true,
       upsert: true,
     });
 
-    const user = await User.findByIdAndUpdate(req.params.id, req.body, {
+    const user = await User.findByIdAndUpdate(req.body.ID, req.body, {
       new: true,
       runValidators: false,
     });
@@ -168,7 +169,7 @@ export const getUserInfoById = async (
   res: Response
 ): Promise<Response | void> => {
   try {
-    const user = await UserInfo.findOne({ userId: req.params.id });
+    const user = await UserInfo.findById(req.params.id);
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }

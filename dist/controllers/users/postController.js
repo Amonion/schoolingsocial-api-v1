@@ -23,25 +23,21 @@ const createAccount = (req, res) => __awaiter(void 0, void 0, void 0, function* 
             req.body[file.fieldName] = file.s3Url;
         });
         const { username, displayName, description, picture, followingsId, interests, userId, } = req.body;
-        const account = yield postModel_1.Account.create({
-            username,
-            userId,
-            displayName,
-            picture,
-            description,
-        });
-        const user = yield userModel_1.User.findByIdAndUpdate(userId, {
+        const user = yield userModel_1.User.findOneAndUpdate({ _id: userId }, {
             picture: picture,
             displayName: displayName,
             isFirstTime: false,
             username: username,
             interests: interests,
+            intro: description,
         }, { new: true });
+        if (!user) {
+            throw new Error("User not found");
+        }
         yield postModel_1.Follower.create({
-            userId: account._id,
+            userId: user._id,
             followingId: followingsId,
         });
-        console.log(user);
         res.status(201).json({
             message: "Account created successfully",
             user: user,

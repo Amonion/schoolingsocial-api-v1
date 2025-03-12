@@ -6,6 +6,7 @@ import { User } from "../../models/users/userModel";
 import { updateItem, getItemById, getItems } from "../../utils/query";
 import { IPost } from "../../utils/userInterface";
 import { Bookmark, Like, Views } from "../../models/users/PostStatModel";
+import { UserInfo } from "../../models/users/userInfoModel";
 
 export const createAccount = async (
   req: Request,
@@ -25,32 +26,28 @@ export const createAccount = async (
       interests,
       userId,
     } = req.body;
-    const account = await Account.create({
-      username,
-      userId,
-      displayName,
-      picture,
-      description,
-    });
 
-    const user = await User.findByIdAndUpdate(
-      userId,
+    const user = await User.findOneAndUpdate(
+      { _id: userId },
       {
         picture: picture,
         displayName: displayName,
         isFirstTime: false,
         username: username,
         interests: interests,
+        intro: description,
       },
       { new: true }
     );
 
+    if (!user) {
+      throw new Error("User not found");
+    }
+
     await Follower.create({
-      userId: account._id,
+      userId: user._id,
       followingId: followingsId,
     });
-
-    console.log(user);
 
     res.status(201).json({
       message: "Account created successfully",

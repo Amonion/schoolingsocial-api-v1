@@ -65,6 +65,7 @@ export interface IUpload extends Document {
 
 export interface IUser extends Document {
   _id?: string;
+  userId?: string;
   username?: string;
   email: string;
   displayName: string;
@@ -102,7 +103,7 @@ export interface IUser extends Document {
 }
 
 export interface IUserInfo extends Document {
-  userId: string;
+  _id: string;
   firstName: string;
   middleName: string;
   lastName: string;
