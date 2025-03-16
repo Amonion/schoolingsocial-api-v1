@@ -33,7 +33,7 @@ var __importStar = (this && this.__importStar) || (function () {
     };
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.Bank = exports.Ad = exports.Place = void 0;
+exports.Document = exports.Bank = exports.Ad = exports.Place = void 0;
 const mongoose_1 = __importStar(require("mongoose"));
 const PlaceSchema = new mongoose_1.Schema({
     landmark: { type: String, default: "" },
@@ -89,3 +89,16 @@ const BankSchema = new mongoose_1.Schema({
     timestamps: true,
 });
 exports.Bank = mongoose_1.default.model("Bank", BankSchema);
+const DocumentSchema = new mongoose_1.Schema({
+    name: { type: String, default: "" },
+    picture: { type: String, default: "" },
+    required: { type: Boolean, default: false },
+    country: { type: String, default: "" },
+    placeId: { type: String, default: "" },
+    countryFlag: { type: String, default: "" },
+    description: { type: String, default: "" },
+    createdAt: { type: Date, default: Date.now },
+}, {
+    timestamps: true,
+});
+exports.Document = mongoose_1.default.model("Document", DocumentSchema);

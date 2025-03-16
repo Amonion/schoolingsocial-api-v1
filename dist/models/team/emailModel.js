@@ -33,7 +33,7 @@ var __importStar = (this && this.__importStar) || (function () {
     };
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.Sms = exports.Notification = exports.Email = void 0;
+exports.Sms = exports.UserNotification = exports.Notification = exports.Email = void 0;
 const mongoose_1 = __importStar(require("mongoose"));
 const EmailSchema = new mongoose_1.Schema({
     content: { type: String, default: "" },
@@ -57,6 +57,17 @@ const NotificationSchema = new mongoose_1.Schema({
     timestamps: true,
 });
 exports.Notification = mongoose_1.default.model("Notification", NotificationSchema);
+const UserNotificationSchema = new mongoose_1.Schema({
+    content: { type: String, default: "" },
+    title: { type: String },
+    name: { type: String, default: "" },
+    username: { type: String, default: "" },
+    userId: { type: String, default: "" },
+    createdAt: { type: Date, default: Date.now },
+}, {
+    timestamps: true,
+});
+exports.UserNotification = mongoose_1.default.model("UserNotification", UserNotificationSchema);
 const SmsSchema = new mongoose_1.Schema({
     content: { type: String, default: "" },
     title: { type: String },

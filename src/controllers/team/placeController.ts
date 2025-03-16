@@ -1,7 +1,6 @@
 import { Request, Response } from "express";
 import { AcademicLevel } from "../../models/team/academicLevelModel";
-import { Document } from "../../models/team/documentModel";
-import { Place, Ad, Bank } from "../../models/team/placeModel";
+import { Place, Ad, Bank, Document } from "../../models/team/placeModel";
 import { Payment } from "../../models/team/paymentModel";
 import { IPlace, IAd, IBank } from "../../utils/teamInterface";
 import { IAcademicLevel } from "../../utils/teamInterface";

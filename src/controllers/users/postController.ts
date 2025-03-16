@@ -6,7 +6,6 @@ import { User } from "../../models/users/userModel";
 import { updateItem, getItemById, getItems } from "../../utils/query";
 import { IPost } from "../../utils/userInterface";
 import { Bookmark, Like, Views } from "../../models/users/PostStatModel";
-import { UserInfo } from "../../models/users/userInfoModel";
 
 export const createAccount = async (
   req: Request,

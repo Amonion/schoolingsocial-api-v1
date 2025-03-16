@@ -51,6 +51,7 @@ const CompanySchema = new mongoose_1.Schema({
     name: { type: String },
     domain: { type: String },
     email: { type: String, default: "" },
+    documents: { type: String, default: "" },
     finalInstruction: { type: String, default: "" },
     phone: { type: String, default: "" },
     headquaters: { type: String, default: "" },

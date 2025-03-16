@@ -102,6 +102,13 @@ export interface IUser extends Document {
   passwordExpiresAt?: Date;
 }
 
+interface IDDocs {
+  name: string;
+  tempDoc: string;
+  doc: string | File;
+  docId: string;
+}
+
 export interface IUserInfo extends Document {
   _id: string;
   firstName: string;
@@ -110,6 +117,7 @@ export interface IUserInfo extends Document {
   dob: string;
   gender: string;
   maritalStatus: string;
+  documents: IDDocs[];
   residentCountry: string;
   residentState: string;
   residentArea: string;
@@ -135,6 +143,14 @@ export interface IUserInfo extends Document {
   passwordResetToken?: string;
   password?: string;
   passwordExpiresAt?: Date;
+}
+
+export interface IUserNotification extends Document {
+  content: string;
+  title: string;
+  username: string;
+  userId: string;
+  createdAt: Date;
 }
 
 export interface IUserInterest extends Document {

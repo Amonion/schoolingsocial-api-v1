@@ -1,5 +1,6 @@
 import mongoose, { Schema } from "mongoose";
 import { IEmail, INotification, ISms } from "../../utils/teamInterface";
+import { IUserNotification } from "../../utils/userInterface";
 
 const EmailSchema: Schema = new Schema(
   {
@@ -32,6 +33,24 @@ const NotificationSchema: Schema = new Schema(
 export const Notification = mongoose.model<INotification>(
   "Notification",
   NotificationSchema
+);
+
+const UserNotificationSchema: Schema = new Schema(
+  {
+    content: { type: String, default: "" },
+    title: { type: String },
+    name: { type: String, default: "" },
+    username: { type: String, default: "" },
+    userId: { type: String, default: "" },
+    createdAt: { type: Date, default: Date.now },
+  },
+  {
+    timestamps: true,
+  }
+);
+export const UserNotification = mongoose.model<IUserNotification>(
+  "UserNotification",
+  UserNotificationSchema
 );
 
 const SmsSchema: Schema = new Schema(

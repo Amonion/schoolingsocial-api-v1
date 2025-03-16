@@ -9,6 +9,7 @@ const UserInfoSchema: Schema = new Schema(
     passport: { type: String, default: "" },
     gender: { type: String, default: "" },
     maritalStatus: { type: String, default: "" },
+    documents: { type: Array, default: [] },
 
     homeContinent: { type: String, default: "" },
     homeCountry: { type: String, default: "" },
@@ -40,6 +41,7 @@ const UserInfoSchema: Schema = new Schema(
 
     accountName: { type: String, default: "" },
     accountNumber: { type: String, default: "" },
+    bvn: { type: String, default: "" },
     bankName: { type: String, default: "" },
     bankId: { type: String, default: "" },
     bankUsername: { type: String, default: "" },

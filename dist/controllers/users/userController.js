@@ -143,6 +143,40 @@ const updateUserInfo = (req, res) => __awaiter(void 0, void 0, void 0, function*
             req.body.pastSchool = pastSchools;
             req.body.pastSchools = JSON.stringify(pastSchools);
         }
+        if (req.body.isDocument) {
+            const user = yield userInfoModel_1.UserInfo.findById(req.params.id);
+            const documents = user === null || user === void 0 ? void 0 : user.documents;
+            const id = req.body.id;
+            if (documents) {
+                const uploadedFiles = yield (0, fileUpload_1.uploadFilesToS3)(req);
+                uploadedFiles.forEach((file) => {
+                    req.body[file.fieldName] = file.s3Url;
+                });
+                const result = documents.find((item) => item.docId === id);
+                if (result) {
+                    result.doc = uploadedFiles[0].s3Url;
+                    result.name = req.body.name;
+                    documents.map((item) => (item.docId === id ? result : item));
+                    yield userInfoModel_1.UserInfo.updateOne({ _id: req.params.id }, { documents: documents }, {
+                        new: true,
+                        upsert: true,
+                    });
+                }
+                else {
+                    const doc = {
+                        doc: uploadedFiles[0].s3Url,
+                        name: req.body.name,
+                        docId: id,
+                        tempDoc: "",
+                    };
+                    documents.push(doc);
+                    yield userInfoModel_1.UserInfo.updateOne({ _id: req.params.id }, { documents: documents }, {
+                        new: true,
+                        upsert: true,
+                    });
+                }
+            }
+        }
         yield userInfoModel_1.UserInfo.updateOne({ _id: req.params.id }, req.body, {
             new: true,
             upsert: true,

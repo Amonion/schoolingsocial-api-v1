@@ -1,5 +1,5 @@
 import mongoose, { Schema } from "mongoose";
-import { IPlace, IAd, IBank } from "../../utils/teamInterface";
+import { IPlace, IAd, IBank, IDocument } from "../../utils/teamInterface";
 
 const PlaceSchema: Schema = new Schema(
   {
@@ -66,3 +66,21 @@ const BankSchema: Schema = new Schema(
   }
 );
 export const Bank = mongoose.model<IBank>("Bank", BankSchema);
+
+const DocumentSchema: Schema = new Schema(
+  {
+    name: { type: String, default: "" },
+    picture: { type: String, default: "" },
+    required: { type: Boolean, default: false },
+    country: { type: String, default: "" },
+    placeId: { type: String, default: "" },
+    countryFlag: { type: String, default: "" },
+    description: { type: String, default: "" },
+    createdAt: { type: Date, default: Date.now },
+  },
+  {
+    timestamps: true,
+  }
+);
+
+export const Document = mongoose.model<IDocument>("Document", DocumentSchema);

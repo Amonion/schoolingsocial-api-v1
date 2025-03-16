@@ -144,6 +144,48 @@ export const updateUserInfo = async (
       req.body.pastSchools = JSON.stringify(pastSchools);
     }
 
+    if (req.body.isDocument) {
+      const user = await UserInfo.findById(req.params.id);
+      const documents = user?.documents;
+      const id = req.body.id;
+      if (documents) {
+        const uploadedFiles = await uploadFilesToS3(req);
+        uploadedFiles.forEach((file) => {
+          req.body[file.fieldName] = file.s3Url;
+        });
+        const result = documents.find((item) => item.docId === id);
+        if (result) {
+          result.doc = uploadedFiles[0].s3Url;
+          result.name = req.body.name;
+          documents.map((item) => (item.docId === id ? result : item));
+          await UserInfo.updateOne(
+            { _id: req.params.id },
+            { documents: documents },
+            {
+              new: true,
+              upsert: true,
+            }
+          );
+        } else {
+          const doc = {
+            doc: uploadedFiles[0].s3Url,
+            name: req.body.name,
+            docId: id,
+            tempDoc: "",
+          };
+          documents.push(doc);
+          await UserInfo.updateOne(
+            { _id: req.params.id },
+            { documents: documents },
+            {
+              new: true,
+              upsert: true,
+            }
+          );
+        }
+      }
+    }
+
     await UserInfo.updateOne({ _id: req.params.id }, req.body, {
       new: true,
       upsert: true,

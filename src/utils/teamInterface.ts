@@ -45,6 +45,7 @@ export interface ICompany extends Document {
   name: string;
   domain: string;
   email: string;
+  documents: string;
   finalInstruction: string;
   phone: string;
   allowSignup: boolean;
@@ -88,6 +89,7 @@ export interface IDocument extends Document {
   country: string;
   countryFlag: string;
   placeId: string;
+  required: boolean;
   createdAt: Date;
 }
 

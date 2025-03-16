@@ -11,7 +11,6 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.getUniquePlaces = exports.searchPlaces = exports.searchPlace = exports.deletePlaces = exports.deletePlace = exports.updatePlace = exports.getPlaces = exports.getPlaceById = exports.createPlace = exports.deleteBank = exports.getBankById = exports.getBanks = exports.updateBank = exports.createBank = exports.deleteDocument = exports.getDocumentById = exports.getDocuments = exports.updateDocument = exports.createDocument = exports.deleteAcademicLevel = exports.getAcademicLevels = exports.getAcademicLevelById = exports.updateAcademicLevel = exports.createAcademicLevel = exports.deleteAd = exports.updateAd = exports.getAds = exports.getAdById = exports.createAd = exports.deletePayment = exports.updatePayment = exports.getPayments = exports.getPaymentById = exports.createPayment = void 0;
 const academicLevelModel_1 = require("../../models/team/academicLevelModel");
-const documentModel_1 = require("../../models/team/documentModel");
 const placeModel_1 = require("../../models/team/placeModel");
 const paymentModel_1 = require("../../models/team/paymentModel");
 const errorHandler_1 = require("../../utils/errorHandler");
@@ -122,12 +121,12 @@ const deleteAcademicLevel = (req, res) => __awaiter(void 0, void 0, void 0, func
 exports.deleteAcademicLevel = deleteAcademicLevel;
 //-----------------DOCUMENT--------------------//
 const createDocument = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    (0, query_1.createItem)(req, res, documentModel_1.Document, "Document was created successfully");
+    (0, query_1.createItem)(req, res, placeModel_1.Document, "Document was created successfully");
 });
 exports.createDocument = createDocument;
 const updateDocument = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        (0, query_1.updateItem)(req, res, documentModel_1.Document, [], ["Document  not found", "Document was updated successfully"]);
+        (0, query_1.updateItem)(req, res, placeModel_1.Document, [], ["Document  not found", "Document was updated successfully"]);
     }
     catch (error) {
         (0, errorHandler_1.handleError)(res, undefined, undefined, error);
@@ -136,7 +135,7 @@ const updateDocument = (req, res) => __awaiter(void 0, void 0, void 0, function*
 exports.updateDocument = updateDocument;
 const getDocuments = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const result = yield (0, query_1.queryData)(documentModel_1.Document, req);
+        const result = yield (0, query_1.queryData)(placeModel_1.Document, req);
         res.status(200).json(result);
     }
     catch (error) {
@@ -146,7 +145,7 @@ const getDocuments = (req, res) => __awaiter(void 0, void 0, void 0, function* (
 exports.getDocuments = getDocuments;
 const getDocumentById = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const item = yield documentModel_1.Document.findById(req.params.id);
+        const item = yield placeModel_1.Document.findById(req.params.id);
         if (!item) {
             return res.status(404).json({ message: "Document not found" });
         }
@@ -158,7 +157,7 @@ const getDocumentById = (req, res) => __awaiter(void 0, void 0, void 0, function
 });
 exports.getDocumentById = getDocumentById;
 const deleteDocument = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    yield (0, query_1.deleteItem)(req, res, documentModel_1.Document, [], "Document not found");
+    yield (0, query_1.deleteItem)(req, res, placeModel_1.Document, [], "Document not found");
 });
 exports.deleteDocument = deleteDocument;
 //-----------------BANK--------------------//

@@ -23,6 +23,7 @@ const errorHandler_1 = require("./utils/errorHandler");
 const competitionRoutes_1 = __importDefault(require("./routes/team/competitionRoutes"));
 const companyRoutes_1 = __importDefault(require("./routes/team/companyRoutes"));
 const messageRoutes_1 = __importDefault(require("./routes/team/messageRoutes"));
+const userMessageRoutes_1 = __importDefault(require("./routes/users/userMessageRoutes"));
 const newsRoutes_1 = __importDefault(require("./routes/team/newsRoutes"));
 const placeRoutes_1 = __importDefault(require("./routes/team/placeRoutes"));
 const postRoutes_1 = __importDefault(require("./routes/users/postRoutes"));
@@ -30,6 +31,7 @@ const schoolRoutes_1 = __importDefault(require("./routes/team/schoolRoutes"));
 const userRoutes_1 = __importDefault(require("./routes/users/userRoutes"));
 const postController_1 = require("./controllers/users/postController");
 const fileUpload_1 = require("./utils/fileUpload");
+const notificationController_1 = require("./controllers/team/notificationController");
 dotenv_1.default.config();
 const app = (0, express_1.default)();
 exports.app = app;
@@ -72,7 +74,8 @@ io.on("connection", (socket) => {
                 io.emit("message", response);
                 break;
             case "notifications":
-                console.log("📨 Message received:", data);
+                const nResponse = yield (0, notificationController_1.routeNotification)(data);
+                io.emit("message", nResponse);
                 break;
             default:
                 break;
@@ -93,6 +96,7 @@ app.use("/api/v1/places", placeRoutes_1.default);
 app.use("/api/v1/posts", postRoutes_1.default);
 app.use("/api/v1/schools", schoolRoutes_1.default);
 app.use("/api/v1/users", userRoutes_1.default);
+app.use("/api/v1/user-messages", userMessageRoutes_1.default);
 // ✅ Error Handling Middleware
 app.use((req, res, next) => {
     (0, errorHandler_1.handleError)(res, 404, `Request not found: ${req.method} ${req.originalUrl}`);
