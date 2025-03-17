@@ -9,15 +9,17 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.deleteNotification = exports.updateNotification = exports.getNotifications = exports.getNotificationById = exports.createVerificationNotification = exports.routeNotification = void 0;
+exports.deleteNotification = exports.updateNotification = exports.getNotifications = exports.getNotificationById = exports.getNotificationCounts = exports.createVerificationNotification = exports.routeNotification = void 0;
 const emailModel_1 = require("../../models/team/emailModel");
 const errorHandler_1 = require("../../utils/errorHandler");
 const query_1 = require("../../utils/query");
 const routeNotification = (data) => __awaiter(void 0, void 0, void 0, function* () {
     switch (data.action) {
         case "verification":
-            return data.user;
             return (0, exports.createVerificationNotification)(data);
+            break;
+        case "get-notifications":
+            return (0, exports.getNotificationCounts)(data);
             break;
         default:
             break;
@@ -33,26 +35,21 @@ const createVerificationNotification = (item) => __awaiter(void 0, void 0, void 
         username: item.user.username,
         name: noteTemp === null || noteTemp === void 0 ? void 0 : noteTemp.name,
         content: noteTemp === null || noteTemp === void 0 ? void 0 : noteTemp.content,
+        greetings: noteTemp === null || noteTemp === void 0 ? void 0 : noteTemp.greetings,
         title: noteTemp === null || noteTemp === void 0 ? void 0 : noteTemp.title,
         createdAt: item.time,
     });
-    const page_size = 20;
-    const page = 1;
-    const filters = { username: item.user.username };
-    const sort = "-createdAt";
-    const count = yield emailModel_1.UserNotification.countDocuments(filters);
-    const results = yield emailModel_1.UserNotification.find(filters)
-        .skip((page - 1) * page_size)
-        .limit(page_size)
-        .sort(sort);
-    return {
-        count,
-        results,
-        page,
-        page_size,
-    };
+    return (0, exports.getNotificationCounts)(item);
 });
 exports.createVerificationNotification = createVerificationNotification;
+const getNotificationCounts = (item) => __awaiter(void 0, void 0, void 0, function* () {
+    const count = yield emailModel_1.UserNotification.countDocuments({
+        username: item.user.username,
+        unread: true,
+    });
+    return { count };
+});
+exports.getNotificationCounts = getNotificationCounts;
 const getNotificationById = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const item = yield emailModel_1.Notification.findById(req.params.id);

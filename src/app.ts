@@ -66,7 +66,7 @@ io.on("connection", (socket) => {
         break;
       case "notifications":
         const nResponse = await routeNotification(data);
-        io.emit("message", nResponse);
+        io.emit("count", nResponse);
         break;
       default:
         break;

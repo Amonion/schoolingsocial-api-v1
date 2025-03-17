@@ -59,10 +59,12 @@ const NotificationSchema = new mongoose_1.Schema({
 exports.Notification = mongoose_1.default.model("Notification", NotificationSchema);
 const UserNotificationSchema = new mongoose_1.Schema({
     content: { type: String, default: "" },
+    unread: { type: Boolean, default: true },
     title: { type: String },
     name: { type: String, default: "" },
     username: { type: String, default: "" },
     userId: { type: String, default: "" },
+    greetings: { type: String, default: "" },
     createdAt: { type: Date, default: Date.now },
 }, {
     timestamps: true,

@@ -75,7 +75,7 @@ io.on("connection", (socket) => {
                 break;
             case "notifications":
                 const nResponse = yield (0, notificationController_1.routeNotification)(data);
-                io.emit("message", nResponse);
+                io.emit("count", nResponse);
                 break;
             default:
                 break;

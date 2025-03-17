@@ -38,10 +38,12 @@ export const Notification = mongoose.model<INotification>(
 const UserNotificationSchema: Schema = new Schema(
   {
     content: { type: String, default: "" },
+    unread: { type: Boolean, default: true },
     title: { type: String },
     name: { type: String, default: "" },
     username: { type: String, default: "" },
     userId: { type: String, default: "" },
+    greetings: { type: String, default: "" },
     createdAt: { type: Date, default: Date.now },
   },
   {

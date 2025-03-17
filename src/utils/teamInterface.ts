@@ -194,6 +194,7 @@ export interface INews extends Document {
 
 export interface INotification extends Document {
   content: string;
+  greetings: string;
   title: string;
   name: string;
   createdAt: Date;

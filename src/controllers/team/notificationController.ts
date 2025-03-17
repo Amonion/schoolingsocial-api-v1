@@ -15,8 +15,10 @@ interface Body {
 export const routeNotification = async (data: Body) => {
   switch (data.action) {
     case "verification":
-      return data.user;
       return createVerificationNotification(data);
+      break;
+    case "get-notifications":
+      return getNotificationCounts(data);
       break;
     default:
       break;
@@ -32,28 +34,21 @@ export const createVerificationNotification = async (item: Body) => {
     username: item.user.username,
     name: noteTemp?.name,
     content: noteTemp?.content,
+    greetings: noteTemp?.greetings,
     title: noteTemp?.title,
     createdAt: item.time,
   });
 
-  const page_size = 20;
-  const page = 1;
+  return getNotificationCounts(item);
+};
 
-  const filters = { username: item.user.username };
-  const sort = "-createdAt";
+export const getNotificationCounts = async (item: Body) => {
+  const count = await UserNotification.countDocuments({
+    username: item.user.username,
+    unread: true,
+  });
 
-  const count = await UserNotification.countDocuments(filters);
-  const results = await UserNotification.find(filters)
-    .skip((page - 1) * page_size)
-    .limit(page_size)
-    .sort(sort);
-
-  return {
-    count,
-    results,
-    page,
-    page_size,
-  };
+  return { count };
 };
 
 export const getNotificationById = async (

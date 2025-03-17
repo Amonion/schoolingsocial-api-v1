@@ -150,6 +150,7 @@ export interface IUserNotification extends Document {
   title: string;
   username: string;
   userId: string;
+  unread: boolean;
   createdAt: Date;
 }
 
