@@ -90,6 +90,22 @@ app.use("/api/v1/posts", postRoutes);
 app.use("/api/v1/schools", schoolRoutes);
 app.use("/api/v1/users", userRoutes);
 app.use("/api/v1/user-messages", userMessageRoutes);
+app.use("/api/v1/btc", async (req, res) => {
+  try {
+    // Extract currency pair from query params (default to BTCUSDT)
+    const symbol = req.query.symbol || "BTCUSDT";
+
+    const url = `https://api.bybit.com/v5/market/tickers?category=spot&symbol=${symbol}`;
+    const headers = { "User-Agent": "Mozilla/5.0" };
+
+    const response = await fetch(url, { headers });
+    const data = await response.json();
+
+    res.json(data);
+  } catch (error) {
+    res.status(500).json({ error: "Failed to fetch price", details: error });
+  }
+});
 
 // ✅ Error Handling Middleware
 app.use((req, res, next) => {
