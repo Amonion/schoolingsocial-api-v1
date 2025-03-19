@@ -92,10 +92,11 @@ app.use("/api/v1/users", userRoutes);
 app.use("/api/v1/user-messages", userMessageRoutes);
 app.use("/api/v1/btc", async (req, res) => {
   try {
-    // Extract currency pair from query params (default to BTCUSDT)
     const symbol = req.query.symbol || "BTCUSDT";
 
-    const url = `https://api.bybit.com/v5/market/tickers?category=spot&symbol=${symbol}`;
+    const proxyUrl = "https://cors-anywhere.herokuapp.com/";
+    const url = `${proxyUrl}https://api.bybit.com/v5/market/tickers?category=spot&symbol=${symbol}`;
+
     const headers = { "User-Agent": "Mozilla/5.0" };
 
     const response = await fetch(url, { headers });
@@ -107,10 +108,8 @@ app.use("/api/v1/btc", async (req, res) => {
   }
 });
 
-// ✅ Error Handling Middleware
 app.use((req, res, next) => {
   handleError(res, 404, `Request not found: ${req.method} ${req.originalUrl}`);
 });
 
-// ✅ Export both `app` and `server`
 export { app, server, io };

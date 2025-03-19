@@ -99,9 +99,9 @@ app.use("/api/v1/users", userRoutes_1.default);
 app.use("/api/v1/user-messages", userMessageRoutes_1.default);
 app.use("/api/v1/btc", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        // Extract currency pair from query params (default to BTCUSDT)
         const symbol = req.query.symbol || "BTCUSDT";
-        const url = `https://api.bybit.com/v5/market/tickers?category=spot&symbol=${symbol}`;
+        const proxyUrl = "https://cors-anywhere.herokuapp.com/";
+        const url = `${proxyUrl}https://api.bybit.com/v5/market/tickers?category=spot&symbol=${symbol}`;
         const headers = { "User-Agent": "Mozilla/5.0" };
         const response = yield fetch(url, { headers });
         const data = yield response.json();
@@ -111,7 +111,6 @@ app.use("/api/v1/btc", (req, res) => __awaiter(void 0, void 0, void 0, function*
         res.status(500).json({ error: "Failed to fetch price", details: error });
     }
 }));
-// ✅ Error Handling Middleware
 app.use((req, res, next) => {
     (0, errorHandler_1.handleError)(res, 404, `Request not found: ${req.method} ${req.originalUrl}`);
 });
