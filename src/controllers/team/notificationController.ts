@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import { Notification, UserNotification } from "../../models/team/emailModel";
 import { INotification } from "../../utils/teamInterface";
+import { IUserNotification } from "../../utils/userInterface";
 import { handleError } from "../../utils/errorHandler";
 import { queryData, deleteItem, updateItem } from "../../utils/query";
 import { IUser } from "../../utils/userInterface";
@@ -9,6 +10,7 @@ interface Body {
   user: IUser;
   to: string;
   action: string;
+  data: IUserNotification[];
   time: Date;
 }
 
@@ -20,6 +22,9 @@ export const routeNotification = async (data: Body) => {
     case "get-notifications":
       return getNotificationCounts(data);
       break;
+    case "read-notifications":
+      return ReadNotification(data);
+      break;
     default:
       break;
   }
@@ -28,16 +33,30 @@ export const routeNotification = async (data: Body) => {
 
 //-----------------NOTIFICATION--------------------//
 export const createVerificationNotification = async (item: Body) => {
-  const noteTemp = await Notification.findOne({ name: item.action });
-  await UserNotification.create({
-    userId: item.user._id,
-    username: item.user.username,
-    name: noteTemp?.name,
-    content: noteTemp?.content,
-    greetings: noteTemp?.greetings,
-    title: noteTemp?.title,
-    createdAt: item.time,
-  });
+  const user = item.user;
+  if (
+    user &&
+    user.isBio &&
+    user.isContact &&
+    user.isDocument &&
+    user.isRelated &&
+    user.isOrigin &&
+    user.isAccountSet &&
+    user.isEducation &&
+    user.isEducationDocument &&
+    user.isEducationHistory
+  ) {
+    const noteTemp = await Notification.findOne({ name: item.action });
+    await UserNotification.create({
+      userId: item.user._id,
+      username: item.user.username,
+      name: noteTemp?.name,
+      content: noteTemp?.content,
+      greetings: noteTemp?.greetings,
+      title: noteTemp?.title,
+      createdAt: item.time,
+    });
+  }
 
   return getNotificationCounts(item);
 };
@@ -49,6 +68,15 @@ export const getNotificationCounts = async (item: Body) => {
   });
 
   return { count };
+};
+
+export const ReadNotification = async (item: Body) => {
+  await UserNotification.updateMany(
+    { _id: { $in: item.data.map((el) => el._id) } },
+    { $set: { unread: false } }
+  );
+
+  return getNotificationCounts(item);
 };
 
 export const getNotificationById = async (

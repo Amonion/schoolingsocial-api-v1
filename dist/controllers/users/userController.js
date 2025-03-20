@@ -179,7 +179,6 @@ const updateUserInfo = (req, res) => __awaiter(void 0, void 0, void 0, function*
         }
         yield userInfoModel_1.UserInfo.updateOne({ _id: req.params.id }, req.body, {
             new: true,
-            upsert: true,
         });
         const user = yield userModel_1.User.findByIdAndUpdate(req.body.ID, req.body, {
             new: true,

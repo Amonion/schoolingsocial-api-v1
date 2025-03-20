@@ -97,20 +97,7 @@ app.use("/api/v1/posts", postRoutes_1.default);
 app.use("/api/v1/schools", schoolRoutes_1.default);
 app.use("/api/v1/users", userRoutes_1.default);
 app.use("/api/v1/user-messages", userMessageRoutes_1.default);
-app.use("/api/v1/btc", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    try {
-        const symbol = req.query.symbol || "BTCUSDT";
-        const proxyUrl = "https://cors-anywhere.herokuapp.com/";
-        const url = `${proxyUrl}https://api.bybit.com/v5/market/tickers?category=spot&symbol=${symbol}`;
-        const headers = { "User-Agent": "Mozilla/5.0" };
-        const response = yield fetch(url, { headers });
-        const data = yield response.json();
-        res.json(data);
-    }
-    catch (error) {
-        (0, errorHandler_1.handleError)(res, 404, `Request not found: ${req.method} ${req.originalUrl}`);
-    }
-}));
+// ✅ Error Handling Middleware
 app.use((req, res, next) => {
     (0, errorHandler_1.handleError)(res, 404, `Request not found: ${req.method} ${req.originalUrl}`);
 });

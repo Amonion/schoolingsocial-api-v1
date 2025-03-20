@@ -188,7 +188,6 @@ export const updateUserInfo = async (
 
     await UserInfo.updateOne({ _id: req.params.id }, req.body, {
       new: true,
-      upsert: true,
     });
 
     const user = await User.findByIdAndUpdate(req.body.ID, req.body, {

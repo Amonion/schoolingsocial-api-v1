@@ -88,11 +88,12 @@ export interface IUser extends Document {
   isOrigin: boolean;
   isContact: boolean;
   isBio: boolean;
+  isRelated: boolean;
   isVerified: boolean;
   isEducationDocument: boolean;
   isEducationHistory: boolean;
   isEducation: boolean;
-  isFinancial: boolean;
+  isAccountSet: boolean;
   isSuspendeded: boolean;
   isDeleted: boolean;
   isFirstTime: boolean;
@@ -146,6 +147,7 @@ export interface IUserInfo extends Document {
 }
 
 export interface IUserNotification extends Document {
+  _id: string;
   content: string;
   title: string;
   username: string;

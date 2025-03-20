@@ -9,7 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.deleteNotification = exports.updateNotification = exports.getNotifications = exports.getNotificationById = exports.getNotificationCounts = exports.createVerificationNotification = exports.routeNotification = void 0;
+exports.deleteNotification = exports.updateNotification = exports.getNotifications = exports.getNotificationById = exports.ReadNotification = exports.getNotificationCounts = exports.createVerificationNotification = exports.routeNotification = void 0;
 const emailModel_1 = require("../../models/team/emailModel");
 const errorHandler_1 = require("../../utils/errorHandler");
 const query_1 = require("../../utils/query");
@@ -21,6 +21,9 @@ const routeNotification = (data) => __awaiter(void 0, void 0, void 0, function* 
         case "get-notifications":
             return (0, exports.getNotificationCounts)(data);
             break;
+        case "read-notifications":
+            return (0, exports.ReadNotification)(data);
+            break;
         default:
             break;
     }
@@ -29,16 +32,28 @@ const routeNotification = (data) => __awaiter(void 0, void 0, void 0, function* 
 exports.routeNotification = routeNotification;
 //-----------------NOTIFICATION--------------------//
 const createVerificationNotification = (item) => __awaiter(void 0, void 0, void 0, function* () {
-    const noteTemp = yield emailModel_1.Notification.findOne({ name: item.action });
-    yield emailModel_1.UserNotification.create({
-        userId: item.user._id,
-        username: item.user.username,
-        name: noteTemp === null || noteTemp === void 0 ? void 0 : noteTemp.name,
-        content: noteTemp === null || noteTemp === void 0 ? void 0 : noteTemp.content,
-        greetings: noteTemp === null || noteTemp === void 0 ? void 0 : noteTemp.greetings,
-        title: noteTemp === null || noteTemp === void 0 ? void 0 : noteTemp.title,
-        createdAt: item.time,
-    });
+    const user = item.user;
+    if (user &&
+        user.isBio &&
+        user.isContact &&
+        user.isDocument &&
+        user.isRelated &&
+        user.isOrigin &&
+        user.isAccountSet &&
+        user.isEducation &&
+        user.isEducationDocument &&
+        user.isEducationHistory) {
+        const noteTemp = yield emailModel_1.Notification.findOne({ name: item.action });
+        yield emailModel_1.UserNotification.create({
+            userId: item.user._id,
+            username: item.user.username,
+            name: noteTemp === null || noteTemp === void 0 ? void 0 : noteTemp.name,
+            content: noteTemp === null || noteTemp === void 0 ? void 0 : noteTemp.content,
+            greetings: noteTemp === null || noteTemp === void 0 ? void 0 : noteTemp.greetings,
+            title: noteTemp === null || noteTemp === void 0 ? void 0 : noteTemp.title,
+            createdAt: item.time,
+        });
+    }
     return (0, exports.getNotificationCounts)(item);
 });
 exports.createVerificationNotification = createVerificationNotification;
@@ -50,6 +65,11 @@ const getNotificationCounts = (item) => __awaiter(void 0, void 0, void 0, functi
     return { count };
 });
 exports.getNotificationCounts = getNotificationCounts;
+const ReadNotification = (item) => __awaiter(void 0, void 0, void 0, function* () {
+    yield emailModel_1.UserNotification.updateMany({ _id: { $in: item.data.map((el) => el._id) } }, { $set: { unread: false } });
+    return (0, exports.getNotificationCounts)(item);
+});
+exports.ReadNotification = ReadNotification;
 const getNotificationById = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const item = yield emailModel_1.Notification.findById(req.params.id);
