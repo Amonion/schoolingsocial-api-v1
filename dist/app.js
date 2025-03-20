@@ -108,7 +108,7 @@ app.use("/api/v1/btc", (req, res) => __awaiter(void 0, void 0, void 0, function*
         res.json(data);
     }
     catch (error) {
-        res.status(500).json({ error: "Failed to fetch price", details: error });
+        (0, errorHandler_1.handleError)(res, 404, `Request not found: ${req.method} ${req.originalUrl}`);
     }
 }));
 app.use((req, res, next) => {
