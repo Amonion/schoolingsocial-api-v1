@@ -16,6 +16,7 @@ const errorHandler_1 = require("../../utils/errorHandler");
 const userModel_1 = require("../../models/users/userModel");
 const query_1 = require("../../utils/query");
 const PostStatModel_1 = require("../../models/users/PostStatModel");
+const computation_1 = require("../../utils/computation");
 const createAccount = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const uploadedFiles = yield (0, fileUpload_1.uploadFilesToS3)(req);
@@ -98,12 +99,13 @@ const createPost = (data) => __awaiter(void 0, void 0, void 0, function* () {
             });
         }
         else {
-            yield PostStatModel_1.Views.create({
+            yield PostStatModel_1.View.create({
                 postId: post._id,
                 userId: sender._id,
             });
+            const score = (0, computation_1.postScore)(post.likes, post.replies, post.shares, post.bookmarks, post.views);
             yield postModel_1.Post.updateOne({ _id: post._id }, {
-                $inc: { views: 1 },
+                $inc: { score: score },
                 $push: { users: sender.username },
             });
         }
@@ -122,7 +124,51 @@ const getPostById = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
 });
 exports.getPostById = getPostById;
 const getPosts = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    (0, query_1.getItems)(req, res, postModel_1.Post);
+    try {
+        const userId = req.query.userId;
+        req.query.userId = undefined;
+        const response = yield (0, query_1.queryData)(postModel_1.Post, req);
+        const posts = response.results;
+        const postIds = posts.map((post) => post._id);
+        const likedPosts = yield PostStatModel_1.Like.find({
+            userId: userId,
+            postId: { $in: postIds },
+        }).select("postId");
+        const bookmarkedPosts = yield PostStatModel_1.Bookmark.find({
+            userId: userId,
+            postId: { $in: postIds },
+        }).select("postId");
+        const viewedPosts = yield PostStatModel_1.View.find({
+            userId: userId,
+            postId: { $in: postIds },
+        }).select("postId");
+        const likedPostIds = likedPosts.map((like) => like.postId.toString());
+        const bookmarkedPostIds = bookmarkedPosts.map((bookmark) => bookmark.postId.toString());
+        const viewedPostIds = viewedPosts.map((view) => view.postId.toString());
+        const updatedPosts = [];
+        for (let i = 0; i < posts.length; i++) {
+            const el = posts[i];
+            if (likedPostIds.includes(el._id.toString())) {
+                el.liked = true;
+            }
+            if (bookmarkedPostIds.includes(el._id.toString())) {
+                el.bookmarked = true;
+            }
+            if (viewedPostIds.includes(el._id.toString())) {
+                el.viewed = true;
+            }
+            updatedPosts.push(el);
+        }
+        res.status(200).json({
+            count: response.count,
+            page: response.page,
+            page_size: response.page_size,
+            results: updatedPosts,
+        });
+    }
+    catch (error) {
+        (0, errorHandler_1.handleError)(res, undefined, undefined, error);
+    }
 });
 exports.getPosts = getPosts;
 const updatePost = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
@@ -174,45 +220,47 @@ const updatePostStat = (req, res) => __awaiter(void 0, void 0, void 0, function*
         }
         if (req.body.likes !== undefined) {
             if (!req.body.likes && post.likes <= 0) {
-                return res.status(400).json({ message: "Likes cannot be negative" });
+                return res.status(200).json({ message: null });
             }
-            updateQuery.$inc = { likes: req.body.likes ? 1 : -1 };
-            if (req.body.likes) {
-                yield PostStatModel_1.Like.create({ postId: id, userId });
+            const like = yield PostStatModel_1.Like.findOne({ postId: id, userId });
+            if (like) {
+                updateQuery.$inc = { likes: -1 };
+                yield PostStatModel_1.Like.deleteOne({ postId: id, userId });
             }
             else {
-                yield PostStatModel_1.Like.deleteOne({ postId: id, userId });
+                updateQuery.$inc = { likes: 1 };
+                yield PostStatModel_1.Like.create({ postId: id, userId });
             }
         }
         if (req.body.bookmarks !== undefined) {
             if (!req.body.bookmarks && post.bookmarks <= 0) {
-                return res
-                    .status(400)
-                    .json({ message: "Bookmarks cannot be negative" });
+                return res.status(200).json({ message: null });
             }
-            updateQuery.$inc = { bookmarks: req.body.bookmarks ? 1 : -1 };
-            if (req.body.bookmarks) {
-                yield PostStatModel_1.Bookmark.create({ postId: id, userId });
+            const bookmark = yield PostStatModel_1.Bookmark.findOne({ postId: id, userId });
+            if (bookmark) {
+                updateQuery.$inc = { bookmarks: -1 };
+                yield PostStatModel_1.Bookmark.deleteOne({ postId: id, userId });
             }
             else {
-                yield PostStatModel_1.Bookmark.deleteOne({ postId: id, userId });
+                updateQuery.$inc = { bookmarks: 1 };
+                yield PostStatModel_1.Bookmark.create({ postId: id, userId });
             }
         }
         if (req.body.views !== undefined) {
-            updateQuery.$inc = { views: 1 };
+            const post = yield PostStatModel_1.View.findOne({ userId: userId, postId: id });
+            if (!post) {
+                updateQuery.$inc = { views: 1 };
+                yield PostStatModel_1.View.create({ userId: userId, postId: id });
+            }
         }
         if (Object.keys(updateQuery).length > 0) {
-            const updatedPost = yield postModel_1.Post.findByIdAndUpdate(id, updateQuery, {
+            yield postModel_1.Post.findByIdAndUpdate(id, updateQuery, {
                 new: true,
             });
-            return res.status(201).json({
-                data: updatedPost,
-            });
+            return res.status(200).json({ message: null });
         }
         else {
-            return res
-                .status(400)
-                .json({ message: "No valid update parameters provided" });
+            return res.status(200).json({ message: null });
         }
     }
     catch (error) {

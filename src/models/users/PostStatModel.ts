@@ -47,7 +47,7 @@ const ViewSchema: Schema = new Schema(
     timestamps: true,
   }
 );
-export const Views = mongoose.model<IStat>("Views", ViewSchema);
+export const View = mongoose.model<IStat>("Views", ViewSchema);
 
 const RepostSchema: Schema = new Schema(
   {

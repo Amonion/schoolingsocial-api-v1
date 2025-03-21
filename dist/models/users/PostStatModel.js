@@ -33,7 +33,7 @@ var __importStar = (this && this.__importStar) || (function () {
     };
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.Repost = exports.Views = exports.CommentStat = exports.Bookmark = exports.Like = void 0;
+exports.Repost = exports.View = exports.CommentStat = exports.Bookmark = exports.Like = void 0;
 const mongoose_1 = __importStar(require("mongoose"));
 const LikeSchema = new mongoose_1.Schema({
     userId: { type: String },
@@ -66,7 +66,7 @@ const ViewSchema = new mongoose_1.Schema({
 }, {
     timestamps: true,
 });
-exports.Views = mongoose_1.default.model("Views", ViewSchema);
+exports.View = mongoose_1.default.model("Views", ViewSchema);
 const RepostSchema = new mongoose_1.Schema({
     userId: { type: String },
     postId: { type: String },

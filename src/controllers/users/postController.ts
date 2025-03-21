@@ -3,9 +3,15 @@ import { Account, Follower, Post } from "../../models/users/postModel";
 import { deleteFileFromS3, uploadFilesToS3 } from "../../utils/fileUpload";
 import { handleError } from "../../utils/errorHandler";
 import { User } from "../../models/users/userModel";
-import { updateItem, getItemById, getItems } from "../../utils/query";
+import {
+  updateItem,
+  getItemById,
+  getItems,
+  queryData,
+} from "../../utils/query";
 import { IPost } from "../../utils/userInterface";
-import { Bookmark, Like, Views } from "../../models/users/PostStatModel";
+import { Bookmark, Like, View } from "../../models/users/PostStatModel";
+import { postScore } from "../../utils/computation";
 
 export const createAccount = async (
   req: Request,
@@ -120,15 +126,23 @@ export const createPost = async (data: IPost) => {
         }
       );
     } else {
-      await Views.create({
+      await View.create({
         postId: post._id,
         userId: sender._id,
       });
 
+      const score = postScore(
+        post.likes,
+        post.replies,
+        post.shares,
+        post.bookmarks,
+        post.views
+      );
+
       await Post.updateOne(
         { _id: post._id },
         {
-          $inc: { views: 1 },
+          $inc: { score: score },
           $push: { users: sender.username },
         }
       );
@@ -151,7 +165,62 @@ export const getPostById = async (
 };
 
 export const getPosts = async (req: Request, res: Response) => {
-  getItems(req, res, Post);
+  try {
+    const userId = req.query.userId;
+    req.query.userId = undefined;
+    const response = await queryData(Post, req);
+    const posts = response.results;
+    const postIds = posts.map((post) => post._id);
+
+    const likedPosts = await Like.find({
+      userId: userId,
+      postId: { $in: postIds },
+    }).select("postId");
+
+    const bookmarkedPosts = await Bookmark.find({
+      userId: userId,
+      postId: { $in: postIds },
+    }).select("postId");
+
+    const viewedPosts = await View.find({
+      userId: userId,
+      postId: { $in: postIds },
+    }).select("postId");
+
+    const likedPostIds = likedPosts.map((like) => like.postId.toString());
+
+    const bookmarkedPostIds = bookmarkedPosts.map((bookmark) =>
+      bookmark.postId.toString()
+    );
+
+    const viewedPostIds = viewedPosts.map((view) => view.postId.toString());
+
+    const updatedPosts = [];
+
+    for (let i = 0; i < posts.length; i++) {
+      const el = posts[i];
+      if (likedPostIds.includes(el._id.toString())) {
+        el.liked = true;
+      }
+      if (bookmarkedPostIds.includes(el._id.toString())) {
+        el.bookmarked = true;
+      }
+      if (viewedPostIds.includes(el._id.toString())) {
+        el.viewed = true;
+      }
+
+      updatedPosts.push(el);
+    }
+
+    res.status(200).json({
+      count: response.count,
+      page: response.page,
+      page_size: response.page_size,
+      results: updatedPosts,
+    });
+  } catch (error) {
+    handleError(res, undefined, undefined, error);
+  }
 };
 
 export const updatePost = async (req: Request, res: Response) => {
@@ -210,49 +279,48 @@ export const updatePostStat = async (req: Request, res: Response) => {
 
     if (req.body.likes !== undefined) {
       if (!req.body.likes && post.likes <= 0) {
-        return res.status(400).json({ message: "Likes cannot be negative" });
+        return res.status(200).json({ message: null });
       }
 
-      updateQuery.$inc = { likes: req.body.likes ? 1 : -1 };
-
-      if (req.body.likes) {
-        await Like.create({ postId: id, userId });
-      } else {
+      const like = await Like.findOne({ postId: id, userId });
+      if (like) {
+        updateQuery.$inc = { likes: -1 };
         await Like.deleteOne({ postId: id, userId });
+      } else {
+        updateQuery.$inc = { likes: 1 };
+        await Like.create({ postId: id, userId });
       }
     }
 
     if (req.body.bookmarks !== undefined) {
       if (!req.body.bookmarks && post.bookmarks <= 0) {
-        return res
-          .status(400)
-          .json({ message: "Bookmarks cannot be negative" });
+        return res.status(200).json({ message: null });
       }
-
-      updateQuery.$inc = { bookmarks: req.body.bookmarks ? 1 : -1 };
-
-      if (req.body.bookmarks) {
-        await Bookmark.create({ postId: id, userId });
-      } else {
+      const bookmark = await Bookmark.findOne({ postId: id, userId });
+      if (bookmark) {
+        updateQuery.$inc = { bookmarks: -1 };
         await Bookmark.deleteOne({ postId: id, userId });
+      } else {
+        updateQuery.$inc = { bookmarks: 1 };
+        await Bookmark.create({ postId: id, userId });
       }
     }
 
     if (req.body.views !== undefined) {
-      updateQuery.$inc = { views: 1 };
+      const post = await View.findOne({ userId: userId, postId: id });
+      if (!post) {
+        updateQuery.$inc = { views: 1 };
+        await View.create({ userId: userId, postId: id });
+      }
     }
 
     if (Object.keys(updateQuery).length > 0) {
-      const updatedPost = await Post.findByIdAndUpdate(id, updateQuery, {
+      await Post.findByIdAndUpdate(id, updateQuery, {
         new: true,
       });
-      return res.status(201).json({
-        data: updatedPost,
-      });
+      return res.status(200).json({ message: null });
     } else {
-      return res
-        .status(400)
-        .json({ message: "No valid update parameters provided" });
+      return res.status(200).json({ message: null });
     }
   } catch (error: any) {
     handleError(res, undefined, undefined, error);

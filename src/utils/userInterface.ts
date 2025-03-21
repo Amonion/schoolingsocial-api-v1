@@ -31,6 +31,7 @@ interface Poll {
 }
 
 export interface IPost extends Document {
+  _id: string;
   postId: string;
   createdAt: Date;
   username: string;
@@ -39,14 +40,20 @@ export interface IPost extends Document {
   postType: string;
   displayName: string;
   content: string;
+  postCountry: string;
   media: Media[];
   polls: Poll[];
   users: string[];
   picture: string;
   country: string;
+  liked: boolean;
+  bookmarked: boolean;
+  viewed: boolean;
   isVerified: boolean;
   shares: number;
   replies: number;
+  score: number;
+  trendScore: number;
   views: number;
   bookmarks: number;
   likes: number;
