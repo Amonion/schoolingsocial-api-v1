@@ -9,6 +9,7 @@ const upload = (0, multer_1.default)();
 const schoolController_1 = require("../../controllers/team/schoolController");
 const router = express_1.default.Router();
 router.route("/search").get(schoolController_1.searchSchools);
+router.route("/find").get(schoolController_1.searchSchool);
 router.route("/").get(schoolController_1.getSchools).post(upload.any(), schoolController_1.createSchool);
 router
     .route("/payments")

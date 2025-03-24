@@ -9,7 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.deleteFaculty = exports.updateFaculty = exports.getFaculties = exports.getFacultyById = exports.createFaculty = exports.deleteDepartment = exports.updateDepartment = exports.getDepartments = exports.getDepartmentById = exports.createDepartment = exports.deleteCourse = exports.updateCourse = exports.getCourses = exports.getCourseById = exports.createCourse = exports.searchSchools = exports.deleteSchoolPayment = exports.updateSchoolPayment = exports.getSchoolPayments = exports.getSchoolPaymentById = exports.createSchoolPayment = exports.deleteSchool = exports.updateSchool = exports.getSchools = exports.getSchoolById = exports.createSchool = void 0;
+exports.deleteFaculty = exports.updateFaculty = exports.getFaculties = exports.getFacultyById = exports.createFaculty = exports.deleteDepartment = exports.updateDepartment = exports.getDepartments = exports.getDepartmentById = exports.createDepartment = exports.deleteCourse = exports.updateCourse = exports.getCourses = exports.getCourseById = exports.createCourse = exports.searchSchools = exports.deleteSchoolPayment = exports.updateSchoolPayment = exports.getSchoolPayments = exports.getSchoolPaymentById = exports.createSchoolPayment = exports.searchSchool = exports.deleteSchool = exports.updateSchool = exports.getSchools = exports.getSchoolById = exports.createSchool = void 0;
 const errorHandler_1 = require("../../utils/errorHandler");
 const schoolModel_1 = require("../../models/team/schoolModel");
 const query_1 = require("../../utils/query");
@@ -53,6 +53,10 @@ const deleteSchool = (req, res) => __awaiter(void 0, void 0, void 0, function* (
     yield (0, query_1.deleteItem)(req, res, schoolModel_1.School, ["logo", "media", "picture"], "School not found");
 });
 exports.deleteSchool = deleteSchool;
+const searchSchool = (req, res) => {
+    return (0, query_1.search)(schoolModel_1.School, req, res);
+};
+exports.searchSchool = searchSchool;
 //-----------------PAYMENT--------------------//
 const createSchoolPayment = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     (0, query_1.createItem)(req, res, schoolModel_1.SchoolPayment, "School payment was created successfully");

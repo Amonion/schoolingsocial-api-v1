@@ -122,6 +122,10 @@ export interface IUserInfo extends Document {
   firstName: string;
   middleName: string;
   lastName: string;
+  picture: string;
+  username: string;
+  displayName: string;
+  intro: string;
   dob: string;
   gender: string;
   maritalStatus: string;

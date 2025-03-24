@@ -1,4 +1,4 @@
-import { Model } from "mongoose";
+import { Model, FilterQuery } from "mongoose";
 import { Request, Response } from "express";
 import { deleteFilesFromS3, uploadFilesToS3 } from "./fileUpload";
 import { handleError } from "./errorHandler";
@@ -138,6 +138,27 @@ export const queryData = async <T>(
     page,
     page_size,
   };
+};
+
+export const search = async <T>(
+  model: Model<T>,
+  req: Request,
+  res: Response
+): Promise<Response | void> => {
+  try {
+    // Construct the query properly
+    const searchQuery: FilterQuery<T> = {
+      $or: Object.entries(req.query).map(([field, value]) => ({
+        [field]: { $regex: String(value), $options: "i" },
+      })) as any, // Explicitly cast as 'any' to avoid type mismatch
+    };
+
+    // Perform search
+    const results = await model.find(searchQuery);
+    res.json(results);
+  } catch (error) {
+    handleError(res, undefined, undefined, error);
+  }
 };
 
 export const createItem = async <T extends Document>(

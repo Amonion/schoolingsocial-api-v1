@@ -20,6 +20,7 @@ router.route("/").get(userController_1.getUsers).post(upload.any(), userControll
 router.route("/staffs").get(staffController_1.getStaffs);
 router.route("/staffs/:id").get(staffController_1.getStaffById).patch(upload.any(), staffController_1.updateStaff);
 router.route("/info").get(staffController_1.getStaffs);
+router.route("/people").get(userController_1.searchUserInfo);
 router
     .route("/info/:id")
     .get(userController_1.getUserInfoById)

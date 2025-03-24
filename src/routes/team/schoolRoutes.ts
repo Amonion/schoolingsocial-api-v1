@@ -8,6 +8,7 @@ import {
   deleteSchool,
   createSchool,
   searchSchools,
+  searchSchool,
   getSchoolPaymentById,
   getSchoolPayments,
   updateSchoolPayment,
@@ -33,6 +34,7 @@ import {
 const router = express.Router();
 
 router.route("/search").get(searchSchools);
+router.route("/find").get(searchSchool);
 router.route("/").get(getSchools).post(upload.any(), createSchool);
 router
   .route("/payments")

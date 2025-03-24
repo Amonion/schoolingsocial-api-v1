@@ -10,6 +10,7 @@ import {
   createUser,
   updateUserInfo,
   getUserInfoById,
+  searchUserInfo,
 } from "../../controllers/users/userController";
 import {
   getStaffById,
@@ -31,6 +32,7 @@ router.route("/staffs").get(getStaffs);
 router.route("/staffs/:id").get(getStaffById).patch(upload.any(), updateStaff);
 
 router.route("/info").get(getStaffs);
+router.route("/people").get(searchUserInfo);
 router
   .route("/info/:id")
   .get(getUserInfoById)

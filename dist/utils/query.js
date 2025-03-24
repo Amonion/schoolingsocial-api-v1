@@ -9,7 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.deleteItems = exports.deleteItem = exports.updateItem = exports.getItems = exports.getItemById = exports.createItem = exports.queryData = void 0;
+exports.deleteItems = exports.deleteItem = exports.updateItem = exports.getItems = exports.getItemById = exports.createItem = exports.search = exports.queryData = void 0;
 const fileUpload_1 = require("./fileUpload");
 const errorHandler_1 = require("./errorHandler");
 // const buildFilterQuery = (req: Request): Record<string, any> => {
@@ -129,6 +129,23 @@ const queryData = (model, req) => __awaiter(void 0, void 0, void 0, function* ()
     };
 });
 exports.queryData = queryData;
+const search = (model, req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        // Construct the query properly
+        const searchQuery = {
+            $or: Object.entries(req.query).map(([field, value]) => ({
+                [field]: { $regex: String(value), $options: "i" },
+            })), // Explicitly cast as 'any' to avoid type mismatch
+        };
+        // Perform search
+        const results = yield model.find(searchQuery);
+        res.json(results);
+    }
+    catch (error) {
+        (0, errorHandler_1.handleError)(res, undefined, undefined, error);
+    }
+});
+exports.search = search;
 const createItem = (req, res, model, message) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const uploadedFiles = yield (0, fileUpload_1.uploadFilesToS3)(req);

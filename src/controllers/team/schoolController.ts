@@ -19,6 +19,7 @@ import {
   deleteItem,
   updateItem,
   createItem,
+  search,
 } from "../../utils/query";
 
 export const createSchool = async (
@@ -74,6 +75,10 @@ export const deleteSchool = async (req: Request, res: Response) => {
     ["logo", "media", "picture"],
     "School not found"
   );
+};
+
+export const searchSchool = (req: Request, res: Response) => {
+  return search(School, req, res);
 };
 
 //-----------------PAYMENT--------------------//

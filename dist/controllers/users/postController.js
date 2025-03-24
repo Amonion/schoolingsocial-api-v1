@@ -17,6 +17,7 @@ const userModel_1 = require("../../models/users/userModel");
 const query_1 = require("../../utils/query");
 const PostStatModel_1 = require("../../models/users/PostStatModel");
 const computation_1 = require("../../utils/computation");
+const userInfoModel_1 = require("../../models/users/userInfoModel");
 const createAccount = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const uploadedFiles = yield (0, fileUpload_1.uploadFilesToS3)(req);
@@ -30,6 +31,12 @@ const createAccount = (req, res) => __awaiter(void 0, void 0, void 0, function* 
             isFirstTime: false,
             username: username,
             interests: interests,
+            intro: description,
+        }, { new: true });
+        yield userInfoModel_1.UserInfo.findByIdAndUpdate(user === null || user === void 0 ? void 0 : user.userId, {
+            picture: picture,
+            displayName: displayName,
+            username: username,
             intro: description,
         }, { new: true });
         if (!user) {

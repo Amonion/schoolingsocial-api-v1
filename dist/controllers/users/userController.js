@@ -12,7 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getUserInfoById = exports.updateUserInfo = exports.deleteUser = exports.updateUser = exports.getUsers = exports.getUserById = exports.createUser = void 0;
+exports.searchUserInfo = exports.getUserInfoById = exports.updateUserInfo = exports.deleteUser = exports.updateUser = exports.getUsers = exports.getUserById = exports.createUser = void 0;
 const userModel_1 = require("../../models/users/userModel");
 const userInfoModel_1 = require("../../models/users/userInfoModel");
 const staffModel_1 = require("../../models/team/staffModel");
@@ -80,6 +80,10 @@ const updateUser = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
         if (!user) {
             return res.status(404).json({ message: "User not found" });
         }
+        yield userInfoModel_1.UserInfo.findByIdAndUpdate(user.userId, req.body, {
+            new: true,
+            runValidators: true,
+        });
         if (req.body.picture) {
             yield postModel_1.Post.updateMany({ userId: req.params.id }, { picture: req.body.picture });
         }
@@ -208,3 +212,7 @@ const getUserInfoById = (req, res) => __awaiter(void 0, void 0, void 0, function
     }
 });
 exports.getUserInfoById = getUserInfoById;
+const searchUserInfo = (req, res) => {
+    return (0, query_1.search)(userInfoModel_1.UserInfo, req, res);
+};
+exports.searchUserInfo = searchUserInfo;

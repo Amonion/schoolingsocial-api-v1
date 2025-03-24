@@ -4,7 +4,7 @@ import { User } from "../../models/users/userModel";
 import { UserInfo } from "../../models/users/userInfoModel";
 import { Staff } from "../../models/team/staffModel";
 import { handleError } from "../../utils/errorHandler";
-import { queryData } from "../../utils/query";
+import { queryData, search } from "../../utils/query";
 import { uploadFilesToS3 } from "../../utils/fileUpload";
 import bcrypt from "bcryptjs";
 import { Post } from "../../models/users/postModel";
@@ -75,6 +75,11 @@ export const updateUser = async (req: Request, res: Response) => {
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
+
+    await UserInfo.findByIdAndUpdate(user.userId, req.body, {
+      new: true,
+      runValidators: true,
+    });
 
     if (req.body.picture) {
       await Post.updateMany(
@@ -218,4 +223,8 @@ export const getUserInfoById = async (
   } catch (error) {
     handleError(res, undefined, undefined, error);
   }
+};
+
+export const searchUserInfo = (req: Request, res: Response) => {
+  return search(UserInfo, req, res);
 };

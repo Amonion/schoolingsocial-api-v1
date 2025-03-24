@@ -12,6 +12,7 @@ import {
 import { IPost } from "../../utils/userInterface";
 import { Bookmark, Like, View } from "../../models/users/PostStatModel";
 import { postScore } from "../../utils/computation";
+import { UserInfo } from "../../models/users/userInfoModel";
 
 export const createAccount = async (
   req: Request,
@@ -40,6 +41,16 @@ export const createAccount = async (
         isFirstTime: false,
         username: username,
         interests: interests,
+        intro: description,
+      },
+      { new: true }
+    );
+    await UserInfo.findByIdAndUpdate(
+      user?.userId,
+      {
+        picture: picture,
+        displayName: displayName,
+        username: username,
         intro: description,
       },
       { new: true }
