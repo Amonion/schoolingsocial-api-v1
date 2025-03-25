@@ -17,6 +17,10 @@ const errorHandler_1 = require("./errorHandler");
 //   for (const [key, value] of Object.entries(req.query)) {
 //     if (key !== "page_size" && key !== "page" && key !== "ordering") {
 //       if (typeof value === "string") {
+//         if (value.trim() === "") {
+//           // If any key has an empty string value, return a filter that matches no documents
+//           return { [key]: { $exists: false } };
+//         }
 //         if (value === "true" || value === "false") {
 //           // Convert boolean-like strings to actual booleans
 //           filters[key] = value === "true";
@@ -26,10 +30,16 @@ const errorHandler_1 = require("./errorHandler");
 //         }
 //       } else if (Array.isArray(value)) {
 //         // Map each item in the array to a regex, ensuring it is a string
+//         const validValues = value.filter(
+//           (item): item is string =>
+//             typeof item === "string" && item.trim() !== ""
+//         );
+//         if (validValues.length === 0) {
+//           // If all array items are empty, return a filter that matches no documents
+//           return { [key]: { $exists: false } };
+//         }
 //         filters[key] = {
-//           $in: value
-//             .filter((item): item is string => typeof item === "string")
-//             .map((item) => new RegExp(item, "i")),
+//           $in: validValues.map((item) => new RegExp(item, "i")),
 //         };
 //       } else if (typeof value === "boolean") {
 //         // Directly handle boolean fields
@@ -51,48 +61,33 @@ const errorHandler_1 = require("./errorHandler");
 const buildFilterQuery = (req) => {
     const filters = {};
     for (const [key, value] of Object.entries(req.query)) {
-        if (key !== "page_size" && key !== "page" && key !== "ordering") {
-            if (typeof value === "string") {
-                if (value.trim() === "") {
-                    // If any key has an empty string value, return a filter that matches no documents
-                    return { [key]: { $exists: false } };
-                }
-                if (value === "true" || value === "false") {
-                    // Convert boolean-like strings to actual booleans
-                    filters[key] = value === "true";
-                }
-                else {
-                    // Use regex for other strings
-                    filters[key] = { $regex: value, $options: "i" };
-                }
+        if (["page_size", "page", "ordering"].includes(key))
+            continue;
+        if (typeof value === "string") {
+            const valuesArray = value
+                .split(",")
+                .map((v) => v.trim())
+                .filter(Boolean);
+            if (valuesArray.length === 1) {
+                filters[key] = { $regex: valuesArray[0], $options: "i" };
             }
-            else if (Array.isArray(value)) {
-                // Map each item in the array to a regex, ensuring it is a string
-                const validValues = value.filter((item) => typeof item === "string" && item.trim() !== "");
-                if (validValues.length === 0) {
-                    // If all array items are empty, return a filter that matches no documents
-                    return { [key]: { $exists: false } };
-                }
+            else {
+                filters[key] = { $in: valuesArray.map((v) => new RegExp(v, "i")) };
+            }
+        }
+        else if (Array.isArray(value)) {
+            const validValues = value.filter((item) => typeof item === "string" && item.trim() !== "");
+            if (validValues.length > 0) {
                 filters[key] = {
                     $in: validValues.map((item) => new RegExp(item, "i")),
                 };
             }
-            else if (typeof value === "boolean") {
-                // Directly handle boolean fields
-                filters[key] = value;
-            }
-            else if (typeof value === "number") {
-                // Handle numbers directly
-                filters[key] = value;
-            }
-            else if (value && typeof value === "object") {
-                // Handle plain objects
-                filters[key] = value;
-            }
-            else {
-                // Ignore unsupported or undefined types
-                continue;
-            }
+        }
+        else if (typeof value === "boolean" || typeof value === "number") {
+            filters[key] = value;
+        }
+        else if (value && typeof value === "object") {
+            filters[key] = value;
         }
     }
     return filters;
@@ -129,16 +124,62 @@ const queryData = (model, req) => __awaiter(void 0, void 0, void 0, function* ()
     };
 });
 exports.queryData = queryData;
+function buildSearchQuery(req) {
+    const cleanedQuery = req.query;
+    let searchQuery = {};
+    if (cleanedQuery.country) {
+        const countries = cleanedQuery.country.split(",");
+        Object.assign(searchQuery, { country: { $in: countries } });
+    }
+    if (cleanedQuery.state) {
+        if (cleanedQuery.country && cleanedQuery.country.split(",").length === 1) {
+            Object.assign(searchQuery, {
+                state: { $in: cleanedQuery.state.split(",") },
+            });
+        }
+    }
+    if (cleanedQuery.area) {
+        if (cleanedQuery.country && cleanedQuery.country.split(",").length === 1) {
+            if (cleanedQuery.state && cleanedQuery.state.split(",").length === 1) {
+                Object.assign(searchQuery, {
+                    area: { $in: cleanedQuery.area.split(",") },
+                });
+            }
+        }
+    }
+    if (cleanedQuery.gender) {
+        const items = cleanedQuery.gender.split(",");
+        Object.assign(searchQuery, { gender: { $in: items } });
+    }
+    if (cleanedQuery.currentSchoolCountry) {
+        const items = cleanedQuery.currentSchoolCountry.split(",");
+        Object.assign(searchQuery, { currentSchoolCountry: { $in: items } });
+    }
+    if (cleanedQuery.currentSchoolName) {
+        const items = cleanedQuery.currentSchoolName.split(",");
+        Object.assign(searchQuery, { currentSchoolName: { $in: items } });
+    }
+    if (cleanedQuery.currentAcademicLevelName) {
+        const items = cleanedQuery.currentAcademicLevelName.split(",");
+        Object.assign(searchQuery, { currentAcademicLevelName: { $in: items } });
+    }
+    const regexQuery = {
+        $or: Object.entries(cleanedQuery).map(([field, value]) => ({
+            [field]: { $regex: String(value), $options: "i" },
+        })),
+    };
+    return Object.assign(Object.assign({}, searchQuery), regexQuery);
+}
 const search = (model, req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        // Construct the query properly
         const searchQuery = {
             $or: Object.entries(req.query).map(([field, value]) => ({
                 [field]: { $regex: String(value), $options: "i" },
-            })), // Explicitly cast as 'any' to avoid type mismatch
+            })),
         };
-        // Perform search
-        const results = yield model.find(searchQuery);
+        const newSearchQuery = buildSearchQuery(req);
+        console.log(newSearchQuery);
+        const results = yield model.find(newSearchQuery);
         res.json(results);
     }
     catch (error) {

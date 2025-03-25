@@ -139,6 +139,7 @@ export interface IUserInfo extends Document {
   phone: string;
   email: string;
   passport: string;
+  currentAcademicLevelSymbol: string;
   isDocument: boolean;
   isOrigin: boolean;
   isContact: boolean;

@@ -17,6 +17,7 @@ const UserInfoSchema: Schema = new Schema(
 
     homeContinent: { type: String, default: "" },
     homeCountry: { type: String, default: "" },
+    homeCountrySymbol: { type: String, default: "" },
     homeState: { type: String, default: "" },
     homeArea: { type: String, default: "" },
     homeAddress: { type: String, default: "" },
@@ -24,6 +25,7 @@ const UserInfoSchema: Schema = new Schema(
 
     continent: { type: String, default: "" },
     country: { type: String, default: "" },
+    countrySymbol: { type: String, default: "" },
     state: { type: String, default: "" },
     area: { type: String, default: "" },
     address: { type: String, default: "" },
@@ -31,10 +33,13 @@ const UserInfoSchema: Schema = new Schema(
 
     currentSchoolContinent: { type: String, default: "" },
     currentSchoolCountry: { type: String, default: "" },
+    currentSchoolCountrySymbol: { type: String, default: "" },
     currentSchoolState: { type: String, default: "" },
+    currentSchoolPicture: { type: String, default: "" },
     currentSchoolArea: { type: String, default: "" },
     currentSchoolName: { type: String, default: "" },
     currentSchoolId: { type: String, default: "" },
+    currentAcademicLevelSymbol: { type: String, default: "" },
     currentAcademicLevel: { type: String, default: "" },
     currentAcademicLevelName: { type: String, default: "" },
     currentSchoolLevel: { type: String, default: "" },
