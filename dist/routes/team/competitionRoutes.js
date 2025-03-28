@@ -16,6 +16,7 @@ router
     .post(upload.any(), competitionController_1.createObjective);
 router.route("/leagues").get(competitionController_1.getLeagues).post(upload.any(), competitionController_1.createLeague);
 router.route("/exams").get(competitionController_1.getExams).post(upload.any(), competitionController_1.createExam);
+router.route("/exams/find").get(competitionController_1.searchExamInfo);
 router
     .route("/leagues/papers/:id")
     .get(competitionController_1.getPaperById)

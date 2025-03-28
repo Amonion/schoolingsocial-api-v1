@@ -124,75 +124,148 @@ const queryData = (model, req) => __awaiter(void 0, void 0, void 0, function* ()
     };
 });
 exports.queryData = queryData;
+// function buildSearchQuery<T>(req: any): FilterQuery<T> {
+//   const cleanedQuery = req.query;
+//   let searchQuery: FilterQuery<T> = {} as FilterQuery<T>;
+//   if (cleanedQuery.country) {
+//     const countries = cleanedQuery.country.split(",");
+//     Object.assign(searchQuery, { country: { $in: countries } });
+//   }
+//   if (cleanedQuery.state) {
+//     if (cleanedQuery.country && cleanedQuery.country.split(",").length === 1) {
+//       Object.assign(searchQuery, {
+//         state: { $in: cleanedQuery.state.split(",") },
+//       });
+//     }
+//   }
+//   if (cleanedQuery.area) {
+//     if (cleanedQuery.country && cleanedQuery.country.split(",").length === 1) {
+//       if (cleanedQuery.state && cleanedQuery.state.split(",").length === 1) {
+//         Object.assign(searchQuery, {
+//           area: { $in: cleanedQuery.area.split(",") },
+//         });
+//       }
+//     }
+//   }
+//   if (cleanedQuery.gender) {
+//     const items = cleanedQuery.gender.split(",");
+//     Object.assign(searchQuery, { gender: { $in: items } });
+//   }
+//   if (cleanedQuery.currentSchoolCountry) {
+//     const items = cleanedQuery.currentSchoolCountry.split(",");
+//     Object.assign(searchQuery, { currentSchoolCountry: { $in: items } });
+//   }
+//   if (cleanedQuery.currentSchoolName) {
+//     const items = cleanedQuery.currentSchoolName.split(",");
+//     Object.assign(searchQuery, { currentSchoolName: { $in: items } });
+//   }
+//   if (cleanedQuery.currentAcademicLevelName) {
+//     const items = cleanedQuery.currentAcademicLevelName.split(",");
+//     Object.assign(searchQuery, { currentAcademicLevelName: { $in: items } });
+//   }
+//   if (cleanedQuery.schoolCountry) {
+//     const items = cleanedQuery.schoolCountry.split(",");
+//     Object.assign(searchQuery, { country: { $in: items } });
+//   }
+//   if (cleanedQuery.schoolState) {
+//     const items = cleanedQuery.schoolState.split(",");
+//     Object.assign(searchQuery, { state: { $in: items } });
+//   }
+//   if (cleanedQuery.schoolArea) {
+//     const items = cleanedQuery.schoolArea.split(",");
+//     Object.assign(searchQuery, { area: { $in: items } });
+//   }
+//   if (cleanedQuery.schoolLevelName) {
+//     const items = cleanedQuery.schoolLevelName.split(",");
+//     Object.assign(searchQuery, { levelNames: { $in: items } });
+//   }
+//   if (cleanedQuery.examCountries) {
+//     const items = cleanedQuery.examCountries.split(",");
+//     Object.assign(searchQuery, { countries: { $in: items } });
+//   }
+//   if (cleanedQuery.examStates) {
+//     const items = cleanedQuery.examStates.split(",");
+//     Object.assign(searchQuery, { states: { $in: items } });
+//   }
+//   if (cleanedQuery.publishedAt) {
+//     const [startDate, endDate] = cleanedQuery.publishedAt.split(",");
+//     if (startDate && endDate) {
+//       Object.assign(searchQuery, {
+//         publishedAt: { $gte: new Date(startDate), $lte: new Date(endDate) },
+//       });
+//     } else if (startDate) {
+//       Object.assign(searchQuery, {
+//         publishedAt: { $gte: new Date(startDate) },
+//       });
+//     } else if (endDate) {
+//       Object.assign(searchQuery, { publishedAt: { $lte: new Date(endDate) } });
+//     }
+//   }
+//   const regexQuery: FilterQuery<T> = {
+//     $or: Object.entries(cleanedQuery).map(([field, value]) => ({
+//       [field]: { $regex: String(value), $options: "i" },
+//     })) as any,
+//   };
+//   return { ...searchQuery, ...regexQuery };
+// }
 function buildSearchQuery(req) {
     const cleanedQuery = req.query;
     let searchQuery = {};
-    if (cleanedQuery.country) {
-        const countries = cleanedQuery.country.split(",");
-        Object.assign(searchQuery, { country: { $in: countries } });
-    }
-    if (cleanedQuery.state) {
-        if (cleanedQuery.country && cleanedQuery.country.split(",").length === 1) {
+    const applyInFilter = (field) => {
+        if (cleanedQuery[field]) {
             Object.assign(searchQuery, {
-                state: { $in: cleanedQuery.state.split(",") },
+                [field]: { $in: cleanedQuery[field].split(",") },
             });
         }
-    }
-    if (cleanedQuery.area) {
-        if (cleanedQuery.country && cleanedQuery.country.split(",").length === 1) {
-            if (cleanedQuery.state && cleanedQuery.state.split(",").length === 1) {
-                Object.assign(searchQuery, {
-                    area: { $in: cleanedQuery.area.split(",") },
-                });
-            }
+    };
+    applyInFilter("country");
+    applyInFilter("state");
+    applyInFilter("area");
+    applyInFilter("gender");
+    applyInFilter("currentSchoolCountry");
+    applyInFilter("currentSchoolName");
+    applyInFilter("currentAcademicLevelName");
+    applyInFilter("schoolCountry");
+    applyInFilter("schoolState");
+    applyInFilter("schoolArea");
+    applyInFilter("schoolLevelName");
+    applyInFilter("examCountries");
+    applyInFilter("examStates");
+    if (cleanedQuery.publishedAt) {
+        let [startDate, endDate] = cleanedQuery.publishedAt.split(",");
+        if (!startDate || startDate === "undefined")
+            startDate = undefined;
+        if (!endDate || endDate === "undefined")
+            endDate = undefined;
+        const dateFilter = {};
+        if (startDate)
+            dateFilter.$gte = new Date(startDate);
+        if (endDate)
+            dateFilter.$lte = new Date(endDate);
+        if (Object.keys(dateFilter).length > 0) {
+            Object.assign(searchQuery, { publishedAt: dateFilter });
         }
     }
-    if (cleanedQuery.gender) {
-        const items = cleanedQuery.gender.split(",");
-        Object.assign(searchQuery, { gender: { $in: items } });
-    }
-    if (cleanedQuery.currentSchoolCountry) {
-        const items = cleanedQuery.currentSchoolCountry.split(",");
-        Object.assign(searchQuery, { currentSchoolCountry: { $in: items } });
-    }
-    if (cleanedQuery.currentSchoolName) {
-        const items = cleanedQuery.currentSchoolName.split(",");
-        Object.assign(searchQuery, { currentSchoolName: { $in: items } });
-    }
-    if (cleanedQuery.currentAcademicLevelName) {
-        const items = cleanedQuery.currentAcademicLevelName.split(",");
-        Object.assign(searchQuery, { currentAcademicLevelName: { $in: items } });
-    }
-    if (cleanedQuery.schoolCountry) {
-        const items = cleanedQuery.schoolCountry.split(",");
-        Object.assign(searchQuery, { country: { $in: items } });
-    }
-    if (cleanedQuery.schoolState) {
-        const items = cleanedQuery.schoolState.split(",");
-        Object.assign(searchQuery, { state: { $in: items } });
-    }
-    if (cleanedQuery.schoolArea) {
-        const items = cleanedQuery.schoolArea.split(",");
-        Object.assign(searchQuery, { area: { $in: items } });
-    }
-    if (cleanedQuery.schoolLevelName) {
-        const items = cleanedQuery.schoolLevelName.split(",");
-        Object.assign(searchQuery, { levelNames: { $in: items } });
-    }
-    const regexQuery = {
-        $or: Object.entries(cleanedQuery).map(([field, value]) => ({
-            [field]: { $regex: String(value), $options: "i" },
-        })),
-    };
-    return Object.assign(Object.assign({}, searchQuery), regexQuery);
+    const textFields = [
+        "title",
+        "name",
+        "instruction",
+        "username",
+        "displayName",
+        "firstName",
+        "middleName",
+        "lastName",
+        "subtitle",
+    ];
+    const regexConditions = textFields
+        .filter((field) => cleanedQuery[field])
+        .map((field) => ({
+        [field]: { $regex: cleanedQuery[field], $options: "i" },
+    }));
+    return Object.assign(Object.assign({}, searchQuery), (regexConditions.length ? { $or: regexConditions } : {}));
 }
 const search = (model, req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const searchQuery = {
-            $or: Object.entries(req.query).map(([field, value]) => ({
-                [field]: { $regex: String(value), $options: "i" },
-            })),
-        };
         const newSearchQuery = buildSearchQuery(req);
         console.log(newSearchQuery);
         const results = yield model.find(newSearchQuery);

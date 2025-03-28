@@ -11,6 +11,7 @@ import {
   getExams,
   updateExam,
   createExam,
+  searchExamInfo,
   getLeagueById,
   getLeagues,
   updateLeague,
@@ -33,6 +34,7 @@ router
   .post(upload.any(), createObjective);
 router.route("/leagues").get(getLeagues).post(upload.any(), createLeague);
 router.route("/exams").get(getExams).post(upload.any(), createExam);
+router.route("/exams/find").get(searchExamInfo);
 
 router
   .route("/leagues/papers/:id")

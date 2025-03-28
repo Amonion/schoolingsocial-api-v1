@@ -14,7 +14,7 @@ import {
   IPaper,
   IObjective,
 } from "../../utils/teamInterface";
-import { queryData, updateItem, createItem } from "../../utils/query";
+import { queryData, updateItem, createItem, search } from "../../utils/query";
 
 export const createWeekend = async (
   req: Request,
@@ -277,4 +277,8 @@ export const getObjectives = async (req: Request, res: Response) => {
   } catch (error) {
     handleError(res, undefined, undefined, error);
   }
+};
+
+export const searchExamInfo = (req: Request, res: Response) => {
+  return search(Exam, req, res);
 };

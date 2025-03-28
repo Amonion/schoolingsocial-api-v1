@@ -116,6 +116,7 @@ const ExamSchema: Schema = new Schema(
     academicLevels: { type: Array, default: [] },
 
     title: { type: String, default: "" },
+    picture: { type: String, default: "" },
     subjects: { type: String, default: "" },
     subtitle: { type: String, default: "" },
     instruction: { type: String, default: "" },
