@@ -42,6 +42,7 @@ const AcademicLevelSchema = new mongoose_1.Schema({
     maxLevel: { type: Number, default: 0 },
     maxLevelName: { type: String, default: "" },
     levelName: { type: String, default: "" },
+    institution: { type: String, default: "" },
     country: { type: String, default: "" },
     placeId: { type: String, default: "" },
     countryFlag: { type: String, default: "" },

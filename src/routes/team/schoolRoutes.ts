@@ -9,6 +9,7 @@ import {
   createSchool,
   searchSchools,
   searchSchool,
+  updateLevels,
   getSchoolPaymentById,
   getSchoolPayments,
   updateSchoolPayment,
@@ -46,6 +47,7 @@ router
   .get(getDepartments)
   .post(upload.any(), createDepartment);
 router.route("/faculties").get(getFaculties).post(upload.any(), createFaculty);
+router.route("/update-levels").post(upload.any(), updateLevels);
 
 router
   .route("/faculties/:id")

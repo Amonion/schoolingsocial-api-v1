@@ -5,6 +5,7 @@ export interface IAcademicLevel extends Document {
   level: number;
   maxLevel: number;
   levelName: string;
+  institution: string;
   certificate: string;
   certificateName: string;
   description: string;
@@ -120,6 +121,7 @@ export interface IExam extends Document {
   optionsPerQuestion: number;
   status: string;
   createdAt: Date;
+  questionDate: Date;
 }
 
 export interface IExpenses extends Document {
@@ -283,6 +285,8 @@ export interface ISchool extends Document {
   state: string;
   area: string;
   name: string;
+  levels: string;
+  levelNames: [];
   username: string;
   type: string;
   logo: string;

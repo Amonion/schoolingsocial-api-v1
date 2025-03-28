@@ -13,6 +13,7 @@ const SchoolSchema: Schema = new Schema(
     latitude: { type: Number, default: 0.0 },
     logo: { type: String },
     levels: { type: String },
+    levelNames: { type: Array, default: undefined },
     name: { type: String, default: "" },
     username: { type: String, default: "" },
     area: { type: String, default: "" },
@@ -53,6 +54,7 @@ const SchoolPaymentSchema: Schema = new Schema(
     timestamps: true,
   }
 );
+
 export const SchoolPayment = mongoose.model<ISchoolPayment>(
   "SchoolPayment",
   SchoolPaymentSchema

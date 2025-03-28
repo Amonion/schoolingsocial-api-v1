@@ -51,6 +51,24 @@ const updateWeekend = (req, res) => __awaiter(void 0, void 0, void 0, function* 
 exports.updateWeekend = updateWeekend;
 //-----------------Exam--------------------//
 const createExam = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    if (req.body.continents) {
+        req.body.continents = JSON.parse(req.body.continents);
+    }
+    if (req.body.countries) {
+        req.body.countries = JSON.parse(req.body.countries);
+    }
+    if (req.body.countriesId) {
+        req.body.countriesId = JSON.parse(req.body.countriesId);
+    }
+    if (req.body.states) {
+        req.body.states = JSON.parse(req.body.states);
+    }
+    if (req.body.statesId) {
+        req.body.statesId = JSON.parse(req.body.statesId);
+    }
+    if (req.body.academicLevels) {
+        req.body.academicLevels = JSON.parse(req.body.academicLevels);
+    }
     (0, query_1.createItem)(req, res, competitionModel_1.Exam, "Exam was created successfully");
 });
 exports.createExam = createExam;
@@ -170,7 +188,7 @@ const createObjective = (req, res) => __awaiter(void 0, void 0, void 0, function
     }
     for (let i = 0; i < questions.length; i++) {
         const el = questions[i];
-        if (el._id) {
+        if (el._id && el._id !== undefined && el._id !== "") {
             yield competitionModel_1.Objective.updateOne({ _id: el._id }, {
                 $set: {
                     question: el.question,
@@ -190,6 +208,9 @@ const createObjective = (req, res) => __awaiter(void 0, void 0, void 0, function
         }
     }
     const result = yield (0, query_1.queryData)(competitionModel_1.Objective, req);
+    yield competitionModel_1.Exam.findOneAndUpdate({ _id: result.results[0].paperId }, {
+        questions: result.count,
+    });
     res.status(200).json({
         message: "The question was saved successfully",
         count: result.count,

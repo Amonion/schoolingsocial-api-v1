@@ -66,6 +66,25 @@ export const createExam = async (
   req: Request,
   res: Response
 ): Promise<void> => {
+  if (req.body.continents) {
+    req.body.continents = JSON.parse(req.body.continents);
+  }
+  if (req.body.countries) {
+    req.body.countries = JSON.parse(req.body.countries);
+  }
+  if (req.body.countriesId) {
+    req.body.countriesId = JSON.parse(req.body.countriesId);
+  }
+  if (req.body.states) {
+    req.body.states = JSON.parse(req.body.states);
+  }
+  if (req.body.statesId) {
+    req.body.statesId = JSON.parse(req.body.statesId);
+  }
+  if (req.body.academicLevels) {
+    req.body.academicLevels = JSON.parse(req.body.academicLevels);
+  }
+
   createItem(req, res, Exam, "Exam was created successfully");
 };
 
@@ -213,7 +232,7 @@ export const createObjective = async (
 
   for (let i = 0; i < questions.length; i++) {
     const el = questions[i];
-    if (el._id) {
+    if (el._id && el._id !== undefined && el._id !== "") {
       await Objective.updateOne(
         { _id: el._id },
         {
@@ -237,7 +256,12 @@ export const createObjective = async (
   }
 
   const result = await queryData(Objective, req);
-
+  await Exam.findOneAndUpdate(
+    { _id: result.results[0].paperId },
+    {
+      questions: result.count,
+    }
+  );
   res.status(200).json({
     message: "The question was saved successfully",
     count: result.count,

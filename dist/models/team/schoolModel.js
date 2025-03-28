@@ -40,6 +40,7 @@ const SchoolSchema = new mongoose_1.Schema({
     latitude: { type: Number, default: 0.0 },
     logo: { type: String },
     levels: { type: String },
+    levelNames: { type: Array, default: undefined },
     name: { type: String, default: "" },
     username: { type: String, default: "" },
     area: { type: String, default: "" },

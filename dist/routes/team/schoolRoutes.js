@@ -21,6 +21,7 @@ router
     .get(schoolController_1.getDepartments)
     .post(upload.any(), schoolController_1.createDepartment);
 router.route("/faculties").get(schoolController_1.getFaculties).post(upload.any(), schoolController_1.createFaculty);
+router.route("/update-levels").post(upload.any(), schoolController_1.updateLevels);
 router
     .route("/faculties/:id")
     .get(schoolController_1.getFacultyById)

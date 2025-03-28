@@ -5,7 +5,6 @@ import {
   ILeague,
   IPaper,
   IObjective,
-  IOption,
 } from "../../utils/teamInterface";
 
 const WeekendSchema: Schema = new Schema(
@@ -109,10 +108,13 @@ export const League = mongoose.model<ILeague>("League", LeagueSchema);
 
 const ExamSchema: Schema = new Schema(
   {
-    continent: { type: String },
-    country: { type: String },
-    state: { type: String, default: "" },
-    placeId: { type: String, default: "" },
+    continents: { type: Array, default: [] },
+    countries: { type: Array, default: [] },
+    countriesId: { type: Array, default: [] },
+    states: { type: Array, default: [] },
+    statesId: { type: Array, default: [] },
+    academicLevels: { type: Array, default: [] },
+
     title: { type: String, default: "" },
     subjects: { type: String, default: "" },
     subtitle: { type: String, default: "" },
@@ -120,13 +122,17 @@ const ExamSchema: Schema = new Schema(
     randomize: { type: Boolean, default: false },
     showResult: { type: Boolean, default: false },
     simultaneous: { type: Boolean, default: false },
-    types: { type: Array, default: "" },
+    eligibility: { type: Boolean, default: false },
+    isEditable: { type: Boolean, default: false },
+    type: { type: String, default: "" },
     name: { type: String, default: "" },
     status: { type: String, default: "Draft" },
     duration: { type: Number, default: 0 },
+    questions: { type: Number, default: 0 },
     questionsPerPage: { type: Number, default: 0 },
     optionsPerQuestion: { type: Number, default: 0 },
     createdAt: { type: Date, default: Date.now },
+    questionDate: { type: Date, default: null },
     publishedAt: { type: Date, default: Date.now },
   },
   {

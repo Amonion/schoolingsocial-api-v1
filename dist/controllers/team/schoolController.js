@@ -9,11 +9,12 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.deleteFaculty = exports.updateFaculty = exports.getFaculties = exports.getFacultyById = exports.createFaculty = exports.deleteDepartment = exports.updateDepartment = exports.getDepartments = exports.getDepartmentById = exports.createDepartment = exports.deleteCourse = exports.updateCourse = exports.getCourses = exports.getCourseById = exports.createCourse = exports.searchSchools = exports.deleteSchoolPayment = exports.updateSchoolPayment = exports.getSchoolPayments = exports.getSchoolPaymentById = exports.createSchoolPayment = exports.searchSchool = exports.deleteSchool = exports.updateSchool = exports.getSchools = exports.getSchoolById = exports.createSchool = void 0;
+exports.deleteFaculty = exports.updateFaculty = exports.getFaculties = exports.getFacultyById = exports.createFaculty = exports.deleteDepartment = exports.updateDepartment = exports.getDepartments = exports.getDepartmentById = exports.createDepartment = exports.deleteCourse = exports.updateCourse = exports.getCourses = exports.getCourseById = exports.createCourse = exports.searchSchools = exports.deleteSchoolPayment = exports.updateSchoolPayment = exports.getSchoolPayments = exports.getSchoolPaymentById = exports.createSchoolPayment = exports.updateLevels = exports.searchSchool = exports.deleteSchool = exports.updateSchool = exports.getSchools = exports.getSchoolById = exports.createSchool = void 0;
 const errorHandler_1 = require("../../utils/errorHandler");
 const schoolModel_1 = require("../../models/team/schoolModel");
 const query_1 = require("../../utils/query");
 const createSchool = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    req.body.level = JSON.parse(req.body.levels);
     (0, query_1.createItem)(req, res, schoolModel_1.School, "School was created successfully");
 });
 exports.createSchool = createSchool;
@@ -57,6 +58,31 @@ const searchSchool = (req, res) => {
     return (0, query_1.search)(schoolModel_1.School, req, res);
 };
 exports.searchSchool = searchSchool;
+const updateLevels = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const items = yield schoolModel_1.School.find();
+        for (let i = 0; i < items.length; i++) {
+            const el = items[i];
+            if (el.levelNames.length === 0 ||
+                el.levelNames[i] === null ||
+                el.levelNames === null ||
+                el.levelNames === undefined) {
+                const levels = JSON.parse(el.levels);
+                const arr = [];
+                for (let x = 0; x < levels.length; x++) {
+                    const elm = levels[x];
+                    arr.push(elm.levelName);
+                }
+                yield schoolModel_1.School.findByIdAndUpdate(el._id, { levelNames: arr });
+            }
+        }
+        return res.status(200).json({ message: "Schools updated successfully." });
+    }
+    catch (error) {
+        (0, errorHandler_1.handleError)(res, undefined, undefined, error);
+    }
+});
+exports.updateLevels = updateLevels;
 //-----------------PAYMENT--------------------//
 const createSchoolPayment = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     (0, query_1.createItem)(req, res, schoolModel_1.SchoolPayment, "School payment was created successfully");

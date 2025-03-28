@@ -12,86 +12,86 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.deleteItems = exports.deleteItem = exports.updateItem = exports.getItems = exports.getItemById = exports.createItem = exports.search = exports.queryData = void 0;
 const fileUpload_1 = require("./fileUpload");
 const errorHandler_1 = require("./errorHandler");
-// const buildFilterQuery = (req: Request): Record<string, any> => {
-//   const filters: Record<string, any> = {};
-//   for (const [key, value] of Object.entries(req.query)) {
-//     if (key !== "page_size" && key !== "page" && key !== "ordering") {
-//       if (typeof value === "string") {
-//         if (value.trim() === "") {
-//           // If any key has an empty string value, return a filter that matches no documents
-//           return { [key]: { $exists: false } };
-//         }
-//         if (value === "true" || value === "false") {
-//           // Convert boolean-like strings to actual booleans
-//           filters[key] = value === "true";
-//         } else {
-//           // Use regex for other strings
-//           filters[key] = { $regex: value, $options: "i" };
-//         }
-//       } else if (Array.isArray(value)) {
-//         // Map each item in the array to a regex, ensuring it is a string
-//         const validValues = value.filter(
-//           (item): item is string =>
-//             typeof item === "string" && item.trim() !== ""
-//         );
-//         if (validValues.length === 0) {
-//           // If all array items are empty, return a filter that matches no documents
-//           return { [key]: { $exists: false } };
-//         }
-//         filters[key] = {
-//           $in: validValues.map((item) => new RegExp(item, "i")),
-//         };
-//       } else if (typeof value === "boolean") {
-//         // Directly handle boolean fields
-//         filters[key] = value;
-//       } else if (typeof value === "number") {
-//         // Handle numbers directly
-//         filters[key] = value;
-//       } else if (value && typeof value === "object") {
-//         // Handle plain objects
-//         filters[key] = value;
-//       } else {
-//         // Ignore unsupported or undefined types
-//         continue;
-//       }
-//     }
-//   }
-//   return filters;
-// };
 const buildFilterQuery = (req) => {
     const filters = {};
     for (const [key, value] of Object.entries(req.query)) {
-        if (["page_size", "page", "ordering"].includes(key))
-            continue;
-        if (typeof value === "string") {
-            const valuesArray = value
-                .split(",")
-                .map((v) => v.trim())
-                .filter(Boolean);
-            if (valuesArray.length === 1) {
-                filters[key] = { $regex: valuesArray[0], $options: "i" };
+        if (key !== "page_size" && key !== "page" && key !== "ordering") {
+            if (typeof value === "string") {
+                if (value.trim() === "") {
+                    // If any key has an empty string value, return a filter that matches no documents
+                    return { [key]: { $exists: false } };
+                }
+                if (value === "true" || value === "false") {
+                    // Convert boolean-like strings to actual booleans
+                    filters[key] = value === "true";
+                }
+                else {
+                    // Use regex for other strings
+                    filters[key] = { $regex: value, $options: "i" };
+                }
             }
-            else {
-                filters[key] = { $in: valuesArray.map((v) => new RegExp(v, "i")) };
-            }
-        }
-        else if (Array.isArray(value)) {
-            const validValues = value.filter((item) => typeof item === "string" && item.trim() !== "");
-            if (validValues.length > 0) {
+            else if (Array.isArray(value)) {
+                // Map each item in the array to a regex, ensuring it is a string
+                const validValues = value.filter((item) => typeof item === "string" && item.trim() !== "");
+                if (validValues.length === 0) {
+                    // If all array items are empty, return a filter that matches no documents
+                    return { [key]: { $exists: false } };
+                }
                 filters[key] = {
                     $in: validValues.map((item) => new RegExp(item, "i")),
                 };
             }
-        }
-        else if (typeof value === "boolean" || typeof value === "number") {
-            filters[key] = value;
-        }
-        else if (value && typeof value === "object") {
-            filters[key] = value;
+            else if (typeof value === "boolean") {
+                // Directly handle boolean fields
+                filters[key] = value;
+            }
+            else if (typeof value === "number") {
+                // Handle numbers directly
+                filters[key] = value;
+            }
+            else if (value && typeof value === "object") {
+                // Handle plain objects
+                filters[key] = value;
+            }
+            else {
+                // Ignore unsupported or undefined types
+                continue;
+            }
         }
     }
     return filters;
 };
+// const buildFilterQuery = (req: Request): Record<string, any> => {
+//   const filters: Record<string, any> = {};
+//   for (const [key, value] of Object.entries(req.query)) {
+//     if (["page_size", "page", "ordering"].includes(key)) continue;
+//     if (typeof value === "string") {
+//       const valuesArray = value
+//         .split(",")
+//         .map((v) => v.trim())
+//         .filter(Boolean);
+//       if (valuesArray.length === 1) {
+//         filters[key] = { $regex: valuesArray[0], $options: "i" };
+//       } else {
+//         filters[key] = { $in: valuesArray.map((v) => new RegExp(v, "i")) };
+//       }
+//     } else if (Array.isArray(value)) {
+//       const validValues = value.filter(
+//         (item): item is string => typeof item === "string" && item.trim() !== ""
+//       );
+//       if (validValues.length > 0) {
+//         filters[key] = {
+//           $in: validValues.map((item) => new RegExp(item, "i")),
+//         };
+//       }
+//     } else if (typeof value === "boolean" || typeof value === "number") {
+//       filters[key] = value;
+//     } else if (value && typeof value === "object") {
+//       filters[key] = value;
+//     }
+//   }
+//   return filters;
+// };
 const buildSortingQuery = (req) => {
     const sort = {};
     if (req.query.ordering) {
@@ -162,6 +162,22 @@ function buildSearchQuery(req) {
     if (cleanedQuery.currentAcademicLevelName) {
         const items = cleanedQuery.currentAcademicLevelName.split(",");
         Object.assign(searchQuery, { currentAcademicLevelName: { $in: items } });
+    }
+    if (cleanedQuery.schoolCountry) {
+        const items = cleanedQuery.schoolCountry.split(",");
+        Object.assign(searchQuery, { country: { $in: items } });
+    }
+    if (cleanedQuery.schoolState) {
+        const items = cleanedQuery.schoolState.split(",");
+        Object.assign(searchQuery, { state: { $in: items } });
+    }
+    if (cleanedQuery.schoolArea) {
+        const items = cleanedQuery.schoolArea.split(",");
+        Object.assign(searchQuery, { area: { $in: items } });
+    }
+    if (cleanedQuery.schoolLevelName) {
+        const items = cleanedQuery.schoolLevelName.split(",");
+        Object.assign(searchQuery, { levelNames: { $in: items } });
     }
     const regexQuery = {
         $or: Object.entries(cleanedQuery).map(([field, value]) => ({

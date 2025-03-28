@@ -13,6 +13,7 @@ import {
   IFaculty,
   IDepartment,
   ICourse,
+  IAcademicLevel,
 } from "../../utils/teamInterface";
 import {
   queryData,
@@ -26,6 +27,7 @@ export const createSchool = async (
   req: Request,
   res: Response
 ): Promise<void> => {
+  req.body.level = JSON.parse(req.body.levels);
   createItem(req, res, School, "School was created successfully");
 };
 
@@ -81,6 +83,31 @@ export const searchSchool = (req: Request, res: Response) => {
   return search(School, req, res);
 };
 
+export const updateLevels = async (req: Request, res: Response) => {
+  try {
+    const items = await School.find();
+    for (let i = 0; i < items.length; i++) {
+      const el = items[i];
+      if (
+        el.levelNames.length === 0 ||
+        el.levelNames[i] === null ||
+        el.levelNames === null ||
+        el.levelNames === undefined
+      ) {
+        const levels: IAcademicLevel[] = JSON.parse(el.levels);
+        const arr = [];
+        for (let x = 0; x < levels.length; x++) {
+          const elm = levels[x];
+          arr.push(elm.levelName);
+        }
+        await School.findByIdAndUpdate(el._id, { levelNames: arr });
+      }
+    }
+    return res.status(200).json({ message: "Schools updated successfully." });
+  } catch (error) {
+    handleError(res, undefined, undefined, error);
+  }
+};
 //-----------------PAYMENT--------------------//
 export const createSchoolPayment = async (
   req: Request,
