@@ -240,6 +240,71 @@ export const queryData = async <T>(
 //   return { ...searchQuery, ...regexQuery };
 // }
 
+// export const generalSearchQuery = <T>(req: any): FilterQuery<T> => {
+//   const cleanedQuery = req.query;
+
+//   let searchQuery: FilterQuery<T> = {} as FilterQuery<T>;
+
+//   const textFields = [
+//     "title",
+//     "name",
+//     "instruction",
+//     "username",
+//     "displayName",
+//     "firstName",
+//     "middleName",
+//     "lastName",
+//     "subtitle",
+//   ];
+
+//   const regexConditions: FilterQuery<T>[] = textFields
+//     .filter((field) => cleanedQuery[field])
+//     .map((field) => ({
+//       [field]: { $regex: cleanedQuery[field], $options: "i" },
+//     })) as FilterQuery<T>[];
+
+//   return {
+//     ...searchQuery,
+//     ...(regexConditions.length ? { $or: regexConditions } : {}),
+//   } as FilterQuery<T>;
+// };
+
+export const generalSearchQuery = <T>(
+  req: any
+): { filter: FilterQuery<T>; page: number; page_size: number } => {
+  const cleanedQuery = req.query;
+
+  let searchQuery: FilterQuery<T> = {} as FilterQuery<T>;
+
+  const textFields = [
+    "title",
+    "name",
+    "instruction",
+    "username",
+    "displayName",
+    "firstName",
+    "middleName",
+    "lastName",
+    "subtitle",
+  ];
+
+  const regexConditions: FilterQuery<T>[] = textFields
+    .filter((field) => cleanedQuery[field])
+    .map((field) => ({
+      [field]: { $regex: cleanedQuery[field], $options: "i" },
+    })) as FilterQuery<T>[];
+
+  const filter = {
+    ...searchQuery,
+    ...(regexConditions.length ? { $or: regexConditions } : {}),
+  };
+
+  const page = Math.max(1, parseInt(cleanedQuery.page) || 1); // Default to page 1
+  const page_size = Math.max(1, parseInt(cleanedQuery.page_size) || 3); // Default to 10 items per page
+
+  return { filter, page, page_size };
+};
+
 function buildSearchQuery<T>(req: any): FilterQuery<T> {
   const cleanedQuery = req.query;
 

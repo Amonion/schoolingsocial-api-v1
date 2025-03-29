@@ -13,6 +13,21 @@ export interface IAccount extends Document {
   isVerified: boolean;
 }
 
+export interface IFollower extends Document {
+  userId: string;
+  followersId: string[];
+  followingId: string[];
+}
+
+export interface IGeneral {
+  picture: string;
+  name: string;
+  title: string;
+  username: string;
+  type: string;
+  id: string;
+}
+
 export interface IStat extends Document {
   userId: string;
   postId: string;
@@ -171,12 +186,6 @@ export interface IUserNotification extends Document {
 export interface IUserInterest extends Document {
   userId: string;
   interests: string[];
-}
-
-export interface IFollower extends Document {
-  userId: string;
-  followersId: string[];
-  followingId: string[];
 }
 
 interface File {

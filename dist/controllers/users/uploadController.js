@@ -9,9 +9,15 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.deleteUpload = exports.updateUpload = exports.getUploads = exports.getUploadById = exports.createUploadVideo = exports.createUpload = void 0;
+exports.multiSearch = exports.deleteUpload = exports.updateUpload = exports.getUploads = exports.getUploadById = exports.createUploadVideo = exports.createUpload = void 0;
 const uploadModel_1 = require("../../models/users/uploadModel");
 const query_1 = require("../../utils/query");
+const errorHandler_1 = require("../../utils/errorHandler");
+const userModel_1 = require("../../models/users/userModel");
+const postModel_1 = require("../../models/users/postModel");
+const schoolModel_1 = require("../../models/team/schoolModel");
+const competitionModel_1 = require("../../models/team/competitionModel");
+const userInfoModel_1 = require("../../models/users/userInfoModel");
 //--------------------UPLOADS-----------------------//
 const createUpload = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     (0, query_1.createItem)(req, res, uploadModel_1.Upload, "Uploads was created successfully");
@@ -37,3 +43,42 @@ const deleteUpload = (req, res) => __awaiter(void 0, void 0, void 0, function* (
     yield (0, query_1.deleteItem)(req, res, uploadModel_1.Upload, ["media"], "Upload not found");
 });
 exports.deleteUpload = deleteUpload;
+const multiSearch = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const setType = (type) => {
+            if (type === "UserInfo") {
+                return "User";
+            }
+            else if (type === "User") {
+                return "Account";
+            }
+            else {
+                return type;
+            }
+        };
+        const models = [userModel_1.User, userInfoModel_1.UserInfo, postModel_1.Post, schoolModel_1.School, competitionModel_1.Exam];
+        // const searchQuery = generalSearchQuery(req);
+        const { filter, page, page_size } = (0, query_1.generalSearchQuery)(req);
+        const searchPromises = models.map((model) => model
+            .find(filter)
+            .skip((page - 1) * page_size)
+            .limit(page_size)
+            .then((docs) => docs.map((doc) => (Object.assign(Object.assign({}, doc.toObject()), { type: model.modelName })))));
+        const results = yield Promise.all(searchPromises);
+        const combinedResults = results.flat();
+        const formattedResults = combinedResults.map((item) => ({
+            picture: item.picture || "",
+            name: item.name || item.username || item.title || item.displayName || "",
+            title: item.title || "",
+            username: item.username || "",
+            type: setType(item.type) || "",
+            id: item._id.toString(),
+        }));
+        res.json(formattedResults);
+    }
+    catch (error) {
+        console.error("Search Error:", error);
+        (0, errorHandler_1.handleError)(res, undefined, undefined, error);
+    }
+});
+exports.multiSearch = multiSearch;

@@ -12,6 +12,7 @@ const router = express_1.default.Router();
 router.route("/uploads").get(uploadController_1.getUploads).post(upload.any(), uploadController_1.createUpload);
 router.route("/accounts").get(postController_1.getAccounts).post(upload.any(), postController_1.createAccount);
 router.route("/stats").get(postController_1.getPostStat).patch(postController_1.updatePostStat);
+router.route("/general").get(uploadController_1.multiSearch);
 router.route("/").get(postController_1.getPosts).post(upload.any(), postController_1.createPost);
 router
     .route("/uploads/:id")

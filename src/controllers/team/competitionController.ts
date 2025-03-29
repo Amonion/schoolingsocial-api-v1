@@ -92,6 +92,7 @@ export const getExamById = async (
   req: Request,
   res: Response
 ): Promise<Response | void> => {
+  console.log(req.params.id);
   try {
     const item = await Exam.findById(req.params.id);
     if (!item) {

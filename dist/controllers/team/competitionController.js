@@ -73,6 +73,7 @@ const createExam = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
 });
 exports.createExam = createExam;
 const getExamById = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    console.log(req.params.id);
     try {
         const item = yield competitionModel_1.Exam.findById(req.params.id);
         if (!item) {

@@ -23,6 +23,7 @@ import {
   updateUpload,
   deleteUpload,
   createUpload,
+  multiSearch,
 } from "../../controllers/users/uploadController";
 
 const router = express.Router();
@@ -30,6 +31,7 @@ const router = express.Router();
 router.route("/uploads").get(getUploads).post(upload.any(), createUpload);
 router.route("/accounts").get(getAccounts).post(upload.any(), createAccount);
 router.route("/stats").get(getPostStat).patch(updatePostStat);
+router.route("/general").get(multiSearch);
 router.route("/").get(getPosts).post(upload.any(), createPost);
 router
   .route("/uploads/:id")
