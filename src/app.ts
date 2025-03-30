@@ -8,11 +8,12 @@ import { handleError } from "./utils/errorHandler";
 import competitionRoutes from "./routes/team/competitionRoutes";
 import companyRoutes from "./routes/team/companyRoutes";
 import messageRoutes from "./routes/team/messageRoutes";
-import userMessageRoutes from "./routes/users/userMessageRoutes";
 import newsRoutes from "./routes/team/newsRoutes";
 import placeRoutes from "./routes/team/placeRoutes";
 import postRoutes from "./routes/users/postRoutes";
 import schoolRoutes from "./routes/team/schoolRoutes";
+import userMessageRoutes from "./routes/users/userMessageRoutes";
+import userCompetitionRoutes from "./routes/users/userCompetitionRoutes";
 import userRoutes from "./routes/users/userRoutes";
 import { createPost } from "./controllers/users/postController";
 import { getPresignedUrl, removeFile } from "./utils/fileUpload";
@@ -88,8 +89,10 @@ app.use("/api/v1/news", newsRoutes);
 app.use("/api/v1/places", placeRoutes);
 app.use("/api/v1/posts", postRoutes);
 app.use("/api/v1/schools", schoolRoutes);
-app.use("/api/v1/users", userRoutes);
+app.use("/api/v1/user-competitions", userCompetitionRoutes);
 app.use("/api/v1/user-messages", userMessageRoutes);
+
+app.use("/api/v1/users", userRoutes);
 
 // ✅ Error Handling Middleware
 app.use((req, res, next) => {

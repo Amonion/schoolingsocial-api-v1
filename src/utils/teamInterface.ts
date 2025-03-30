@@ -108,8 +108,9 @@ export interface IExam extends Document {
   instruction: string;
   country: string;
   subtitle: string;
+  name: string;
   continent: string;
-  types: string;
+  type: string;
   randomize: boolean;
   simultaneous: boolean;
   showResult: boolean;
@@ -119,6 +120,7 @@ export interface IExam extends Document {
   duration: number;
   questionsPerPage: number;
   optionsPerQuestion: number;
+  questions: number;
   status: string;
   createdAt: Date;
   questionDate: Date;
@@ -206,8 +208,8 @@ export interface IObjective extends Document {
   index: number;
   paperId: string;
   leagueId: string;
-  question: IOption[];
-  options: string;
+  question: string;
+  options: IOption[];
   createdAt: Date;
 }
 
@@ -215,6 +217,7 @@ export interface IOption {
   index: number;
   value: string;
   isSelected: boolean;
+  isClicked: boolean;
 }
 
 export interface IPayment extends Document {

@@ -1,3 +1,5 @@
+import { IObjective } from "./teamInterface";
+
 export interface IAccount extends Document {
   username: string;
   userId: string;
@@ -186,6 +188,23 @@ export interface IUserNotification extends Document {
 export interface IUserInterest extends Document {
   userId: string;
   interests: string[];
+}
+
+export interface IUserTest extends Document {
+  username: string;
+  userId: string;
+  picture: string;
+  paperId: string;
+  name: string;
+  title: string;
+  instruction: string;
+  type: string;
+  questionLen: number;
+  questions: IObjective[];
+
+  attempts: number;
+  totalAnswered: number;
+  totalCorrectAnswer: number;
 }
 
 interface File {
