@@ -64,6 +64,7 @@ const ObjectiveSchema = new mongoose_1.Schema({
     question: { type: String },
     options: { type: Array },
     isSelected: { type: Boolean, default: false },
+    isClicked: { type: Boolean, default: false },
     createdAt: { type: Date, default: Date.now },
 }, {
     timestamps: true,

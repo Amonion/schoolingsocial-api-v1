@@ -23,11 +23,12 @@ const errorHandler_1 = require("./utils/errorHandler");
 const competitionRoutes_1 = __importDefault(require("./routes/team/competitionRoutes"));
 const companyRoutes_1 = __importDefault(require("./routes/team/companyRoutes"));
 const messageRoutes_1 = __importDefault(require("./routes/team/messageRoutes"));
-const userMessageRoutes_1 = __importDefault(require("./routes/users/userMessageRoutes"));
 const newsRoutes_1 = __importDefault(require("./routes/team/newsRoutes"));
 const placeRoutes_1 = __importDefault(require("./routes/team/placeRoutes"));
 const postRoutes_1 = __importDefault(require("./routes/users/postRoutes"));
 const schoolRoutes_1 = __importDefault(require("./routes/team/schoolRoutes"));
+const userMessageRoutes_1 = __importDefault(require("./routes/users/userMessageRoutes"));
+const userCompetitionRoutes_1 = __importDefault(require("./routes/users/userCompetitionRoutes"));
 const userRoutes_1 = __importDefault(require("./routes/users/userRoutes"));
 const postController_1 = require("./controllers/users/postController");
 const fileUpload_1 = require("./utils/fileUpload");
@@ -95,8 +96,9 @@ app.use("/api/v1/news", newsRoutes_1.default);
 app.use("/api/v1/places", placeRoutes_1.default);
 app.use("/api/v1/posts", postRoutes_1.default);
 app.use("/api/v1/schools", schoolRoutes_1.default);
-app.use("/api/v1/users", userRoutes_1.default);
+app.use("/api/v1/user-competitions", userCompetitionRoutes_1.default);
 app.use("/api/v1/user-messages", userMessageRoutes_1.default);
+app.use("/api/v1/users", userRoutes_1.default);
 // ✅ Error Handling Middleware
 app.use((req, res, next) => {
     (0, errorHandler_1.handleError)(res, 404, `Request not found: ${req.method} ${req.originalUrl}`);

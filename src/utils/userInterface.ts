@@ -40,6 +40,13 @@ interface Media {
   type: string;
 }
 
+interface Option {
+  index: number;
+  value: string;
+  isSelected: boolean;
+  isClicked: boolean;
+}
+
 interface Poll {
   picture: string;
   text: string;
@@ -190,21 +197,31 @@ export interface IUserInterest extends Document {
   interests: string[];
 }
 
-export interface IUserTest extends Document {
+export interface IUserTestExam extends Document {
   username: string;
   userId: string;
   picture: string;
   paperId: string;
   name: string;
   title: string;
-  instruction: string;
   type: string;
-  questionLen: number;
-  questions: IObjective[];
-
+  instruction: string;
+  questions: number;
+  duration: number;
+  rate: number;
+  accuracy: number;
+  metric: number;
   attempts: number;
   totalAnswered: number;
   totalCorrectAnswer: number;
+}
+export interface IUserTest extends Document {
+  _id: string;
+  userId: string;
+  paperId: string;
+  isClicked: boolean;
+  question: string;
+  options: Option[];
 }
 
 interface File {

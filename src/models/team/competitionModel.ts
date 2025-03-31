@@ -41,6 +41,7 @@ const ObjectiveSchema: Schema = new Schema(
     question: { type: String },
     options: { type: Array },
     isSelected: { type: Boolean, default: false },
+    isClicked: { type: Boolean, default: false },
     createdAt: { type: Date, default: Date.now },
   },
   {

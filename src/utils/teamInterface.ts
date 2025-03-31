@@ -205,7 +205,9 @@ export interface INotification extends Document {
 }
 
 export interface IObjective extends Document {
+  _id: string;
   index: number;
+  isClicked: boolean;
   paperId: string;
   leagueId: string;
   question: string;

@@ -15,7 +15,7 @@ import {
   IObjective,
 } from "../../utils/teamInterface";
 import { queryData, updateItem, createItem, search } from "../../utils/query";
-import { UserTest } from "../../models/users/competitionModel";
+import { UserTest, UserTestExam } from "../../models/users/competitionModel";
 import { IUserTest } from "../../utils/userInterface";
 
 export const createWeekend = async (
@@ -70,68 +70,96 @@ export const createExam = async (
 ): Promise<Response | void> => {
   try {
     const paperId = req.body.paperId;
-    const attempted = req.body.attemptedQuestions;
-    const answeredQuestions = req.body.questions
-      ? JSON.parse(req.body.questions)
-      : [];
+    const userId = req.body.userId;
+    const picture = req.body.picture;
+    const started = Number(req.body.started);
+    const ended = Number(req.body.ended);
+    const attempts = Number(req.body.attempts);
+    const instruction = req.body.instruction;
+    const questions = req.body.questions ? JSON.parse(req.body.questions) : [];
 
-    const exam = await Exam.findById(paperId);
+    const rate = (1000 * questions.length) / (ended - started);
+    let mainObjective = await Objective.find({ paperId: paperId });
 
-    const processQuestions = (questions: IObjective[]) => {
-      const updatedQuestions = questions.map((question) => {
-        const hasMatchingSelection = question.options.some(
-          (option) => option.isSelected && option.isClicked
-        );
+    let correctAnswer = 0;
+    for (let i = 0; i < questions.length; i++) {
+      const el = questions[i];
+      for (let x = 0; x < el.options.length; x++) {
+        const opt = el.options[x];
+        if (
+          opt.isSelected === opt.isClicked &&
+          opt.isSelected &&
+          opt.isClicked
+        ) {
+          correctAnswer++;
+        }
+      }
+    }
 
-        return {
-          ...question,
-          isValid: hasMatchingSelection, // Mark the question as valid or not
-          options: question.options.map((option) => ({
-            ...option,
-            isSelected: option.isClicked, // Sync isSelected with isClicked
-          })),
-        };
-      });
+    const accuracy = correctAnswer / questions.length;
+    const metric = accuracy * rate;
+    const updatedQuestions: IUserTest[] = [];
+    for (let i = 0; i < mainObjective.length; i++) {
+      const el = mainObjective[i];
+      const objIndex = questions.findIndex(
+        (obj: IObjective) => obj._id == el._id
+      );
 
-      const totalCorrect = updatedQuestions.filter((q) => q.isValid).length;
+      if (objIndex !== -1) {
+        const obj = {
+          isClicked: true,
+          paperId: paperId,
+          userId: userId,
+          question: el.question,
+          options: questions[objIndex].options,
+        } as IUserTest;
+        updatedQuestions.push(obj);
+      } else {
+        const obj = {
+          isClicked: false,
+          paperId: paperId,
+          userId: userId,
+          question: el.question,
+          options: el.options,
+        } as IUserTest;
+        updatedQuestions.push(obj);
+      }
+    }
 
-      return { updatedQuestions, totalCorrect };
-    };
+    await UserTestExam.updateOne(
+      {
+        paperId,
+        userId,
+      },
+      {
+        $set: {
+          paperId,
+          userId,
+          picture,
+          started,
+          ended,
+          attempts,
+          rate,
+          accuracy,
+          metric,
+          instruction,
+          questions: mainObjective.length,
+          attemptedQuestions: questions.length,
+          totalCorrectAnswer: correctAnswer,
+        },
+      },
 
-    const result = processQuestions(answeredQuestions);
-    const duration = exam?.duration ? exam.duration : 1;
-    const questions = exam?.questions ? exam?.questions : 1;
-    const rate = attempted / duration;
-    const accuracy = result.totalCorrect / questions;
+      {
+        upsert: true,
+      }
+    );
 
-    const form = {
-      username: req.body.username,
-      userId: req.body.userId,
-      paperId: req.body.paperId,
-      picture: req.body.picture,
-      started: req.body.started,
-      ended: req.body.ended,
-      title: exam?.title,
-      type: exam?.type,
-      name: exam?.name,
-      questionLen: exam?.questions,
-      rate: rate,
-      accuracy: accuracy,
-      metric: rate * accuracy,
-      questions: answeredQuestions,
-      attemptedQuestions: attempted,
-      attempts: req.body.attempts,
-      totalCorrectAnswer: result.totalCorrect,
-    };
-
-    const item = await UserTest.findOneAndUpdate({ paperId: paperId }, form, {
-      new: true,
-      upsert: true,
-    });
+    await UserTest.deleteMany({ userId: userId, paperId: paperId });
+    const insertedDocs = await UserTest.insertMany(updatedQuestions);
 
     res
       .status(200)
-      .json({ message: "Exam submitted successfully", data: item });
+      .json({ message: "Exam submitted successfully", results: insertedDocs });
   } catch (error) {
     handleError(res, undefined, undefined, error);
   }
