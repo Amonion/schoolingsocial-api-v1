@@ -75,7 +75,7 @@ const createExam = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
                 }
             }
         }
-        const accuracy = correctAnswer / questions.length;
+        const accuracy = correctAnswer / mainObjective.length;
         const metric = accuracy * rate;
         const updatedQuestions = [];
         for (let i = 0; i < mainObjective.length; i++) {
@@ -102,7 +102,7 @@ const createExam = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
                 updatedQuestions.push(obj);
             }
         }
-        yield competitionModel_2.UserTestExam.updateOne({
+        const exam = yield competitionModel_2.UserTestExam.findOneAndUpdate({
             paperId,
             userId,
         }, {
@@ -122,13 +122,18 @@ const createExam = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
                 totalCorrectAnswer: correctAnswer,
             },
         }, {
+            new: true,
             upsert: true,
         });
         yield competitionModel_2.UserTest.deleteMany({ userId: userId, paperId: paperId });
-        const insertedDocs = yield competitionModel_2.UserTest.insertMany(updatedQuestions);
-        res
-            .status(200)
-            .json({ message: "Exam submitted successfully", results: insertedDocs });
+        yield competitionModel_2.UserTest.insertMany(updatedQuestions);
+        const result = yield (0, query_1.queryData)(competitionModel_2.UserTest, req);
+        const data = {
+            exam,
+            results: result.results,
+            message: "Exam submitted successfull",
+        };
+        res.status(200).json(data);
     }
     catch (error) {
         (0, errorHandler_1.handleError)(res, undefined, undefined, error);
@@ -151,8 +156,16 @@ const getExamById = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
 exports.getExamById = getExamById;
 const getExams = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
+        const exam = yield competitionModel_2.UserTestExam.findOne({
+            userId: req.query.userId,
+            paperId: req.query.paperId,
+        });
         const result = yield (0, query_1.queryData)(competitionModel_2.UserTest, req);
-        res.status(200).json(result);
+        const data = {
+            exam,
+            results: result.results,
+        };
+        res.status(200).json(data);
     }
     catch (error) {
         (0, errorHandler_1.handleError)(res, undefined, undefined, error);

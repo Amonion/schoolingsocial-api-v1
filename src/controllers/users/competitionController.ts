@@ -96,7 +96,7 @@ export const createExam = async (
       }
     }
 
-    const accuracy = correctAnswer / questions.length;
+    const accuracy = correctAnswer / mainObjective.length;
     const metric = accuracy * rate;
     const updatedQuestions: IUserTest[] = [];
     for (let i = 0; i < mainObjective.length; i++) {
@@ -126,7 +126,7 @@ export const createExam = async (
       }
     }
 
-    await UserTestExam.updateOne(
+    const exam = await UserTestExam.findOneAndUpdate(
       {
         paperId,
         userId,
@@ -148,18 +148,22 @@ export const createExam = async (
           totalCorrectAnswer: correctAnswer,
         },
       },
-
       {
+        new: true,
         upsert: true,
       }
     );
-
     await UserTest.deleteMany({ userId: userId, paperId: paperId });
-    const insertedDocs = await UserTest.insertMany(updatedQuestions);
+    await UserTest.insertMany(updatedQuestions);
 
-    res
-      .status(200)
-      .json({ message: "Exam submitted successfully", results: insertedDocs });
+    const result = await queryData<IUserTest>(UserTest, req);
+    const data = {
+      exam,
+      results: result.results,
+      message: "Exam submitted successfull",
+    };
+
+    res.status(200).json(data);
   } catch (error) {
     handleError(res, undefined, undefined, error);
   }
@@ -183,8 +187,16 @@ export const getExamById = async (
 
 export const getExams = async (req: Request, res: Response) => {
   try {
+    const exam = await UserTestExam.findOne({
+      userId: req.query.userId,
+      paperId: req.query.paperId,
+    });
     const result = await queryData<IUserTest>(UserTest, req);
-    res.status(200).json(result);
+    const data = {
+      exam,
+      results: result.results,
+    };
+    res.status(200).json(data);
   } catch (error) {
     handleError(res, undefined, undefined, error);
   }
