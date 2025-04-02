@@ -26,8 +26,12 @@ export const createUser = async (
       signupIp,
       password: await bcrypt.hash(password, 10),
     });
-    await newUser.save();
 
+    await newUser.save();
+    await UserInfo.updateOne(
+      { _id: userBio._id },
+      { $set: { accountId: newUser._id } }
+    );
     res.status(201).json({
       message: "User created successfully",
       user: newUser,

@@ -28,7 +28,12 @@ export interface IGeneral {
   content: string;
   media: Object;
   username: string;
+  country: string;
+  state: string;
+  area: string;
+  description: string;
   type: string;
+  subject: string;
   id: string;
 }
 
@@ -151,6 +156,7 @@ export interface IUserInfo extends Document {
   picture: string;
   username: string;
   displayName: string;
+  accountId: string;
   intro: string;
   dob: string;
   gender: string;

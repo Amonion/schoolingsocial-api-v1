@@ -34,6 +34,7 @@ const createUser = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
             password: yield bcryptjs_1.default.hash(password, 10),
         });
         yield newUser.save();
+        yield userInfoModel_1.UserInfo.updateOne({ _id: userBio._id }, { $set: { accountId: newUser._id } });
         res.status(201).json({
             message: "User created successfully",
             user: newUser,

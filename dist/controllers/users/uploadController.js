@@ -17,7 +17,6 @@ const userModel_1 = require("../../models/users/userModel");
 const postModel_1 = require("../../models/users/postModel");
 const schoolModel_1 = require("../../models/team/schoolModel");
 const competitionModel_1 = require("../../models/team/competitionModel");
-const userInfoModel_1 = require("../../models/users/userInfoModel");
 //--------------------UPLOADS-----------------------//
 const createUpload = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     (0, query_1.createItem)(req, res, uploadModel_1.Upload, "Uploads was created successfully");
@@ -45,18 +44,21 @@ const deleteUpload = (req, res) => __awaiter(void 0, void 0, void 0, function* (
 exports.deleteUpload = deleteUpload;
 const multiSearch = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const setType = (type) => {
-            if (type === "UserInfo") {
+        const setType = (model) => {
+            if (model === "User") {
                 return "User";
             }
-            else if (type === "User") {
-                return "Account";
-            }
-            else if (type === "Post") {
+            else if (model === "Post") {
                 return "Post";
             }
+            else if (model === "School") {
+                return "School";
+            }
+            else if (model === "Exam") {
+                return "Exam";
+            }
             else {
-                return type;
+                return model;
             }
         };
         const setMedia = (media) => {
@@ -71,26 +73,33 @@ const multiSearch = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
                 return media;
             }
         };
-        const models = [userModel_1.User, userInfoModel_1.UserInfo, postModel_1.Post, schoolModel_1.School, competitionModel_1.Exam];
+        const models = [userModel_1.User, postModel_1.Post, schoolModel_1.School, competitionModel_1.Exam];
         const { filter, page, page_size } = (0, query_1.generalSearchQuery)(req);
         const searchPromises = models.map((model) => model
             .find(filter)
             .skip((page - 1) * page_size)
             .limit(page_size)
-            .then((docs) => docs.map((doc) => (Object.assign(Object.assign({}, doc.toObject()), { type: model.modelName })))));
+            .then((docs) => docs.map((doc) => (Object.assign(Object.assign({}, doc.toObject()), { model: model.modelName })))));
         const results = yield Promise.all(searchPromises);
         const combinedResults = results.flat();
         const formattedResults = combinedResults.map((item) => ({
             picture: item.picture || "",
             name: item.name || item.displayName || "",
             title: item.title || "",
+            subtitle: item.subtitle || "",
             displayName: item.displayName || "",
             content: item.content || "",
             intro: item.intro || "",
             username: item.username || "",
             media: item.media ? setMedia(item.media[0]) : "",
-            type: setType(item.type) || "",
+            type: setType(item.model) || "",
             id: item._id.toString(),
+            country: item.country,
+            state: item.state,
+            area: item.area,
+            description: item.description,
+            nature: item.type,
+            subject: item.subjects,
         }));
         res.json(formattedResults);
     }

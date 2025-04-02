@@ -67,15 +67,17 @@ export const multiSearch = async (
       type: string;
       source: string;
     }
-    const setType = (type: string) => {
-      if (type === "UserInfo") {
+    const setType = (model: string) => {
+      if (model === "User") {
         return "User";
-      } else if (type === "User") {
-        return "Account";
-      } else if (type === "Post") {
+      } else if (model === "Post") {
         return "Post";
+      } else if (model === "School") {
+        return "School";
+      } else if (model === "Exam") {
+        return "Exam";
       } else {
-        return type;
+        return model;
       }
     };
     const setMedia = (media: media) => {
@@ -90,7 +92,7 @@ export const multiSearch = async (
       }
     };
 
-    const models: Model<any>[] = [User, UserInfo, Post, School, Exam];
+    const models: Model<any>[] = [User, Post, School, Exam];
     const { filter, page, page_size } = generalSearchQuery(req);
     const searchPromises = models.map((model) =>
       model
@@ -98,7 +100,7 @@ export const multiSearch = async (
         .skip((page - 1) * page_size)
         .limit(page_size)
         .then((docs) =>
-          docs.map((doc) => ({ ...doc.toObject(), type: model.modelName }))
+          docs.map((doc) => ({ ...doc.toObject(), model: model.modelName }))
         )
     );
     const results = await Promise.all(searchPromises);
@@ -109,13 +111,20 @@ export const multiSearch = async (
       picture: item.picture || "",
       name: item.name || item.displayName || "",
       title: item.title || "",
+      subtitle: item.subtitle || "",
       displayName: item.displayName || "",
       content: item.content || "",
       intro: item.intro || "",
       username: item.username || "",
       media: item.media ? setMedia(item.media[0]) : "",
-      type: setType(item.type) || "",
+      type: setType(item.model) || "",
       id: item._id.toString(),
+      country: item.country,
+      state: item.state,
+      area: item.area,
+      description: item.description,
+      nature: item.type,
+      subject: item.subjects,
     }));
 
     res.json(formattedResults);

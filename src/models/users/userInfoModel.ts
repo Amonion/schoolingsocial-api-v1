@@ -10,6 +10,7 @@ const UserInfoSchema: Schema = new Schema(
     username: { type: String, default: "" },
     picture: { type: String, default: "" },
     intro: { type: String, default: "" },
+    accountId: { type: String, default: "" },
     passport: { type: String, default: "" },
     gender: { type: String, default: "" },
     maritalStatus: { type: String, default: "" },
@@ -22,6 +23,8 @@ const UserInfoSchema: Schema = new Schema(
     homeArea: { type: String, default: "" },
     homeAddress: { type: String, default: "" },
     homeId: { type: String, default: "" },
+    phone: { type: String, default: "" },
+    email: { type: String, default: "" },
 
     continent: { type: String, default: "" },
     country: { type: String, default: "" },
