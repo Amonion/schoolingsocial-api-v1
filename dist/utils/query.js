@@ -240,6 +240,7 @@ const generalSearchQuery = (req) => {
         "name",
         "instruction",
         "username",
+        "content",
         "displayName",
         "firstName",
         "middleName",

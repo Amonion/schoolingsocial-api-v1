@@ -25,6 +25,8 @@ export interface IGeneral {
   picture: string;
   name: string;
   title: string;
+  content: string;
+  media: Object;
   username: string;
   type: string;
   id: string;

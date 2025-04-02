@@ -63,21 +63,35 @@ export const multiSearch = async (
   res: Response
 ): Promise<Response | void> => {
   try {
+    interface media {
+      type: string;
+      source: string;
+    }
     const setType = (type: string) => {
       if (type === "UserInfo") {
         return "User";
       } else if (type === "User") {
         return "Account";
+      } else if (type === "Post") {
+        return "Post";
       } else {
         return type;
       }
     };
+    const setMedia = (media: media) => {
+      if (media) {
+        const item = {
+          type: media.type,
+          source: media.source,
+        };
+        return item;
+      } else {
+        return media;
+      }
+    };
+
     const models: Model<any>[] = [User, UserInfo, Post, School, Exam];
-
-    // const searchQuery = generalSearchQuery(req);
-
     const { filter, page, page_size } = generalSearchQuery(req);
-
     const searchPromises = models.map((model) =>
       model
         .find(filter)
@@ -93,9 +107,13 @@ export const multiSearch = async (
 
     const formattedResults: IGeneral[] = combinedResults.map((item) => ({
       picture: item.picture || "",
-      name: item.name || item.username || item.title || item.displayName || "",
+      name: item.name || item.displayName || "",
       title: item.title || "",
+      displayName: item.displayName || "",
+      content: item.content || "",
+      intro: item.intro || "",
       username: item.username || "",
+      media: item.media ? setMedia(item.media[0]) : "",
       type: setType(item.type) || "",
       id: item._id.toString(),
     }));

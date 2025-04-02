@@ -52,12 +52,26 @@ const multiSearch = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
             else if (type === "User") {
                 return "Account";
             }
+            else if (type === "Post") {
+                return "Post";
+            }
             else {
                 return type;
             }
         };
+        const setMedia = (media) => {
+            if (media) {
+                const item = {
+                    type: media.type,
+                    source: media.source,
+                };
+                return item;
+            }
+            else {
+                return media;
+            }
+        };
         const models = [userModel_1.User, userInfoModel_1.UserInfo, postModel_1.Post, schoolModel_1.School, competitionModel_1.Exam];
-        // const searchQuery = generalSearchQuery(req);
         const { filter, page, page_size } = (0, query_1.generalSearchQuery)(req);
         const searchPromises = models.map((model) => model
             .find(filter)
@@ -68,9 +82,13 @@ const multiSearch = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
         const combinedResults = results.flat();
         const formattedResults = combinedResults.map((item) => ({
             picture: item.picture || "",
-            name: item.name || item.username || item.title || item.displayName || "",
+            name: item.name || item.displayName || "",
             title: item.title || "",
+            displayName: item.displayName || "",
+            content: item.content || "",
+            intro: item.intro || "",
             username: item.username || "",
+            media: item.media ? setMedia(item.media[0]) : "",
             type: setType(item.type) || "",
             id: item._id.toString(),
         }));

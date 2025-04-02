@@ -281,6 +281,7 @@ export const generalSearchQuery = <T>(
     "name",
     "instruction",
     "username",
+    "content",
     "displayName",
     "firstName",
     "middleName",
