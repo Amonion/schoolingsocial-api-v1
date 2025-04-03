@@ -15,7 +15,8 @@ const fileUpload_1 = require("../../utils/fileUpload");
 const errorHandler_1 = require("../../utils/errorHandler");
 const userModel_1 = require("../../models/users/userModel");
 const query_1 = require("../../utils/query");
-const PostStatModel_1 = require("../../models/users/PostStatModel");
+const postStatModel_1 = require("../../models/users/postStatModel");
+// import { Bookmark, Like, View } from "../../models/users/PostStatModel";
 const computation_1 = require("../../utils/computation");
 const userInfoModel_1 = require("../../models/users/userInfoModel");
 const createAccount = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
@@ -100,15 +101,21 @@ const createPost = (data) => __awaiter(void 0, void 0, void 0, function* () {
         };
         const post = yield postModel_1.Post.create(form);
         if (data.postType === "comment") {
+            yield userModel_1.User.updateOne({ _id: sender._id }, {
+                $inc: { comments: 1 },
+            });
             yield postModel_1.Post.updateOne({ _id: data.postId }, {
                 $inc: { replies: 1 },
                 $push: { users: sender.username },
             });
         }
         else {
-            yield PostStatModel_1.View.create({
+            yield postStatModel_1.View.create({
                 postId: post._id,
                 userId: sender._id,
+            });
+            yield userModel_1.User.updateOne({ _id: sender._id }, {
+                $inc: { posts: 1 },
             });
             const score = (0, computation_1.postScore)(post.likes, post.replies, post.shares, post.bookmarks, post.views);
             yield postModel_1.Post.updateOne({ _id: post._id }, {
@@ -132,21 +139,35 @@ const getPostById = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
 exports.getPostById = getPostById;
 const getPosts = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const userId = req.query.userId;
-        req.query.userId = undefined;
+        const followerId = String(req.query.myId);
+        req.query.myId = undefined;
         const response = yield (0, query_1.queryData)(postModel_1.Post, req);
         const posts = response.results;
         const postIds = posts.map((post) => post._id);
-        const likedPosts = yield PostStatModel_1.Like.find({
-            userId: userId,
+        const userIds = [...new Set(posts.map((post) => post.userId))];
+        const userObjects = userIds.map((userId) => ({ userId, followerId }));
+        const queryConditions = userObjects.map(({ userId, followerId }) => ({
+            userId,
+            followerId,
+        }));
+        const follows = yield postModel_1.Follower.find({ $or: queryConditions }, { userId: 1, _id: 0 });
+        const followedUserIds = new Set(follows.map((user) => user.userId));
+        posts.map((post) => {
+            if (followedUserIds.has(post.userId)) {
+                post.followed = true;
+            }
+            return post;
+        });
+        const likedPosts = yield postStatModel_1.Like.find({
+            userId: followerId,
             postId: { $in: postIds },
         }).select("postId");
-        const bookmarkedPosts = yield PostStatModel_1.Bookmark.find({
-            userId: userId,
+        const bookmarkedPosts = yield postStatModel_1.Bookmark.find({
+            userId: followerId,
             postId: { $in: postIds },
         }).select("postId");
-        const viewedPosts = yield PostStatModel_1.View.find({
-            userId: userId,
+        const viewedPosts = yield postStatModel_1.View.find({
+            userId: followerId,
             postId: { $in: postIds },
         }).select("postId");
         const likedPostIds = likedPosts.map((like) => like.postId.toString());
@@ -207,6 +228,19 @@ const deletePost = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
                 (0, fileUpload_1.deleteFileFromS3)(el.source);
             }
         }
+        if (post.postType === "comment") {
+            yield userModel_1.User.updateOne({ _id: post.userId }, {
+                $inc: { comments: -1 },
+            });
+            yield postModel_1.Post.updateOne({ _id: post._id }, {
+                $inc: { replies: -1 },
+            });
+        }
+        else {
+            yield userModel_1.User.updateOne({ _id: post.userId }, {
+                $inc: { posts: -1 },
+            });
+        }
         yield postModel_1.Post.findByIdAndDelete(req.params.id);
         res.status(200).json({
             message: "Post is deleted successfully",
@@ -229,35 +263,35 @@ const updatePostStat = (req, res) => __awaiter(void 0, void 0, void 0, function*
             if (!req.body.likes && post.likes <= 0) {
                 return res.status(200).json({ message: null });
             }
-            const like = yield PostStatModel_1.Like.findOne({ postId: id, userId });
+            const like = yield postStatModel_1.Like.findOne({ postId: id, userId });
             if (like) {
                 updateQuery.$inc = { likes: -1 };
-                yield PostStatModel_1.Like.deleteOne({ postId: id, userId });
+                yield postStatModel_1.Like.deleteOne({ postId: id, userId });
             }
             else {
                 updateQuery.$inc = { likes: 1 };
-                yield PostStatModel_1.Like.create({ postId: id, userId });
+                yield postStatModel_1.Like.create({ postId: id, userId });
             }
         }
         if (req.body.bookmarks !== undefined) {
             if (!req.body.bookmarks && post.bookmarks <= 0) {
                 return res.status(200).json({ message: null });
             }
-            const bookmark = yield PostStatModel_1.Bookmark.findOne({ postId: id, userId });
+            const bookmark = yield postStatModel_1.Bookmark.findOne({ postId: id, userId });
             if (bookmark) {
                 updateQuery.$inc = { bookmarks: -1 };
-                yield PostStatModel_1.Bookmark.deleteOne({ postId: id, userId });
+                yield postStatModel_1.Bookmark.deleteOne({ postId: id, userId });
             }
             else {
                 updateQuery.$inc = { bookmarks: 1 };
-                yield PostStatModel_1.Bookmark.create({ postId: id, userId });
+                yield postStatModel_1.Bookmark.create({ postId: id, userId });
             }
         }
         if (req.body.views !== undefined) {
-            const post = yield PostStatModel_1.View.findOne({ userId: userId, postId: id });
+            const post = yield postStatModel_1.View.findOne({ userId: userId, postId: id });
             if (!post) {
                 updateQuery.$inc = { views: 1 };
-                yield PostStatModel_1.View.create({ userId: userId, postId: id });
+                yield postStatModel_1.View.create({ userId: userId, postId: id });
             }
         }
         if (Object.keys(updateQuery).length > 0) {
@@ -278,8 +312,8 @@ exports.updatePostStat = updatePostStat;
 const getPostStat = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const { id, userId } = req.query;
-        const hasLiked = yield PostStatModel_1.Like.findOne({ postId: id, userId });
-        const hasBookmarked = yield PostStatModel_1.Bookmark.findOne({ postId: id, userId });
+        const hasLiked = yield postStatModel_1.Like.findOne({ postId: id, userId });
+        const hasBookmarked = yield postStatModel_1.Bookmark.findOne({ postId: id, userId });
         return res.status(200).json({
             likes: hasLiked ? true : false,
             bookmarks: hasBookmarked ? true : false,

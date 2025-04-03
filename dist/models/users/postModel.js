@@ -50,8 +50,12 @@ const PostSchema = new mongoose_1.Schema({
     isVerified: { type: Boolean, default: false },
     replies: { type: Number, default: 0 },
     bookmarks: { type: Number, default: 0 },
+    followers: { type: Number, default: 0 },
+    unfollowers: { type: Number, default: 0 },
     shares: { type: Number, default: 0 },
     likes: { type: Number, default: 0 },
+    followed: { type: Boolean, default: false },
+    muted: { type: Boolean, default: false },
     liked: { type: Boolean, default: false },
     bookmarked: { type: Boolean, default: false },
     viewed: { type: Boolean, default: false },
@@ -93,8 +97,12 @@ const UserInterestSchema = new mongoose_1.Schema({
 exports.UserInterest = mongoose_1.default.model("UserInterest", UserInterestSchema);
 const FollowerSchema = new mongoose_1.Schema({
     userId: { type: String },
-    followersId: { type: Array },
-    followingsId: { type: Array },
+    username: { type: String },
+    picture: { type: String },
+    followerId: { type: String },
+    followerUsername: { type: String },
+    followerPicture: { type: String },
+    postId: { type: String },
     createdAt: { type: Date, default: Date.now },
 }, {
     timestamps: true,

@@ -12,7 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.searchUserInfo = exports.getUserInfoById = exports.updateUserInfo = exports.deleteUser = exports.updateUser = exports.getUsers = exports.getUserById = exports.createUser = void 0;
+exports.followUser = exports.searchUserInfo = exports.getUserInfoById = exports.updateUserInfo = exports.deleteUser = exports.updateUser = exports.getUsers = exports.getUserById = exports.createUser = void 0;
 const userModel_1 = require("../../models/users/userModel");
 const userInfoModel_1 = require("../../models/users/userInfoModel");
 const staffModel_1 = require("../../models/team/staffModel");
@@ -48,10 +48,16 @@ exports.createUser = createUser;
 const getUserById = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const user = yield userModel_1.User.findById(req.params.id);
+        const followerId = req.query.userId;
+        const follow = yield postModel_1.Follower.findOne({
+            userId: user === null || user === void 0 ? void 0 : user._id,
+            followerId: followerId,
+        });
         if (!user) {
             return res.status(404).json({ message: "User not found" });
         }
-        res.status(200).json(user);
+        const followedUser = Object.assign(Object.assign({}, user.toObject()), { isFollowed: !!follow });
+        res.status(200).json(followedUser);
     }
     catch (error) {
         (0, errorHandler_1.handleError)(res, undefined, undefined, error);
@@ -217,3 +223,59 @@ const searchUserInfo = (req, res) => {
     return (0, query_1.search)(userInfoModel_1.UserInfo, req, res);
 };
 exports.searchUserInfo = searchUserInfo;
+//-----------------FOLLOW USER--------------------//
+const followUser = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const user = yield userModel_1.User.findById(req.params.id);
+        const follower = yield userModel_1.User.findById(req.body.followerId);
+        const post = req.body.post;
+        const follow = yield postModel_1.Follower.findOne({
+            userId: user === null || user === void 0 ? void 0 : user._id,
+            followerId: req.body.followerId,
+        });
+        if (follow) {
+            yield postModel_1.Follower.findByIdAndDelete(follow._id);
+            yield userModel_1.User.findByIdAndUpdate(req.params.id, { $inc: { followers: -1 } });
+            if (post) {
+                yield postModel_1.Post.findByIdAndUpdate(post._id, {
+                    $inc: { unfollowers: 1 },
+                });
+            }
+            if (follow.postId) {
+                yield postModel_1.Post.findByIdAndUpdate(follow.postId, {
+                    $inc: { followers: -1 },
+                });
+            }
+        }
+        else {
+            yield postModel_1.Follower.create({
+                username: user === null || user === void 0 ? void 0 : user.username,
+                userId: user === null || user === void 0 ? void 0 : user._id,
+                picture: user === null || user === void 0 ? void 0 : user.picture,
+                followerId: follower === null || follower === void 0 ? void 0 : follower._id,
+                followerUsername: follower === null || follower === void 0 ? void 0 : follower.username,
+                followerPicture: follower === null || follower === void 0 ? void 0 : follower.picture,
+                postId: post ? post._id : undefined,
+            });
+            yield userModel_1.User.findByIdAndUpdate(req.params.id, { $inc: { followers: 1 } });
+            if (post) {
+                yield postModel_1.Post.findByIdAndUpdate(post._id, {
+                    $inc: { followers: 1 },
+                });
+            }
+        }
+        const message = follow
+            ? `Your have unfollowed ${user === null || user === void 0 ? void 0 : user.displayName}`
+            : `Your have successfully followed ${user === null || user === void 0 ? void 0 : user.displayName}`;
+        post.followed = follow ? false : true;
+        post.isActive = false;
+        res.status(200).json({
+            message,
+            data: post,
+        });
+    }
+    catch (error) {
+        (0, errorHandler_1.handleError)(res, undefined, undefined, error);
+    }
+});
+exports.followUser = followUser;
