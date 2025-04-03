@@ -16,7 +16,6 @@ const errorHandler_1 = require("../../utils/errorHandler");
 const userModel_1 = require("../../models/users/userModel");
 const query_1 = require("../../utils/query");
 const postStatModel_1 = require("../../models/users/postStatModel");
-// import { Bookmark, Like, View } from "../../models/users/PostStatModel";
 const computation_1 = require("../../utils/computation");
 const userInfoModel_1 = require("../../models/users/userInfoModel");
 const createAccount = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
