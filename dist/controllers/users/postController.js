@@ -15,7 +15,7 @@ const fileUpload_1 = require("../../utils/fileUpload");
 const errorHandler_1 = require("../../utils/errorHandler");
 const userModel_1 = require("../../models/users/userModel");
 const query_1 = require("../../utils/query");
-const postStatModel_1 = require("../../models/users/postStatModel");
+const statModel_1 = require("../../models/users/statModel");
 const computation_1 = require("../../utils/computation");
 const userInfoModel_1 = require("../../models/users/userInfoModel");
 const createAccount = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
@@ -109,7 +109,7 @@ const createPost = (data) => __awaiter(void 0, void 0, void 0, function* () {
             });
         }
         else {
-            yield postStatModel_1.View.create({
+            yield statModel_1.View.create({
                 postId: post._id,
                 userId: sender._id,
             });
@@ -157,15 +157,15 @@ const getPosts = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
             }
             return post;
         });
-        const likedPosts = yield postStatModel_1.Like.find({
+        const likedPosts = yield statModel_1.Like.find({
             userId: followerId,
             postId: { $in: postIds },
         }).select("postId");
-        const bookmarkedPosts = yield postStatModel_1.Bookmark.find({
+        const bookmarkedPosts = yield statModel_1.Bookmark.find({
             userId: followerId,
             postId: { $in: postIds },
         }).select("postId");
-        const viewedPosts = yield postStatModel_1.View.find({
+        const viewedPosts = yield statModel_1.View.find({
             userId: followerId,
             postId: { $in: postIds },
         }).select("postId");
@@ -262,35 +262,35 @@ const updatePostStat = (req, res) => __awaiter(void 0, void 0, void 0, function*
             if (!req.body.likes && post.likes <= 0) {
                 return res.status(200).json({ message: null });
             }
-            const like = yield postStatModel_1.Like.findOne({ postId: id, userId });
+            const like = yield statModel_1.Like.findOne({ postId: id, userId });
             if (like) {
                 updateQuery.$inc = { likes: -1 };
-                yield postStatModel_1.Like.deleteOne({ postId: id, userId });
+                yield statModel_1.Like.deleteOne({ postId: id, userId });
             }
             else {
                 updateQuery.$inc = { likes: 1 };
-                yield postStatModel_1.Like.create({ postId: id, userId });
+                yield statModel_1.Like.create({ postId: id, userId });
             }
         }
         if (req.body.bookmarks !== undefined) {
             if (!req.body.bookmarks && post.bookmarks <= 0) {
                 return res.status(200).json({ message: null });
             }
-            const bookmark = yield postStatModel_1.Bookmark.findOne({ postId: id, userId });
+            const bookmark = yield statModel_1.Bookmark.findOne({ postId: id, userId });
             if (bookmark) {
                 updateQuery.$inc = { bookmarks: -1 };
-                yield postStatModel_1.Bookmark.deleteOne({ postId: id, userId });
+                yield statModel_1.Bookmark.deleteOne({ postId: id, userId });
             }
             else {
                 updateQuery.$inc = { bookmarks: 1 };
-                yield postStatModel_1.Bookmark.create({ postId: id, userId });
+                yield statModel_1.Bookmark.create({ postId: id, userId });
             }
         }
         if (req.body.views !== undefined) {
-            const post = yield postStatModel_1.View.findOne({ userId: userId, postId: id });
+            const post = yield statModel_1.View.findOne({ userId: userId, postId: id });
             if (!post) {
                 updateQuery.$inc = { views: 1 };
-                yield postStatModel_1.View.create({ userId: userId, postId: id });
+                yield statModel_1.View.create({ userId: userId, postId: id });
             }
         }
         if (Object.keys(updateQuery).length > 0) {
@@ -311,8 +311,8 @@ exports.updatePostStat = updatePostStat;
 const getPostStat = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const { id, userId } = req.query;
-        const hasLiked = yield postStatModel_1.Like.findOne({ postId: id, userId });
-        const hasBookmarked = yield postStatModel_1.Bookmark.findOne({ postId: id, userId });
+        const hasLiked = yield statModel_1.Like.findOne({ postId: id, userId });
+        const hasBookmarked = yield statModel_1.Bookmark.findOne({ postId: id, userId });
         return res.status(200).json({
             likes: hasLiked ? true : false,
             bookmarks: hasBookmarked ? true : false,

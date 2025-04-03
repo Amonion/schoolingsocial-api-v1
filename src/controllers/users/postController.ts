@@ -10,7 +10,7 @@ import {
   queryData,
 } from "../../utils/query";
 import { IPost } from "../../utils/userInterface";
-import { Bookmark, Like, View } from "../../models/users/postStatModel";
+import { Bookmark, Like, View } from "../../models/users/statModel";
 import { postScore } from "../../utils/computation";
 import { UserInfo } from "../../models/users/userInfoModel";
 
