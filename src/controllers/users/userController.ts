@@ -7,7 +7,7 @@ import { handleError } from "../../utils/errorHandler";
 import { queryData, search } from "../../utils/query";
 import { uploadFilesToS3 } from "../../utils/fileUpload";
 import bcrypt from "bcryptjs";
-import { Post } from "../../models/users/postModel";
+import { Follower, Post } from "../../models/users/postModel";
 
 export const createUser = async (
   req: Request,
@@ -47,10 +47,21 @@ export const getUserById = async (
 ): Promise<Response | void> => {
   try {
     const user = await User.findById(req.params.id);
+    const followerId = req.query.userId;
+    const follow = await Follower.findOne({
+      userId: user?._id,
+      followerId: followerId,
+    });
+
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
-    res.status(200).json(user);
+
+    const followedUser = {
+      ...user.toObject(),
+      isFollowed: !!follow,
+    };
+    res.status(200).json(followedUser);
   } catch (error) {
     handleError(res, undefined, undefined, error);
   }
@@ -231,4 +242,62 @@ export const getUserInfoById = async (
 
 export const searchUserInfo = (req: Request, res: Response) => {
   return search(UserInfo, req, res);
+};
+
+//-----------------FOLLOW USER--------------------//
+export const followUser = async (req: Request, res: Response) => {
+  try {
+    const user = await User.findById(req.params.id);
+    const follower = await User.findById(req.body.followerId);
+    const post = req.body.post;
+    const follow = await Follower.findOne({
+      userId: user?._id,
+      followerId: req.body.followerId,
+    });
+
+    if (follow) {
+      await Follower.findByIdAndDelete(follow._id);
+      await User.findByIdAndUpdate(req.params.id, { $inc: { followers: -1 } });
+      if (post) {
+        await Post.findByIdAndUpdate(post._id, {
+          $inc: { unfollowers: 1 },
+        });
+      }
+      if (follow.postId) {
+        await Post.findByIdAndUpdate(follow.postId, {
+          $inc: { followers: -1 },
+        });
+      }
+    } else {
+      await Follower.create({
+        username: user?.username,
+        userId: user?._id,
+        picture: user?.picture,
+        followerId: follower?._id,
+        followerUsername: follower?.username,
+        followerPicture: follower?.picture,
+        postId: post ? post._id : undefined,
+      });
+      await User.findByIdAndUpdate(req.params.id, { $inc: { followers: 1 } });
+      if (post) {
+        await Post.findByIdAndUpdate(post._id, {
+          $inc: { followers: 1 },
+        });
+      }
+    }
+
+    const message = follow
+      ? `Your have unfollowed ${user?.displayName}`
+      : `Your have successfully followed ${user?.displayName}`;
+
+    post.followed = follow ? false : true;
+    post.isActive = false;
+
+    res.status(200).json({
+      message,
+      data: post,
+    });
+  } catch (error) {
+    handleError(res, undefined, undefined, error);
+  }
 };

@@ -11,6 +11,7 @@ import {
   updateUserInfo,
   getUserInfoById,
   searchUserInfo,
+  followUser,
 } from "../../controllers/users/userController";
 import {
   getStaffById,
@@ -19,15 +20,12 @@ import {
 } from "../../controllers/team/staffController";
 
 const router = express.Router();
-const uploadCert = multer({
-  storage: multer.memoryStorage(), // Or diskStorage if saving to a file
-  limits: { fileSize: 10 * 1024 * 1024 }, // Limit file size to 10MB
-});
 router.route("/login").post(upload.any(), loginUser);
 router.route("/auth/:id").get(getAuthUser);
 
 router.route("/").get(getUsers).post(upload.any(), createUser);
 
+router.route("/follow/:id").patch(upload.any(), followUser);
 router.route("/staffs").get(getStaffs);
 router.route("/staffs/:id").get(getStaffById).patch(upload.any(), updateStaff);
 

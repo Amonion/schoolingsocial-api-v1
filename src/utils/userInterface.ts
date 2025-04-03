@@ -17,8 +17,12 @@ export interface IAccount extends Document {
 
 export interface IFollower extends Document {
   userId: string;
-  followersId: string[];
-  followingId: string[];
+  username: string;
+  picture: string;
+  followerId: string;
+  followerUsername: string;
+  followerPicture: string;
+  postId: string;
 }
 
 export interface IGeneral {
@@ -77,11 +81,14 @@ export interface IPost extends Document {
   users: string[];
   picture: string;
   country: string;
+  followed: boolean;
+  muted: boolean;
   liked: boolean;
   bookmarked: boolean;
   viewed: boolean;
   isVerified: boolean;
   shares: number;
+  followers: number;
   replies: number;
   score: number;
   trendScore: number;
@@ -128,6 +135,7 @@ export interface IUser extends Document {
   isBio: boolean;
   isRelated: boolean;
   isVerified: boolean;
+  isFollowed: boolean;
   isEducationDocument: boolean;
   isEducationHistory: boolean;
   isEducation: boolean;

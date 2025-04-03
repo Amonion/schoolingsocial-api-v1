@@ -129,6 +129,12 @@ export const createPost = async (data: IPost) => {
     const post = await Post.create(form);
 
     if (data.postType === "comment") {
+      await User.updateOne(
+        { _id: sender._id },
+        {
+          $inc: { comments: 1 },
+        }
+      );
       await Post.updateOne(
         { _id: data.postId },
         {
@@ -141,6 +147,13 @@ export const createPost = async (data: IPost) => {
         postId: post._id,
         userId: sender._id,
       });
+
+      await User.updateOne(
+        { _id: sender._id },
+        {
+          $inc: { posts: 1 },
+        }
+      );
 
       const score = postScore(
         post.likes,
@@ -177,24 +190,45 @@ export const getPostById = async (
 
 export const getPosts = async (req: Request, res: Response) => {
   try {
-    const userId = req.query.userId;
-    req.query.userId = undefined;
+    const followerId = String(req.query.myId);
+    req.query.myId = undefined;
     const response = await queryData(Post, req);
     const posts = response.results;
     const postIds = posts.map((post) => post._id);
 
+    const userIds = [...new Set(posts.map((post) => post.userId))];
+    const userObjects = userIds.map((userId) => ({ userId, followerId }));
+
+    const queryConditions = userObjects.map(({ userId, followerId }) => ({
+      userId,
+      followerId,
+    }));
+
+    const follows = await Follower.find(
+      { $or: queryConditions },
+      { userId: 1, _id: 0 }
+    );
+    const followedUserIds = new Set(follows.map((user) => user.userId));
+
+    posts.map((post) => {
+      if (followedUserIds.has(post.userId)) {
+        post.followed = true;
+      }
+      return post;
+    });
+
     const likedPosts = await Like.find({
-      userId: userId,
+      userId: followerId,
       postId: { $in: postIds },
     }).select("postId");
 
     const bookmarkedPosts = await Bookmark.find({
-      userId: userId,
+      userId: followerId,
       postId: { $in: postIds },
     }).select("postId");
 
     const viewedPosts = await View.find({
-      userId: userId,
+      userId: followerId,
       postId: { $in: postIds },
     }).select("postId");
 
@@ -265,6 +299,28 @@ export const deletePost = async (req: Request, res: Response) => {
         const el = post.media[i];
         deleteFileFromS3(el.source);
       }
+    }
+
+    if (post.postType === "comment") {
+      await User.updateOne(
+        { _id: post.userId },
+        {
+          $inc: { comments: -1 },
+        }
+      );
+      await Post.updateOne(
+        { _id: post._id },
+        {
+          $inc: { replies: -1 },
+        }
+      );
+    } else {
+      await User.updateOne(
+        { _id: post.userId },
+        {
+          $inc: { posts: -1 },
+        }
+      );
     }
 
     await Post.findByIdAndDelete(req.params.id);
