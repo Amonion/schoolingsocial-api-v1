@@ -16,7 +16,7 @@ import {
 } from "../../utils/teamInterface";
 import { queryData, updateItem, createItem, search } from "../../utils/query";
 import { UserTest, UserTestExam } from "../../models/users/competitionModel";
-import { IUserTest } from "../../utils/userInterface";
+import { IUserTest, IUserTestExam } from "../../utils/userInterface";
 
 export const createWeekend = async (
   req: Request,
@@ -71,6 +71,7 @@ export const createExam = async (
   try {
     const paperId = req.body.paperId;
     const userId = req.body.userId;
+    const username = req.body.username;
     const picture = req.body.picture;
     const started = Number(req.body.started);
     const ended = Number(req.body.ended);
@@ -80,6 +81,10 @@ export const createExam = async (
 
     const rate = (1000 * questions.length) / (ended - started);
     let mainObjective = await Objective.find({ paperId: paperId });
+    let participant = await UserTestExam.find({
+      paperId: paperId,
+      userId: userId,
+    });
 
     let correctAnswer = 0;
     for (let i = 0; i < questions.length; i++) {
@@ -107,7 +112,7 @@ export const createExam = async (
 
       if (objIndex !== -1) {
         const obj = {
-          isClicked: true,
+          isClicked: questions[objIndex].isClicked,
           paperId: paperId,
           userId: userId,
           question: el.question,
@@ -135,6 +140,7 @@ export const createExam = async (
         $set: {
           paperId,
           userId,
+          username,
           picture,
           started,
           ended,
@@ -155,6 +161,16 @@ export const createExam = async (
     );
     await UserTest.deleteMany({ userId: userId, paperId: paperId });
     await UserTest.insertMany(updatedQuestions);
+    if (participant.length === 0) {
+      await Exam.updateOne(
+        { _id: paperId },
+        {
+          $inc: {
+            participants: 1,
+          },
+        }
+      );
+    }
 
     const result = await queryData<IUserTest>(UserTest, req);
     const data = {
@@ -185,7 +201,7 @@ export const getExamById = async (
   }
 };
 
-export const getExams = async (req: Request, res: Response) => {
+export const getUserExam = async (req: Request, res: Response) => {
   try {
     const exam = await UserTestExam.findOne({
       userId: req.query.userId,
@@ -197,6 +213,16 @@ export const getExams = async (req: Request, res: Response) => {
       results: result.results,
     };
     res.status(200).json(data);
+  } catch (error) {
+    handleError(res, undefined, undefined, error);
+  }
+};
+
+export const getExams = async (req: Request, res: Response) => {
+  try {
+    const result = await queryData<IUserTestExam>(UserTestExam, req);
+
+    res.status(200).json(result);
   } catch (error) {
     handleError(res, undefined, undefined, error);
   }

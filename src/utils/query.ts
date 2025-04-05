@@ -2,6 +2,8 @@ import { Model, FilterQuery } from "mongoose";
 import { Request, Response } from "express";
 import { deleteFilesFromS3, uploadFilesToS3 } from "./fileUpload";
 import { handleError } from "./errorHandler";
+import { Follower, Post } from "../models/users/postModel";
+import { User } from "../models/users/userModel";
 
 interface PaginationResult<T> {
   count: number; // Total number of records
@@ -411,6 +413,56 @@ export const createItem = async <T extends Document>(
   } catch (error: any) {
     handleError(res, undefined, undefined, error);
   }
+};
+
+export const followAccount = async (req: Request, res: Response) => {
+  const user = await User.findById(req.params.id);
+  const follower = await User.findById(req.body.followerId);
+  const post = req.body.post;
+  const follow = await Follower.findOne({
+    userId: user?._id,
+    followerId: req.body.followerId,
+  });
+
+  if (follow) {
+    await Follower.findByIdAndDelete(follow._id);
+    await User.findByIdAndUpdate(req.params.id, { $inc: { followers: -1 } });
+    if (post) {
+      await Post.findByIdAndUpdate(post._id, {
+        $inc: { unfollowers: 1 },
+      });
+    }
+    if (follow.postId) {
+      await Post.findByIdAndUpdate(follow.postId, {
+        $inc: { followers: -1 },
+      });
+    }
+  } else {
+    await Follower.create({
+      username: user?.username,
+      userId: user?._id,
+      picture: user?.picture,
+      followerId: follower?._id,
+      followerUsername: follower?.username,
+      followerPicture: follower?.picture,
+      postId: post ? post._id : undefined,
+    });
+    await User.findByIdAndUpdate(req.params.id, { $inc: { followers: 1 } });
+    if (post) {
+      await Post.findByIdAndUpdate(post._id, {
+        $inc: { followers: 1 },
+      });
+    }
+  }
+
+  const message = follow
+    ? `Your have unfollowed ${user?.displayName}`
+    : `Your have successfully followed ${user?.displayName}`;
+
+  return {
+    follow,
+    message,
+  };
 };
 
 export const getItemById = async <T extends Document>(

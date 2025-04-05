@@ -9,9 +9,11 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.deleteItems = exports.deleteItem = exports.updateItem = exports.getItems = exports.getItemById = exports.createItem = exports.search = exports.generalSearchQuery = exports.queryData = void 0;
+exports.deleteItems = exports.deleteItem = exports.updateItem = exports.getItems = exports.getItemById = exports.followAccount = exports.createItem = exports.search = exports.generalSearchQuery = exports.queryData = void 0;
 const fileUpload_1 = require("./fileUpload");
 const errorHandler_1 = require("./errorHandler");
+const postModel_1 = require("../models/users/postModel");
+const userModel_1 = require("../models/users/userModel");
 const buildFilterQuery = (req) => {
     const filters = {};
     for (const [key, value] of Object.entries(req.query)) {
@@ -348,6 +350,54 @@ const createItem = (req, res, model, message) => __awaiter(void 0, void 0, void 
     }
 });
 exports.createItem = createItem;
+const followAccount = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const user = yield userModel_1.User.findById(req.params.id);
+    const follower = yield userModel_1.User.findById(req.body.followerId);
+    const post = req.body.post;
+    const follow = yield postModel_1.Follower.findOne({
+        userId: user === null || user === void 0 ? void 0 : user._id,
+        followerId: req.body.followerId,
+    });
+    if (follow) {
+        yield postModel_1.Follower.findByIdAndDelete(follow._id);
+        yield userModel_1.User.findByIdAndUpdate(req.params.id, { $inc: { followers: -1 } });
+        if (post) {
+            yield postModel_1.Post.findByIdAndUpdate(post._id, {
+                $inc: { unfollowers: 1 },
+            });
+        }
+        if (follow.postId) {
+            yield postModel_1.Post.findByIdAndUpdate(follow.postId, {
+                $inc: { followers: -1 },
+            });
+        }
+    }
+    else {
+        yield postModel_1.Follower.create({
+            username: user === null || user === void 0 ? void 0 : user.username,
+            userId: user === null || user === void 0 ? void 0 : user._id,
+            picture: user === null || user === void 0 ? void 0 : user.picture,
+            followerId: follower === null || follower === void 0 ? void 0 : follower._id,
+            followerUsername: follower === null || follower === void 0 ? void 0 : follower.username,
+            followerPicture: follower === null || follower === void 0 ? void 0 : follower.picture,
+            postId: post ? post._id : undefined,
+        });
+        yield userModel_1.User.findByIdAndUpdate(req.params.id, { $inc: { followers: 1 } });
+        if (post) {
+            yield postModel_1.Post.findByIdAndUpdate(post._id, {
+                $inc: { followers: 1 },
+            });
+        }
+    }
+    const message = follow
+        ? `Your have unfollowed ${user === null || user === void 0 ? void 0 : user.displayName}`
+        : `Your have successfully followed ${user === null || user === void 0 ? void 0 : user.displayName}`;
+    return {
+        follow,
+        message,
+    };
+});
+exports.followAccount = followAccount;
 const getItemById = (req, res, model, message) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const item = yield model.findById(req.params.id);

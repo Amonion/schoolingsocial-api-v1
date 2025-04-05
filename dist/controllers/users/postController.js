@@ -9,7 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getPostStat = exports.updatePostStat = exports.deletePost = exports.updatePost = exports.getPosts = exports.getPostById = exports.createPost = exports.deleteAccount = exports.updateAccount = exports.getAccounts = exports.getAccountById = exports.createAccount = void 0;
+exports.followUser = exports.getPostStat = exports.updatePostStat = exports.deletePost = exports.updatePost = exports.getPosts = exports.getPostById = exports.createPost = exports.deleteAccount = exports.updateAccount = exports.getAccounts = exports.getAccountById = exports.createAccount = void 0;
 const postModel_1 = require("../../models/users/postModel");
 const fileUpload_1 = require("../../utils/fileUpload");
 const errorHandler_1 = require("../../utils/errorHandler");
@@ -323,3 +323,20 @@ const getPostStat = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
     }
 });
 exports.getPostStat = getPostStat;
+//-----------------FOLLOW USER--------------------//
+const followUser = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const { follow, message } = yield (0, query_1.followAccount)(req, res);
+        const post = req.body.post;
+        post.isFollowed = follow ? false : true;
+        post.isActive = false;
+        res.status(200).json({
+            message: message,
+            data: post,
+        });
+    }
+    catch (error) {
+        (0, errorHandler_1.handleError)(res, undefined, undefined, error);
+    }
+});
+exports.followUser = followUser;

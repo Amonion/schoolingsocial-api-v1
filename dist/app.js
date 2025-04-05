@@ -30,6 +30,7 @@ const schoolRoutes_1 = __importDefault(require("./routes/team/schoolRoutes"));
 const userMessageRoutes_1 = __importDefault(require("./routes/users/userMessageRoutes"));
 const userCompetitionRoutes_1 = __importDefault(require("./routes/users/userCompetitionRoutes"));
 const userRoutes_1 = __importDefault(require("./routes/users/userRoutes"));
+const chatController_1 = require("./controllers/users/chatController");
 const postController_1 = require("./controllers/users/postController");
 const fileUpload_1 = require("./utils/fileUpload");
 const notificationController_1 = require("./controllers/team/notificationController");
@@ -70,6 +71,14 @@ io.on("connection", (socket) => {
     console.log(`✅ User connected: ${socket.id}`);
     socket.on("message", (data) => __awaiter(void 0, void 0, void 0, function* () {
         switch (data.to) {
+            case "chat":
+                const chatResponse = yield (0, chatController_1.createChat)(data);
+                io.emit("chatResponse", chatResponse);
+                break;
+            case "confirm":
+                const confirmResponse = yield (0, chatController_1.confirmChat)(data);
+                io.emit("confirmResponse", confirmResponse);
+                break;
             case "users":
                 const response = yield (0, postController_1.createPost)(data);
                 io.emit("message", response);

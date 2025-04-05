@@ -15,6 +15,7 @@ import {
   updatePost,
   updatePostStat,
   getPostStat,
+  followUser,
 } from "../../controllers/users/postController";
 
 import {
@@ -27,7 +28,7 @@ import {
 } from "../../controllers/users/uploadController";
 
 const router = express.Router();
-
+router.route("/follow/:id").patch(upload.any(), followUser);
 router.route("/uploads").get(getUploads).post(upload.any(), createUpload);
 router.route("/accounts").get(getAccounts).post(upload.any(), createAccount);
 router.route("/stats").get(getPostStat).patch(updatePostStat);

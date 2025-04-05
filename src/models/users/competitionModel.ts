@@ -1,10 +1,8 @@
 import mongoose, { Schema } from "mongoose";
 import {
-  IAccount,
   IUserTestExam,
   IUserTest,
-  IUserInterest,
-  IFollower,
+  IParticipant,
 } from "../../utils/userInterface";
 
 const UserTestExamSchema: Schema = new Schema(
@@ -51,3 +49,21 @@ const UserTestSchema: Schema = new Schema(
   }
 );
 export const UserTest = mongoose.model<IUserTest>("UserTest", UserTestSchema);
+
+const ParticipantSchema: Schema = new Schema(
+  {
+    userId: { type: String },
+    paperId: { type: String, default: "" },
+    isClicked: { type: Boolean, default: false },
+    question: { type: String, default: "" },
+    options: { type: Array, default: [] },
+    createdAt: { type: Date, default: Date.now },
+  },
+  {
+    timestamps: true,
+  }
+);
+export const Participant = mongoose.model<IParticipant>(
+  "Participant",
+  ParticipantSchema
+);

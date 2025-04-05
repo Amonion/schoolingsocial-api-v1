@@ -9,6 +9,7 @@ const upload = (0, multer_1.default)();
 const postController_1 = require("../../controllers/users/postController");
 const uploadController_1 = require("../../controllers/users/uploadController");
 const router = express_1.default.Router();
+router.route("/follow/:id").patch(upload.any(), postController_1.followUser);
 router.route("/uploads").get(uploadController_1.getUploads).post(upload.any(), uploadController_1.createUpload);
 router.route("/accounts").get(postController_1.getAccounts).post(upload.any(), postController_1.createAccount);
 router.route("/stats").get(postController_1.getPostStat).patch(postController_1.updatePostStat);

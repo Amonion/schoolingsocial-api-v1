@@ -33,50 +33,24 @@ var __importStar = (this && this.__importStar) || (function () {
     };
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.Participant = exports.UserTest = exports.UserTestExam = void 0;
+exports.Chat = void 0;
 const mongoose_1 = __importStar(require("mongoose"));
-const UserTestExamSchema = new mongoose_1.Schema({
+const ChatSchema = new mongoose_1.Schema({
     username: { type: String },
     userId: { type: String },
     picture: { type: String, default: "" },
-    paperId: { type: String, default: "" },
-    name: { type: String, default: "" },
-    title: { type: String, default: "" },
-    instruction: { type: String, default: "" },
-    type: { type: String, default: "" },
-    questions: { type: Number, default: 0 },
-    rate: { type: Number, default: 0 },
-    accuracy: { type: Number, default: 0 },
-    metric: { type: Number, default: 0 },
-    attempts: { type: Number, default: 0 },
-    attemptedQuestions: { type: Number, default: 0 },
-    totalCorrectAnswer: { type: Number, default: 0 },
-    started: { type: Number, default: 0 },
-    ended: { type: Number, default: 0 },
+    media: { type: Array, default: [] },
+    day: { type: String, default: "" },
+    connection: { type: String, default: "" },
+    content: { type: String, default: "" },
+    received: { type: Boolean, default: false },
+    receiverUsername: { type: String, default: "" },
+    receiverPicture: { type: String, default: "" },
+    receiverId: { type: String, default: "" },
+    receiverTime: { type: Date, default: Date.now },
+    senderTime: { type: Date, default: Date.now },
     createdAt: { type: Date, default: Date.now },
 }, {
     timestamps: true,
 });
-exports.UserTestExam = mongoose_1.default.model("UserTestExam", UserTestExamSchema);
-const UserTestSchema = new mongoose_1.Schema({
-    userId: { type: String },
-    paperId: { type: String, default: "" },
-    isClicked: { type: Boolean, default: false },
-    question: { type: String, default: "" },
-    options: { type: Array, default: [] },
-    createdAt: { type: Date, default: Date.now },
-}, {
-    timestamps: true,
-});
-exports.UserTest = mongoose_1.default.model("UserTest", UserTestSchema);
-const ParticipantSchema = new mongoose_1.Schema({
-    userId: { type: String },
-    paperId: { type: String, default: "" },
-    isClicked: { type: Boolean, default: false },
-    question: { type: String, default: "" },
-    options: { type: Array, default: [] },
-    createdAt: { type: Date, default: Date.now },
-}, {
-    timestamps: true,
-});
-exports.Participant = mongoose_1.default.model("Participant", ParticipantSchema);
+exports.Chat = mongoose_1.default.model("Chat", ChatSchema);

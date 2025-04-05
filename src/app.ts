@@ -15,6 +15,7 @@ import schoolRoutes from "./routes/team/schoolRoutes";
 import userMessageRoutes from "./routes/users/userMessageRoutes";
 import userCompetitionRoutes from "./routes/users/userCompetitionRoutes";
 import userRoutes from "./routes/users/userRoutes";
+import { confirmChat, createChat } from "./controllers/users/chatController";
 import { createPost } from "./controllers/users/postController";
 import { getPresignedUrl, removeFile } from "./utils/fileUpload";
 import { routeNotification } from "./controllers/team/notificationController";
@@ -61,6 +62,14 @@ io.on("connection", (socket) => {
 
   socket.on("message", async (data) => {
     switch (data.to) {
+      case "chat":
+        const chatResponse = await createChat(data);
+        io.emit("chatResponse", chatResponse);
+        break;
+      case "confirm":
+        const confirmResponse = await confirmChat(data);
+        io.emit("confirmResponse", confirmResponse);
+        break;
       case "users":
         const response = await createPost(data);
         io.emit("message", response);

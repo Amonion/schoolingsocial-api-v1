@@ -136,6 +136,7 @@ const ExamSchema = new mongoose_1.Schema({
     type: { type: String, default: "" },
     name: { type: String, default: "" },
     status: { type: String, default: "Draft" },
+    participants: { type: Number, default: 0 },
     duration: { type: Number, default: 0 },
     questions: { type: Number, default: 0 },
     questionsPerPage: { type: Number, default: 0 },

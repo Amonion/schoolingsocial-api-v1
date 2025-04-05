@@ -1,5 +1,3 @@
-import { IObjective } from "./teamInterface";
-
 export interface IAccount extends Document {
   username: string;
   userId: string;
@@ -13,6 +11,24 @@ export interface IAccount extends Document {
   verification: number;
   replies: number;
   isVerified: boolean;
+}
+
+export interface IChat extends Document {
+  _id: string;
+  content: string;
+  userId: string;
+  action: string;
+  username: string;
+  picture: string;
+  media: Object[];
+  connection: string;
+  senderTime: Date;
+  receiverTime: Date;
+  createdAt: Date;
+  receiverUsername: string;
+  receiverPicture: string;
+  receiverId: string;
+  received: boolean;
 }
 
 export interface IFollower extends Document {
@@ -63,6 +79,15 @@ interface Poll {
   text: string;
   index: number;
   percent: number;
+}
+
+export interface IParticipant extends Document {
+  _id: string;
+  userId: string;
+  paperId: string;
+  isClicked: boolean;
+  question: string;
+  options: Option[];
 }
 
 export interface IPost extends Document {

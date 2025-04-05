@@ -9,6 +9,7 @@ import {
   createWeekend,
   getExamById,
   getExams,
+  getUserExam,
   updateExam,
   createExam,
   searchExamInfo,
@@ -33,7 +34,8 @@ router
   .get(getObjectives)
   .post(upload.any(), createObjective);
 router.route("/leagues").get(getLeagues).post(upload.any(), createLeague);
-router.route("/exams").get(getExams).post(upload.any(), createExam);
+router.route("/exams").get(getUserExam).post(upload.any(), createExam);
+router.route("/table").get(getExams);
 router.route("/exams/find").get(searchExamInfo);
 
 router

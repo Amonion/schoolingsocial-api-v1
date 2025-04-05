@@ -9,7 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.searchExamInfo = exports.getObjectives = exports.createObjective = exports.updatePaper = exports.getPapers = exports.getPaperById = exports.createPaper = exports.updateLeague = exports.getLeagues = exports.getLeagueById = exports.createLeague = exports.updateExam = exports.getExams = exports.getExamById = exports.createExam = exports.updateWeekend = exports.getWeekends = exports.getWeekendById = exports.createWeekend = void 0;
+exports.searchExamInfo = exports.getObjectives = exports.createObjective = exports.updatePaper = exports.getPapers = exports.getPaperById = exports.createPaper = exports.updateLeague = exports.getLeagues = exports.getLeagueById = exports.createLeague = exports.updateExam = exports.getExams = exports.getUserExam = exports.getExamById = exports.createExam = exports.updateWeekend = exports.getWeekends = exports.getWeekendById = exports.createWeekend = void 0;
 const errorHandler_1 = require("../../utils/errorHandler");
 const competitionModel_1 = require("../../models/team/competitionModel");
 const query_1 = require("../../utils/query");
@@ -55,6 +55,7 @@ const createExam = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
     try {
         const paperId = req.body.paperId;
         const userId = req.body.userId;
+        const username = req.body.username;
         const picture = req.body.picture;
         const started = Number(req.body.started);
         const ended = Number(req.body.ended);
@@ -63,6 +64,10 @@ const createExam = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
         const questions = req.body.questions ? JSON.parse(req.body.questions) : [];
         const rate = (1000 * questions.length) / (ended - started);
         let mainObjective = yield competitionModel_1.Objective.find({ paperId: paperId });
+        let participant = yield competitionModel_2.UserTestExam.find({
+            paperId: paperId,
+            userId: userId,
+        });
         let correctAnswer = 0;
         for (let i = 0; i < questions.length; i++) {
             const el = questions[i];
@@ -83,7 +88,7 @@ const createExam = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
             const objIndex = questions.findIndex((obj) => obj._id == el._id);
             if (objIndex !== -1) {
                 const obj = {
-                    isClicked: true,
+                    isClicked: questions[objIndex].isClicked,
                     paperId: paperId,
                     userId: userId,
                     question: el.question,
@@ -109,6 +114,7 @@ const createExam = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
             $set: {
                 paperId,
                 userId,
+                username,
                 picture,
                 started,
                 ended,
@@ -127,6 +133,13 @@ const createExam = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
         });
         yield competitionModel_2.UserTest.deleteMany({ userId: userId, paperId: paperId });
         yield competitionModel_2.UserTest.insertMany(updatedQuestions);
+        if (participant.length === 0) {
+            yield competitionModel_1.Exam.updateOne({ _id: paperId }, {
+                $inc: {
+                    participants: 1,
+                },
+            });
+        }
         const result = yield (0, query_1.queryData)(competitionModel_2.UserTest, req);
         const data = {
             exam,
@@ -154,7 +167,7 @@ const getExamById = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
     }
 });
 exports.getExamById = getExamById;
-const getExams = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+const getUserExam = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const exam = yield competitionModel_2.UserTestExam.findOne({
             userId: req.query.userId,
@@ -166,6 +179,16 @@ const getExams = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
             results: result.results,
         };
         res.status(200).json(data);
+    }
+    catch (error) {
+        (0, errorHandler_1.handleError)(res, undefined, undefined, error);
+    }
+});
+exports.getUserExam = getUserExam;
+const getExams = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const result = yield (0, query_1.queryData)(competitionModel_2.UserTestExam, req);
+        res.status(200).json(result);
     }
     catch (error) {
         (0, errorHandler_1.handleError)(res, undefined, undefined, error);

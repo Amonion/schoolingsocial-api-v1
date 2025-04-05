@@ -8,6 +8,7 @@ import {
   getItemById,
   getItems,
   queryData,
+  followAccount,
 } from "../../utils/query";
 import { IPost } from "../../utils/userInterface";
 import { Bookmark, Like, View } from "../../models/users/statModel";
@@ -406,6 +407,23 @@ export const getPostStat = async (req: Request, res: Response) => {
       bookmarks: hasBookmarked ? true : false,
     });
   } catch (error: any) {
+    handleError(res, undefined, undefined, error);
+  }
+};
+
+//-----------------FOLLOW USER--------------------//
+export const followUser = async (req: Request, res: Response) => {
+  try {
+    const { follow, message } = await followAccount(req, res);
+    const post = req.body.post;
+    post.isFollowed = follow ? false : true;
+    post.isActive = false;
+
+    res.status(200).json({
+      message: message,
+      data: post,
+    });
+  } catch (error) {
     handleError(res, undefined, undefined, error);
   }
 };
