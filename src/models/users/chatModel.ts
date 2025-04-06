@@ -14,6 +14,7 @@ const ChatSchema: Schema = new Schema(
     receiverUsername: { type: String, default: "" },
     receiverPicture: { type: String, default: "" },
     receiverId: { type: String, default: "" },
+    isReceiverDeleted: { type: Boolean, default: false },
     receiverTime: { type: Date, default: Date.now },
     senderTime: { type: Date, default: Date.now },
     createdAt: { type: Date, default: Date.now },

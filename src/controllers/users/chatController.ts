@@ -8,18 +8,23 @@ const setConnectionKey = (id1: string, id2: string) => {
   return participants.join("");
 };
 
-export const confirmChat = async (data: IChat) => {
+interface Receive {
+  ids: string[];
+  receiverId: string;
+}
+
+export const confirmChats = async (data: Receive) => {
   try {
-    const post = await Chat.findByIdAndUpdate(
-      data._id,
-      {
-        received: true,
-      },
-      { new: true }
+    await Chat.updateMany(
+      { _id: { $in: data.ids } },
+      { $set: { received: true } }
     );
+
+    const updatedChats = await Chat.find({ _id: { $in: data.ids } });
     return {
-      key: post?.connection,
-      data: post,
+      key: updatedChats[0].connection,
+      data: updatedChats,
+      receiverId: data.receiverId,
     };
   } catch (error) {
     console.log(error);
@@ -91,5 +96,33 @@ export const getChats = async (req: Request, res: Response) => {
     res.status(200).json(groupedChats);
   } catch (error) {
     handleError(res, undefined, undefined, error);
+  }
+};
+
+interface Delete {
+  id: string;
+  connection: string;
+  day: string;
+  isSender: boolean;
+}
+
+export const deleteChat = async (data: Delete) => {
+  try {
+    if (data.isSender) {
+      await Chat.findByIdAndDelete(data.id);
+    } else {
+      await Chat.findByIdAndUpdate(data.id, { isReceiverDeleted: true });
+    }
+
+    const chat = await Chat.findById(data.id);
+
+    return {
+      id: data.id,
+      key: data.connection,
+      day: data.day,
+      chat: chat,
+    };
+  } catch (error) {
+    console.log(error);
   }
 };

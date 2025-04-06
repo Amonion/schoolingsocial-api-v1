@@ -9,28 +9,28 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getChats = exports.createChat = exports.confirmChat = void 0;
+exports.deleteChat = exports.getChats = exports.createChat = exports.confirmChats = void 0;
 const chatModel_1 = require("../../models/users/chatModel");
 const errorHandler_1 = require("../../utils/errorHandler");
 const setConnectionKey = (id1, id2) => {
     const participants = [id1, id2].sort();
     return participants.join("");
 };
-const confirmChat = (data) => __awaiter(void 0, void 0, void 0, function* () {
+const confirmChats = (data) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const post = yield chatModel_1.Chat.findByIdAndUpdate(data._id, {
-            received: true,
-        }, { new: true });
+        yield chatModel_1.Chat.updateMany({ _id: { $in: data.ids } }, { $set: { received: true } });
+        const updatedChats = yield chatModel_1.Chat.find({ _id: { $in: data.ids } });
         return {
-            key: post === null || post === void 0 ? void 0 : post.connection,
-            data: post,
+            key: updatedChats[0].connection,
+            data: updatedChats,
+            receiverId: data.receiverId,
         };
     }
     catch (error) {
         console.log(error);
     }
 });
-exports.confirmChat = confirmChat;
+exports.confirmChats = confirmChats;
 const createChat = (data) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const connection = setConnectionKey(data.userId, data.receiverId);
@@ -97,3 +97,24 @@ const getChats = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     }
 });
 exports.getChats = getChats;
+const deleteChat = (data) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        if (data.isSender) {
+            yield chatModel_1.Chat.findByIdAndDelete(data.id);
+        }
+        else {
+            yield chatModel_1.Chat.findByIdAndUpdate(data.id, { isReceiverDeleted: true });
+        }
+        const chat = yield chatModel_1.Chat.findById(data.id);
+        return {
+            id: data.id,
+            key: data.connection,
+            day: data.day,
+            chat: chat,
+        };
+    }
+    catch (error) {
+        console.log(error);
+    }
+});
+exports.deleteChat = deleteChat;

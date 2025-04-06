@@ -76,8 +76,12 @@ io.on("connection", (socket) => {
                 io.emit("chatResponse", chatResponse);
                 break;
             case "confirm":
-                const confirmResponse = yield (0, chatController_1.confirmChat)(data);
+                const confirmResponse = yield (0, chatController_1.confirmChats)(data);
                 io.emit("confirmResponse", confirmResponse);
+                break;
+            case "deleteChat":
+                const deleteChatResponse = yield (0, chatController_1.deleteChat)(data);
+                io.emit("deleteChatResponse", deleteChatResponse);
                 break;
             case "users":
                 const response = yield (0, postController_1.createPost)(data);

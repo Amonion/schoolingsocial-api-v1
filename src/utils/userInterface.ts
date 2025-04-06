@@ -29,6 +29,7 @@ export interface IChat extends Document {
   receiverPicture: string;
   receiverId: string;
   received: boolean;
+  isReceiverDeleted: boolean;
 }
 
 export interface IFollower extends Document {
