@@ -14,7 +14,6 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.deleteFilesFromS3 = exports.deleteFileFromS3 = exports.removeFile = exports.getPresignedUrl = void 0;
 exports.uploadFilesToS3 = uploadFilesToS3;
-exports.socketUploadFilesToS3 = socketUploadFilesToS3;
 exports.uploadToS3 = uploadToS3;
 const aws_sdk_1 = __importDefault(require("aws-sdk"));
 const s3 = new aws_sdk_1.default.S3({
@@ -52,40 +51,11 @@ function uploadFilesToS3(req) {
         return Promise.all(uploadPromises);
     });
 }
-function socketUploadFilesToS3(media) {
-    return __awaiter(this, void 0, void 0, function* () {
-        const bucketName = process.env.AWS_S3_BUCKET_NAME;
-        if (!bucketName) {
-            throw new Error("S3 bucket name is not defined in environment variables.");
-        }
-        if (!media || !Array.isArray(media) || media.length === 0) {
-            return [];
-        }
-        const uploadPromises = media.map((file) => __awaiter(this, void 0, void 0, function* () {
-            const base64Data = file.data.split(",")[1];
-            const buffer = Buffer.from(base64Data, "base64");
-            const multerFile = {
-                buffer,
-                originalname: file.name,
-                mimetype: file.type,
-                fieldname: "media",
-                encoding: "",
-                size: buffer.length,
-                destination: "",
-                filename: "",
-                path: "",
-                stream: null,
-            };
-            return uploadToS3(multerFile, bucketName, multerFile.fieldname);
-        }));
-        return Promise.all(uploadPromises);
-    });
-}
 function uploadToS3(file, bucketName, fieldName) {
     return __awaiter(this, void 0, void 0, function* () {
         const uploadParams = {
             Bucket: bucketName,
-            Key: `${Date.now()}_${file.originalname}`, // Unique key for each file
+            Key: `${Date.now()}_${file.originalname}`,
             Body: file.buffer,
             ContentType: file.mimetype,
         };
@@ -156,8 +126,6 @@ const removeFile = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
     }
 });
 exports.removeFile = removeFile;
-// app.post("/s3-delete-file", async (req, res) => {
-// });
 const deleteFileFromS3 = (url) => __awaiter(void 0, void 0, void 0, function* () {
     if (!url)
         return;
@@ -187,3 +155,32 @@ const deleteFilesFromS3 = (modelInstance, fields) => __awaiter(void 0, void 0, v
     }
 });
 exports.deleteFilesFromS3 = deleteFilesFromS3;
+// export async function socketUploadFilesToS3(
+//   media: { name: string; type: string; data: string }[]
+// ): Promise<S3UploadResult[]> {
+//   const bucketName = process.env.AWS_S3_BUCKET_NAME;
+//   if (!bucketName) {
+//     throw new Error("S3 bucket name is not defined in environment variables.");
+//   }
+//   if (!media || !Array.isArray(media) || media.length === 0) {
+//     return [];
+//   }
+//   const uploadPromises: Promise<S3UploadResult>[] = media.map(async (file) => {
+//     const base64Data = file.data.split(",")[1];
+//     const buffer = Buffer.from(base64Data, "base64");
+//     const multerFile: Express.Multer.File = {
+//       buffer,
+//       originalname: file.name,
+//       mimetype: file.type,
+//       fieldname: "media",
+//       encoding: "",
+//       size: buffer.length,
+//       destination: "",
+//       filename: "",
+//       path: "",
+//       stream: null as any,
+//     };
+//     return uploadToS3(multerFile, bucketName, multerFile.fieldname);
+//   });
+//   return Promise.all(uploadPromises);
+// }

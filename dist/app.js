@@ -102,6 +102,7 @@ io.on("connection", (socket) => {
 app.use(body_parser_1.default.json());
 app.use("/api/v1/s3-delete-file", fileUpload_1.removeFile);
 app.use("/api/v1/s3-presigned-url", fileUpload_1.getPresignedUrl);
+// app.use("/api/v1/s3-metadata", getExtension);
 app.use("/api/v1/competitions", competitionRoutes_1.default);
 app.use("/api/v1/company", companyRoutes_1.default);
 app.use("/api/v1/messages", messageRoutes_1.default);
