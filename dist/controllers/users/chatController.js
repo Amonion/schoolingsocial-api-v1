@@ -9,9 +9,10 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.deleteChat = exports.getChats = exports.createChat = exports.confirmChats = void 0;
+exports.deleteChat = exports.getUserChats = exports.getChats = exports.createChat = exports.confirmChats = void 0;
 const chatModel_1 = require("../../models/users/chatModel");
 const errorHandler_1 = require("../../utils/errorHandler");
+const query_1 = require("../../utils/query");
 const setConnectionKey = (id1, id2) => {
     const participants = [id1, id2].sort();
     return participants.join("");
@@ -65,11 +66,22 @@ const createChat = (data) => __awaiter(void 0, void 0, void 0, function* () {
 exports.createChat = createChat;
 const getChats = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
+        const page = parseInt(String(req.query.page || 1));
+        const limit = parseInt(String(req.query.page_size || 10));
+        const skip = (page - 1) * limit;
         const groupedChats = yield chatModel_1.Chat.aggregate([
             {
                 $match: {
                     connection: setConnectionKey(String(req.query.senderId), String(req.query.receiverId)),
                 },
+            },
+            {
+                $sort: { createdAt: -1 }, // Step 1: Get latest messages first
+            },
+            { $skip: skip },
+            { $limit: limit },
+            {
+                $sort: { createdAt: 1 }, // Step 2: Re-sort for frontend display (ascending order)
             },
             {
                 $group: {
@@ -85,18 +97,33 @@ const getChats = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
                 },
             },
             {
-                $sort: {
-                    day: 1, // or -1 for descending
-                },
+                $sort: { day: 1 }, // Final step: sort grouped days ascending
             },
         ]);
-        res.status(200).json(groupedChats);
+        req.query.senderId = undefined;
+        req.query.receiverId = undefined;
+        const result = yield (0, query_1.queryData)(chatModel_1.Chat, req);
+        const count = result.count;
+        res.status(200).json({
+            results: groupedChats,
+            count: count,
+        });
     }
     catch (error) {
         (0, errorHandler_1.handleError)(res, undefined, undefined, error);
     }
 });
 exports.getChats = getChats;
+const getUserChats = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const result = yield (0, query_1.queryData)(chatModel_1.Chat, req);
+        res.status(200).json(result);
+    }
+    catch (error) {
+        (0, errorHandler_1.handleError)(res, undefined, undefined, error);
+    }
+});
+exports.getUserChats = getUserChats;
 const deleteChat = (data) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         if (data.isSender) {

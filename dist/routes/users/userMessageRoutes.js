@@ -11,5 +11,6 @@ const chatController_1 = require("../../controllers/users/chatController");
 const router = express_1.default.Router();
 router.route("/notifications").get(messageController_1.getNotifications);
 router.route("/chats").get(chatController_1.getChats);
+router.route("/user-chats").get(chatController_1.getUserChats);
 router.route("/notifications/:id").patch(upload.any(), messageController_1.updateNotification);
 exports.default = router;

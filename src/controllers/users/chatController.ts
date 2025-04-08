@@ -2,6 +2,7 @@ import { Request, Response } from "express";
 import { Chat } from "../../models/users/chatModel";
 import { handleError } from "../../utils/errorHandler";
 import { IChat } from "../../utils/userInterface";
+import { queryData } from "../../utils/query";
 
 const setConnectionKey = (id1: string, id2: string) => {
   const participants = [id1, id2].sort();
@@ -64,6 +65,10 @@ export const createChat = async (data: IChat) => {
 
 export const getChats = async (req: Request, res: Response) => {
   try {
+    const page = parseInt(String(req.query.page || 1));
+    const limit = parseInt(String(req.query.page_size || 10));
+    const skip = (page - 1) * limit;
+
     const groupedChats = await Chat.aggregate([
       {
         $match: {
@@ -72,6 +77,14 @@ export const getChats = async (req: Request, res: Response) => {
             String(req.query.receiverId)
           ),
         },
+      },
+      {
+        $sort: { createdAt: -1 }, // Step 1: Get latest messages first
+      },
+      { $skip: skip },
+      { $limit: limit },
+      {
+        $sort: { createdAt: 1 }, // Step 2: Re-sort for frontend display (ascending order)
       },
       {
         $group: {
@@ -87,13 +100,28 @@ export const getChats = async (req: Request, res: Response) => {
         },
       },
       {
-        $sort: {
-          day: 1, // or -1 for descending
-        },
+        $sort: { day: 1 }, // Final step: sort grouped days ascending
       },
     ]);
 
-    res.status(200).json(groupedChats);
+    req.query.senderId = undefined;
+    req.query.receiverId = undefined;
+    const result = await queryData<IChat>(Chat, req);
+    const count = result.count;
+
+    res.status(200).json({
+      results: groupedChats,
+      count: count,
+    });
+  } catch (error) {
+    handleError(res, undefined, undefined, error);
+  }
+};
+
+export const getUserChats = async (req: Request, res: Response) => {
+  try {
+    const result = await queryData<IChat>(Chat, req);
+    res.status(200).json(result);
   } catch (error) {
     handleError(res, undefined, undefined, error);
   }
