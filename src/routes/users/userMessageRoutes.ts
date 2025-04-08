@@ -6,12 +6,15 @@ import {
   getNotifications,
   updateNotification,
 } from "../../controllers/users/messageController";
-import { getChats, getUserChats } from "../../controllers/users/chatController";
+import {
+  searchChats,
+  getUserChats,
+} from "../../controllers/users/chatController";
 
 const router = express.Router();
 
 router.route("/notifications").get(getNotifications);
-router.route("/chats").get(getChats);
+router.route("/search").get(searchChats);
 router.route("/user-chats").get(getUserChats);
 router.route("/notifications/:id").patch(upload.any(), updateNotification);
 

@@ -63,56 +63,30 @@ export const createChat = async (data: IChat) => {
   }
 };
 
-export const getChats = async (req: Request, res: Response) => {
+export const searchChats = async (req: Request, res: Response) => {
   try {
-    const page = parseInt(String(req.query.page || 1));
-    const limit = parseInt(String(req.query.page_size || 10));
-    const skip = (page - 1) * limit;
+    const searchTerm = String(req.query.word || "").trim();
+    const connection = String(req.query.connection || "").trim();
 
-    const groupedChats = await Chat.aggregate([
-      {
-        $match: {
-          connection: setConnectionKey(
-            String(req.query.senderId),
-            String(req.query.receiverId)
-          ),
-        },
-      },
-      {
-        $sort: { createdAt: -1 }, // Step 1: Get latest messages first
-      },
-      { $skip: skip },
-      { $limit: limit },
-      {
-        $sort: { createdAt: 1 }, // Step 2: Re-sort for frontend display (ascending order)
-      },
-      {
-        $group: {
-          _id: "$day",
-          chats: { $push: "$$ROOT" },
-        },
-      },
-      {
-        $project: {
-          _id: 0,
-          day: "$_id",
-          chats: 1,
-        },
-      },
-      {
-        $sort: { day: 1 }, // Final step: sort grouped days ascending
-      },
-    ]);
+    if (!searchTerm) {
+      return res.status(400).json({ message: "Search term is required" });
+    }
 
-    req.query.senderId = undefined;
-    req.query.receiverId = undefined;
-    const result = await queryData<IChat>(Chat, req);
-    const count = result.count;
+    const regex = new RegExp(searchTerm, "i");
 
-    res.status(200).json({
-      results: groupedChats,
-      count: count,
-    });
+    const result = await Chat.find({
+      connection,
+      isReceiverDeleted: false,
+      $or: [
+        { content: { $regex: regex } },
+        { "media.name": { $regex: regex } },
+      ],
+    })
+      .select({ _id: 1, content: 1, "media.name": 1 })
+      .sort({ createdAt: -1 })
+      .limit(10);
+
+    res.status(200).json({ results: result });
   } catch (error) {
     handleError(res, undefined, undefined, error);
   }

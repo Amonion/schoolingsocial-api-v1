@@ -9,7 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.deleteChat = exports.getUserChats = exports.getChats = exports.createChat = exports.confirmChats = void 0;
+exports.deleteChat = exports.getUserChats = exports.searchChats = exports.createChat = exports.confirmChats = void 0;
 const chatModel_1 = require("../../models/users/chatModel");
 const errorHandler_1 = require("../../utils/errorHandler");
 const query_1 = require("../../utils/query");
@@ -64,56 +64,32 @@ const createChat = (data) => __awaiter(void 0, void 0, void 0, function* () {
     }
 });
 exports.createChat = createChat;
-const getChats = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+const searchChats = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const page = parseInt(String(req.query.page || 1));
-        const limit = parseInt(String(req.query.page_size || 10));
-        const skip = (page - 1) * limit;
-        const groupedChats = yield chatModel_1.Chat.aggregate([
-            {
-                $match: {
-                    connection: setConnectionKey(String(req.query.senderId), String(req.query.receiverId)),
-                },
-            },
-            {
-                $sort: { createdAt: -1 }, // Step 1: Get latest messages first
-            },
-            { $skip: skip },
-            { $limit: limit },
-            {
-                $sort: { createdAt: 1 }, // Step 2: Re-sort for frontend display (ascending order)
-            },
-            {
-                $group: {
-                    _id: "$day",
-                    chats: { $push: "$$ROOT" },
-                },
-            },
-            {
-                $project: {
-                    _id: 0,
-                    day: "$_id",
-                    chats: 1,
-                },
-            },
-            {
-                $sort: { day: 1 }, // Final step: sort grouped days ascending
-            },
-        ]);
-        req.query.senderId = undefined;
-        req.query.receiverId = undefined;
-        const result = yield (0, query_1.queryData)(chatModel_1.Chat, req);
-        const count = result.count;
-        res.status(200).json({
-            results: groupedChats,
-            count: count,
-        });
+        const searchTerm = String(req.query.word || "").trim();
+        const connection = String(req.query.connection || "").trim();
+        if (!searchTerm) {
+            return res.status(400).json({ message: "Search term is required" });
+        }
+        const regex = new RegExp(searchTerm, "i");
+        const result = yield chatModel_1.Chat.find({
+            connection,
+            isReceiverDeleted: false,
+            $or: [
+                { content: { $regex: regex } },
+                { "media.name": { $regex: regex } },
+            ],
+        })
+            .select({ _id: 1, content: 1, "media.name": 1 })
+            .sort({ createdAt: -1 })
+            .limit(10);
+        res.status(200).json({ results: result });
     }
     catch (error) {
         (0, errorHandler_1.handleError)(res, undefined, undefined, error);
     }
 });
-exports.getChats = getChats;
+exports.searchChats = searchChats;
 const getUserChats = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const result = yield (0, query_1.queryData)(chatModel_1.Chat, req);
