@@ -9,10 +9,11 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.deleteChat = exports.getUserChats = exports.searchChats = exports.createChat = exports.confirmChats = void 0;
+exports.deleteChats = exports.deleteChat = exports.getUserChats = exports.friendsChats = exports.searchChats = exports.createChat = exports.confirmChats = void 0;
 const chatModel_1 = require("../../models/users/chatModel");
 const errorHandler_1 = require("../../utils/errorHandler");
 const query_1 = require("../../utils/query");
+const fileUpload_1 = require("../../utils/fileUpload");
 const setConnectionKey = (id1, id2) => {
     const participants = [id1, id2].sort();
     return participants.join("");
@@ -90,6 +91,34 @@ const searchChats = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
     }
 });
 exports.searchChats = searchChats;
+const friendsChats = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const id = String(req.query.id || "").trim();
+        if (!id) {
+            return res.status(400).json({ message: "User ID is required" });
+        }
+        const result = yield chatModel_1.Chat.find({
+            $or: [{ userId: id }, { receiverId: id }],
+            isReceiverDeleted: false,
+            isFriends: true,
+        })
+            .select({
+            _id: 1,
+            content: 1,
+            createdAt: 1,
+            receiverPicture: 1,
+            receiverId: 1,
+            receiverUsername: 1,
+        })
+            .sort({ createdAt: -1 }) // Get latest first
+            .limit(10);
+        res.status(200).json({ results: result });
+    }
+    catch (error) {
+        (0, errorHandler_1.handleError)(res, undefined, undefined, error);
+    }
+});
+exports.friendsChats = friendsChats;
 const getUserChats = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const result = yield (0, query_1.queryData)(chatModel_1.Chat, req);
@@ -103,6 +132,16 @@ exports.getUserChats = getUserChats;
 const deleteChat = (data) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         if (data.isSender) {
+            const item = yield chatModel_1.Chat.findById(data.id);
+            if (!item) {
+                return { message: "This post has been deleted" };
+            }
+            if (item.media.length > 0) {
+                for (let i = 0; i < item.media.length; i++) {
+                    const el = item.media[i];
+                    (0, fileUpload_1.deleteFileFromS3)(el.source);
+                }
+            }
             yield chatModel_1.Chat.findByIdAndDelete(data.id);
         }
         else {
@@ -121,3 +160,34 @@ const deleteChat = (data) => __awaiter(void 0, void 0, void 0, function* () {
     }
 });
 exports.deleteChat = deleteChat;
+const deleteChats = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const chats = req.body;
+        const senderId = req.query.senderId;
+        for (let i = 0; i < chats.length; i++) {
+            const el = chats[i];
+            const isSender = el.userId === senderId ? true : false;
+            if (isSender) {
+                if (el.media.length > 0) {
+                    for (let i = 0; i < el.media.length; i++) {
+                        const item = el.media[i];
+                        (0, fileUpload_1.deleteFileFromS3)(item.source);
+                    }
+                }
+                yield chatModel_1.Chat.findByIdAndDelete(el._id);
+            }
+            else {
+                yield chatModel_1.Chat.findByIdAndUpdate(el._id, { isReceiverDeleted: true });
+            }
+        }
+        const results = chats.map((item) => item._id);
+        res.status(200).json({
+            results,
+            message: "Chats deleted successfully.",
+        });
+    }
+    catch (error) {
+        (0, errorHandler_1.handleError)(res, undefined, undefined, error);
+    }
+});
+exports.deleteChats = deleteChats;

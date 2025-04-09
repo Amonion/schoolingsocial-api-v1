@@ -20,7 +20,14 @@ export interface IChat extends Document {
   action: string;
   username: string;
   picture: string;
-  media: Object[];
+  media: [
+    {
+      source: string;
+      name: string;
+      duration: number;
+      size: number;
+    }
+  ];
   connection: string;
   senderTime: Date;
   receiverTime: Date;
@@ -28,6 +35,8 @@ export interface IChat extends Document {
   receiverUsername: string;
   receiverPicture: string;
   receiverId: string;
+  isPinned: boolean;
+  isFriends: boolean;
   received: boolean;
   isReceiverDeleted: boolean;
 }

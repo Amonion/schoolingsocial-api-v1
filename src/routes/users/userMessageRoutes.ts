@@ -9,13 +9,17 @@ import {
 import {
   searchChats,
   getUserChats,
+  deleteChats,
+  friendsChats,
 } from "../../controllers/users/chatController";
 
 const router = express.Router();
 
 router.route("/notifications").get(getNotifications);
+router.route("/friends").get(friendsChats);
 router.route("/search").get(searchChats);
 router.route("/user-chats").get(getUserChats);
+router.route("/mass-delete").post(deleteChats);
 router.route("/notifications/:id").patch(upload.any(), updateNotification);
 
 export default router;

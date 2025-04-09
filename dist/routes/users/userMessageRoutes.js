@@ -10,7 +10,9 @@ const messageController_1 = require("../../controllers/users/messageController")
 const chatController_1 = require("../../controllers/users/chatController");
 const router = express_1.default.Router();
 router.route("/notifications").get(messageController_1.getNotifications);
+router.route("/friends").get(chatController_1.friendsChats);
 router.route("/search").get(chatController_1.searchChats);
 router.route("/user-chats").get(chatController_1.getUserChats);
+router.route("/mass-delete").post(chatController_1.deleteChats);
 router.route("/notifications/:id").patch(upload.any(), messageController_1.updateNotification);
 exports.default = router;

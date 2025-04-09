@@ -3,6 +3,7 @@ import { Chat } from "../../models/users/chatModel";
 import { handleError } from "../../utils/errorHandler";
 import { IChat } from "../../utils/userInterface";
 import { queryData } from "../../utils/query";
+import { deleteFileFromS3 } from "../../utils/fileUpload";
 
 const setConnectionKey = (id1: string, id2: string) => {
   const participants = [id1, id2].sort();
@@ -92,6 +93,36 @@ export const searchChats = async (req: Request, res: Response) => {
   }
 };
 
+export const friendsChats = async (req: Request, res: Response) => {
+  try {
+    const id = String(req.query.id || "").trim();
+
+    if (!id) {
+      return res.status(400).json({ message: "User ID is required" });
+    }
+
+    const result = await Chat.find({
+      $or: [{ userId: id }, { receiverId: id }],
+      isReceiverDeleted: false,
+      isFriends: true,
+    })
+      .select({
+        _id: 1,
+        content: 1,
+        createdAt: 1,
+        receiverPicture: 1,
+        receiverId: 1,
+        receiverUsername: 1,
+      })
+      .sort({ createdAt: -1 }) // Get latest first
+      .limit(10);
+
+    res.status(200).json({ results: result });
+  } catch (error) {
+    handleError(res, undefined, undefined, error);
+  }
+};
+
 export const getUserChats = async (req: Request, res: Response) => {
   try {
     const result = await queryData<IChat>(Chat, req);
@@ -111,6 +142,17 @@ interface Delete {
 export const deleteChat = async (data: Delete) => {
   try {
     if (data.isSender) {
+      const item = await Chat.findById(data.id);
+      if (!item) {
+        return { message: "This post has been deleted" };
+      }
+
+      if (item.media.length > 0) {
+        for (let i = 0; i < item.media.length; i++) {
+          const el = item.media[i];
+          deleteFileFromS3(el.source);
+        }
+      }
       await Chat.findByIdAndDelete(data.id);
     } else {
       await Chat.findByIdAndUpdate(data.id, { isReceiverDeleted: true });
@@ -126,5 +168,36 @@ export const deleteChat = async (data: Delete) => {
     };
   } catch (error) {
     console.log(error);
+  }
+};
+
+export const deleteChats = async (req: Request, res: Response) => {
+  try {
+    const chats = req.body;
+    const senderId = req.query.senderId;
+    for (let i = 0; i < chats.length; i++) {
+      const el = chats[i];
+      const isSender = el.userId === senderId ? true : false;
+      if (isSender) {
+        if (el.media.length > 0) {
+          for (let i = 0; i < el.media.length; i++) {
+            const item = el.media[i];
+            deleteFileFromS3(item.source);
+          }
+        }
+        await Chat.findByIdAndDelete(el._id);
+      } else {
+        await Chat.findByIdAndUpdate(el._id, { isReceiverDeleted: true });
+      }
+    }
+
+    const results = chats.map((item: IChat) => item._id);
+
+    res.status(200).json({
+      results,
+      message: "Chats deleted successfully.",
+    });
+  } catch (error) {
+    handleError(res, undefined, undefined, error);
   }
 };
