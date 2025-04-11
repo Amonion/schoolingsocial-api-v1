@@ -32,13 +32,15 @@ export interface IChat extends Document {
   senderTime: Date;
   receiverTime: Date;
   createdAt: Date;
+  time: number;
   receiverUsername: string;
   receiverPicture: string;
   receiverId: string;
   isPinned: boolean;
+  isRead: boolean;
   isFriends: boolean;
   received: boolean;
-  isReceiverDeleted: boolean;
+  senderId: string;
 }
 
 export interface IFollower extends Document {

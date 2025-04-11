@@ -13,6 +13,7 @@ const setConnectionKey = (id1: string, id2: string) => {
 interface Receive {
   ids: string[];
   receiverId: string;
+  userId: string;
 }
 
 export const confirmChats = async (data: Receive) => {
@@ -27,6 +28,7 @@ export const confirmChats = async (data: Receive) => {
       key: updatedChats[0].connection,
       data: updatedChats,
       receiverId: data.receiverId,
+      userId: data.userId,
     };
   } catch (error) {
     console.log(error);
@@ -85,7 +87,7 @@ export const searchChats = async (req: Request, res: Response) => {
     })
       .select({ _id: 1, content: 1, "media.name": 1 })
       .sort({ createdAt: -1 })
-      .limit(10);
+      .limit(100);
 
     res.status(200).json({ results: result });
   } catch (error) {
@@ -126,7 +128,59 @@ export const friendsChats = async (req: Request, res: Response) => {
 export const getUserChats = async (req: Request, res: Response) => {
   try {
     const result = await queryData<IChat>(Chat, req);
-    res.status(200).json(result);
+    const unread = await Chat.countDocuments({
+      connection: req.query.connection,
+      isRead: false,
+    });
+    res.status(200).json({
+      count: result.count,
+      results: result.results,
+      unread: unread,
+      page: result.page,
+    });
+  } catch (error) {
+    handleError(res, undefined, undefined, error);
+  }
+};
+
+export const readChats = async (req: Request, res: Response) => {
+  try {
+    const result = await queryData<IChat>(Chat, req);
+    const unread = await Chat.countDocuments({
+      connection: req.query.connection,
+      isRead: false,
+    });
+    res.status(200).json({
+      count: result.count,
+      results: result.results,
+      unread: unread,
+      page: result.page,
+    });
+  } catch (error) {
+    handleError(res, undefined, undefined, error);
+  }
+};
+
+export const addSearchedChats = async (req: Request, res: Response) => {
+  try {
+    const id = req.query.chatId;
+    const minDate = new Date(Number(req.query.oldest));
+    const item = await Chat.findById(id);
+
+    if (!item) {
+      return res.status(400).json({ message: "Item not found in database." });
+    }
+
+    const maxDate = item.createdAt;
+
+    const chats = await Chat.find({
+      createdAt: {
+        $gt: minDate,
+        $lte: maxDate,
+      },
+    });
+
+    res.status(200).json({ results: chats });
   } catch (error) {
     handleError(res, undefined, undefined, error);
   }
@@ -136,6 +190,7 @@ interface Delete {
   id: string;
   connection: string;
   day: string;
+  senderId: string;
   isSender: boolean;
 }
 
@@ -155,7 +210,7 @@ export const deleteChat = async (data: Delete) => {
       }
       await Chat.findByIdAndDelete(data.id);
     } else {
-      await Chat.findByIdAndUpdate(data.id, { isReceiverDeleted: true });
+      await Chat.findByIdAndUpdate(data.id, { deletedId: data.senderId });
     }
 
     const chat = await Chat.findById(data.id);

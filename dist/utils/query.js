@@ -14,86 +14,117 @@ const fileUpload_1 = require("./fileUpload");
 const errorHandler_1 = require("./errorHandler");
 const postModel_1 = require("../models/users/postModel");
 const userModel_1 = require("../models/users/userModel");
+// const buildFilterQuery = (req: Request): Record<string, any> => {
+//   const filters: Record<string, any> = {};
+//   for (const [key, value] of Object.entries(req.query)) {
+//     if (key !== "page_size" && key !== "page" && key !== "ordering") {
+//       if (typeof value === "string") {
+//         if (value.trim() === "") {
+//           return { [key]: { $exists: false } };
+//         }
+//         if (value === "true" || value === "false") {
+//           filters[key] = value === "true";
+//         } else {
+//           filters[key] = { $regex: value, $options: "i" };
+//         }
+//       } else if (Array.isArray(value)) {
+//         const validValues = value.filter(
+//           (item): item is string =>
+//             typeof item === "string" && item.trim() !== ""
+//         );
+//         if (validValues.length === 0) {
+//           return { [key]: { $exists: false } };
+//         }
+//         filters[key] = {
+//           $in: validValues.map((item) => new RegExp(item, "i")),
+//         };
+//       } else if (typeof value === "boolean") {
+//         filters[key] = value;
+//       } else if (typeof value === "number") {
+//         filters[key] = value;
+//       } else if (value && typeof value === "object") {
+//         filters[key] = value;
+//       } else {
+//         continue;
+//       }
+//     }
+//   }
+//   return filters;
+// };
 const buildFilterQuery = (req) => {
     const filters = {};
-    for (const [key, value] of Object.entries(req.query)) {
-        if (key !== "page_size" && key !== "page" && key !== "ordering") {
-            if (typeof value === "string") {
-                if (value.trim() === "") {
-                    // If any key has an empty string value, return a filter that matches no documents
-                    return { [key]: { $exists: false } };
+    const operators = {
+        lt: "$lt",
+        lte: "$lte",
+        gt: "$gt",
+        gte: "$gte",
+        ne: "$ne",
+        in: "$in",
+        nin: "$nin",
+    };
+    const flattenQuery = (query) => {
+        const flat = {};
+        for (const key in query) {
+            const value = query[key];
+            if (typeof value === "object" && !Array.isArray(value)) {
+                for (const subKey in value) {
+                    flat[`${key}[${subKey}]`] = value[subKey];
                 }
-                if (value === "true" || value === "false") {
-                    // Convert boolean-like strings to actual booleans
-                    filters[key] = value === "true";
-                }
-                else {
-                    // Use regex for other strings
-                    filters[key] = { $regex: value, $options: "i" };
-                }
-            }
-            else if (Array.isArray(value)) {
-                // Map each item in the array to a regex, ensuring it is a string
-                const validValues = value.filter((item) => typeof item === "string" && item.trim() !== "");
-                if (validValues.length === 0) {
-                    // If all array items are empty, return a filter that matches no documents
-                    return { [key]: { $exists: false } };
-                }
-                filters[key] = {
-                    $in: validValues.map((item) => new RegExp(item, "i")),
-                };
-            }
-            else if (typeof value === "boolean") {
-                // Directly handle boolean fields
-                filters[key] = value;
-            }
-            else if (typeof value === "number") {
-                // Handle numbers directly
-                filters[key] = value;
-            }
-            else if (value && typeof value === "object") {
-                // Handle plain objects
-                filters[key] = value;
             }
             else {
-                // Ignore unsupported or undefined types
-                continue;
+                flat[key] = value;
+            }
+        }
+        return flat;
+    };
+    const flatQuery = flattenQuery(req.query);
+    for (const [key, rawValue] of Object.entries(flatQuery)) {
+        if (key === "page" || key === "page_size" || key === "ordering")
+            continue;
+        const match = key.match(/^(.+)\[(.+)\]$/); // matches field[op]
+        if (match) {
+            const field = match[1];
+            const op = match[2];
+            if (operators[op]) {
+                const mongoOp = operators[op];
+                const value = Array.isArray(rawValue) ? rawValue : [rawValue];
+                const finalValues = value.map((v) => {
+                    if (v === "true")
+                        return true;
+                    if (v === "false")
+                        return false;
+                    if (!isNaN(Number(v)))
+                        return Number(v);
+                    return v;
+                });
+                if (!filters[field])
+                    filters[field] = {};
+                filters[field][mongoOp] =
+                    finalValues.length === 1 ? finalValues[0] : finalValues;
+            }
+        }
+        else {
+            const value = Array.isArray(rawValue) ? rawValue : [rawValue];
+            const normalizedValue = value[0];
+            if (normalizedValue === "") {
+                filters[key] = { $exists: false };
+            }
+            else if (normalizedValue === "true" || normalizedValue === "false") {
+                filters[key] = normalizedValue === "true";
+            }
+            else if (!isNaN(Number(normalizedValue))) {
+                filters[key] = Number(normalizedValue);
+            }
+            else if (typeof normalizedValue === "string") {
+                filters[key] = { $regex: normalizedValue, $options: "i" };
+            }
+            else {
+                filters[key] = normalizedValue; // fallback
             }
         }
     }
     return filters;
 };
-// const buildFilterQuery = (req: Request): Record<string, any> => {
-//   const filters: Record<string, any> = {};
-//   for (const [key, value] of Object.entries(req.query)) {
-//     if (["page_size", "page", "ordering"].includes(key)) continue;
-//     if (typeof value === "string") {
-//       const valuesArray = value
-//         .split(",")
-//         .map((v) => v.trim())
-//         .filter(Boolean);
-//       if (valuesArray.length === 1) {
-//         filters[key] = { $regex: valuesArray[0], $options: "i" };
-//       } else {
-//         filters[key] = { $in: valuesArray.map((v) => new RegExp(v, "i")) };
-//       }
-//     } else if (Array.isArray(value)) {
-//       const validValues = value.filter(
-//         (item): item is string => typeof item === "string" && item.trim() !== ""
-//       );
-//       if (validValues.length > 0) {
-//         filters[key] = {
-//           $in: validValues.map((item) => new RegExp(item, "i")),
-//         };
-//       }
-//     } else if (typeof value === "boolean" || typeof value === "number") {
-//       filters[key] = value;
-//     } else if (value && typeof value === "object") {
-//       filters[key] = value;
-//     }
-//   }
-//   return filters;
-// };
 const buildSortingQuery = (req) => {
     const sort = {};
     if (req.query.ordering) {
@@ -111,6 +142,7 @@ const queryData = (model, req) => __awaiter(void 0, void 0, void 0, function* ()
     const page_size = parseInt(req.query.page_size, 10) || 10;
     const page = parseInt(req.query.page, 10) || 1;
     const filters = buildFilterQuery(req);
+    console.log(filters);
     const sort = buildSortingQuery(req);
     const count = yield model.countDocuments(filters);
     const results = yield model

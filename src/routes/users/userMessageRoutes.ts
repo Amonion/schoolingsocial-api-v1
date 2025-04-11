@@ -11,12 +11,14 @@ import {
   getUserChats,
   deleteChats,
   friendsChats,
+  addSearchedChats,
 } from "../../controllers/users/chatController";
 
 const router = express.Router();
 
 router.route("/notifications").get(getNotifications);
 router.route("/friends").get(friendsChats);
+router.route("/add-searched").get(addSearchedChats);
 router.route("/search").get(searchChats);
 router.route("/user-chats").get(getUserChats);
 router.route("/mass-delete").post(deleteChats);

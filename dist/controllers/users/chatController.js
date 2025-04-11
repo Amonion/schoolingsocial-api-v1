@@ -9,7 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.deleteChats = exports.deleteChat = exports.getUserChats = exports.friendsChats = exports.searchChats = exports.createChat = exports.confirmChats = void 0;
+exports.deleteChats = exports.deleteChat = exports.addSearchedChats = exports.readChats = exports.getUserChats = exports.friendsChats = exports.searchChats = exports.createChat = exports.confirmChats = void 0;
 const chatModel_1 = require("../../models/users/chatModel");
 const errorHandler_1 = require("../../utils/errorHandler");
 const query_1 = require("../../utils/query");
@@ -26,6 +26,7 @@ const confirmChats = (data) => __awaiter(void 0, void 0, void 0, function* () {
             key: updatedChats[0].connection,
             data: updatedChats,
             receiverId: data.receiverId,
+            userId: data.userId,
         };
     }
     catch (error) {
@@ -83,7 +84,7 @@ const searchChats = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
         })
             .select({ _id: 1, content: 1, "media.name": 1 })
             .sort({ createdAt: -1 })
-            .limit(10);
+            .limit(100);
         res.status(200).json({ results: result });
     }
     catch (error) {
@@ -122,13 +123,63 @@ exports.friendsChats = friendsChats;
 const getUserChats = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const result = yield (0, query_1.queryData)(chatModel_1.Chat, req);
-        res.status(200).json(result);
+        const unread = yield chatModel_1.Chat.countDocuments({
+            connection: req.query.connection,
+            isRead: false,
+        });
+        res.status(200).json({
+            count: result.count,
+            results: result.results,
+            unread: unread,
+            page: result.page,
+        });
     }
     catch (error) {
         (0, errorHandler_1.handleError)(res, undefined, undefined, error);
     }
 });
 exports.getUserChats = getUserChats;
+const readChats = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const result = yield (0, query_1.queryData)(chatModel_1.Chat, req);
+        const unread = yield chatModel_1.Chat.countDocuments({
+            connection: req.query.connection,
+            isRead: false,
+        });
+        res.status(200).json({
+            count: result.count,
+            results: result.results,
+            unread: unread,
+            page: result.page,
+        });
+    }
+    catch (error) {
+        (0, errorHandler_1.handleError)(res, undefined, undefined, error);
+    }
+});
+exports.readChats = readChats;
+const addSearchedChats = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const id = req.query.chatId;
+        const minDate = new Date(Number(req.query.oldest));
+        const item = yield chatModel_1.Chat.findById(id);
+        if (!item) {
+            return res.status(400).json({ message: "Item not found in database." });
+        }
+        const maxDate = item.createdAt;
+        const chats = yield chatModel_1.Chat.find({
+            createdAt: {
+                $gt: minDate,
+                $lte: maxDate,
+            },
+        });
+        res.status(200).json({ results: chats });
+    }
+    catch (error) {
+        (0, errorHandler_1.handleError)(res, undefined, undefined, error);
+    }
+});
+exports.addSearchedChats = addSearchedChats;
 const deleteChat = (data) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         if (data.isSender) {
@@ -145,7 +196,7 @@ const deleteChat = (data) => __awaiter(void 0, void 0, void 0, function* () {
             yield chatModel_1.Chat.findByIdAndDelete(data.id);
         }
         else {
-            yield chatModel_1.Chat.findByIdAndUpdate(data.id, { isReceiverDeleted: true });
+            yield chatModel_1.Chat.findByIdAndUpdate(data.id, { deletedId: data.senderId });
         }
         const chat = yield chatModel_1.Chat.findById(data.id);
         return {
