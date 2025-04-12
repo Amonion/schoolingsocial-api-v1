@@ -142,7 +142,6 @@ const queryData = (model, req) => __awaiter(void 0, void 0, void 0, function* ()
     const page_size = parseInt(req.query.page_size, 10) || 10;
     const page = parseInt(req.query.page, 10) || 1;
     const filters = buildFilterQuery(req);
-    console.log(filters);
     const sort = buildSortingQuery(req);
     const count = yield model.countDocuments(filters);
     const results = yield model

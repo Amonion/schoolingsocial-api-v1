@@ -70,13 +70,14 @@ const searchChats = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
     try {
         const searchTerm = String(req.query.word || "").trim();
         const connection = String(req.query.connection || "").trim();
+        const userId = String(req.query.userId || "").trim();
         if (!searchTerm) {
             return res.status(400).json({ message: "Search term is required" });
         }
         const regex = new RegExp(searchTerm, "i");
         const result = yield chatModel_1.Chat.find({
             connection,
-            isReceiverDeleted: false,
+            deletedId: { $ne: userId },
             $or: [
                 { content: { $regex: regex } },
                 { "media.name": { $regex: regex } },
@@ -161,16 +162,17 @@ exports.readChats = readChats;
 const addSearchedChats = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const id = req.query.chatId;
-        const minDate = new Date(Number(req.query.oldest));
+        const maxDate = Number(req.query.oldest);
         const item = yield chatModel_1.Chat.findById(id);
         if (!item) {
             return res.status(400).json({ message: "Item not found in database." });
         }
-        const maxDate = item.createdAt;
+        const minDate = item.time;
+        console.log(maxDate, minDate);
         const chats = yield chatModel_1.Chat.find({
-            createdAt: {
-                $gt: minDate,
-                $lte: maxDate,
+            time: {
+                $gte: minDate,
+                $lt: maxDate,
             },
         });
         res.status(200).json({ results: chats });
@@ -228,7 +230,7 @@ const deleteChats = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
                 yield chatModel_1.Chat.findByIdAndDelete(el._id);
             }
             else {
-                yield chatModel_1.Chat.findByIdAndUpdate(el._id, { isReceiverDeleted: true });
+                yield chatModel_1.Chat.findByIdAndUpdate(el._id, { deletedId: senderId });
             }
         }
         const results = chats.map((item) => item._id);
