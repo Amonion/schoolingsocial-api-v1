@@ -70,6 +70,7 @@ export const searchChats = async (req: Request, res: Response) => {
   try {
     const searchTerm = String(req.query.word || "").trim();
     const connection = String(req.query.connection || "").trim();
+    const userId = String(req.query.userId || "").trim();
 
     if (!searchTerm) {
       return res.status(400).json({ message: "Search term is required" });
@@ -79,7 +80,7 @@ export const searchChats = async (req: Request, res: Response) => {
 
     const result = await Chat.find({
       connection,
-      isReceiverDeleted: false,
+      deletedId: { $ne: userId },
       $or: [
         { content: { $regex: regex } },
         { "media.name": { $regex: regex } },
@@ -164,19 +165,19 @@ export const readChats = async (req: Request, res: Response) => {
 export const addSearchedChats = async (req: Request, res: Response) => {
   try {
     const id = req.query.chatId;
-    const minDate = new Date(Number(req.query.oldest));
+    const maxDate = Number(req.query.oldest);
     const item = await Chat.findById(id);
 
     if (!item) {
       return res.status(400).json({ message: "Item not found in database." });
     }
 
-    const maxDate = item.createdAt;
-
+    const minDate = item.time;
+    console.log(maxDate, minDate);
     const chats = await Chat.find({
-      createdAt: {
-        $gt: minDate,
-        $lte: maxDate,
+      time: {
+        $gte: minDate,
+        $lt: maxDate,
       },
     });
 
@@ -242,7 +243,7 @@ export const deleteChats = async (req: Request, res: Response) => {
         }
         await Chat.findByIdAndDelete(el._id);
       } else {
-        await Chat.findByIdAndUpdate(el._id, { isReceiverDeleted: true });
+        await Chat.findByIdAndUpdate(el._id, { deletedId: senderId });
       }
     }
 

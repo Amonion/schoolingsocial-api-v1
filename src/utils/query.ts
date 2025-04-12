@@ -154,7 +154,6 @@ export const queryData = async <T>(
   const page = parseInt(req.query.page as string, 10) || 1;
 
   const filters = buildFilterQuery(req);
-  console.log(filters);
   const sort = buildSortingQuery(req);
 
   const count = await model.countDocuments(filters);
