@@ -9,7 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.deleteChats = exports.deleteChat = exports.addSearchedChats = exports.readChats = exports.getUserChats = exports.friendsChats = exports.searchChats = exports.createChat = exports.confirmChats = void 0;
+exports.deleteChats = exports.deleteChat = exports.addSearchedChats = exports.unSaveChats = exports.pinChats = exports.saveChats = exports.getSaveChats = exports.readChats = exports.getUserChats = exports.friendsChats = exports.searchFavChats = exports.searchChats = exports.createChat = exports.confirmChats = void 0;
 const chatModel_1 = require("../../models/users/chatModel");
 const errorHandler_1 = require("../../utils/errorHandler");
 const query_1 = require("../../utils/query");
@@ -93,6 +93,34 @@ const searchChats = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
     }
 });
 exports.searchChats = searchChats;
+const searchFavChats = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const searchTerm = String(req.query.word || "").trim();
+        const connection = String(req.query.connection || "").trim();
+        const userId = String(req.query.userId || "").trim();
+        if (!searchTerm) {
+            return res.status(400).json({ message: "Search term is required" });
+        }
+        const regex = new RegExp(searchTerm, "i");
+        const result = yield chatModel_1.Chat.find({
+            connection,
+            deletedId: { $ne: userId },
+            isSavedIds: { $in: userId },
+            $or: [
+                { content: { $regex: regex } },
+                { "media.name": { $regex: regex } },
+            ],
+        })
+            .select({ _id: 1, content: 1, "media.name": 1 })
+            .sort({ createdAt: -1 })
+            .limit(100);
+        res.status(200).json({ results: result });
+    }
+    catch (error) {
+        (0, errorHandler_1.handleError)(res, undefined, undefined, error);
+    }
+});
+exports.searchFavChats = searchFavChats;
 const friendsChats = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const id = String(req.query.id || "").trim();
@@ -159,6 +187,67 @@ const readChats = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     }
 });
 exports.readChats = readChats;
+const getSaveChats = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const result = yield (0, query_1.queryData)(chatModel_1.Chat, req);
+        res.status(200).json(result);
+    }
+    catch (error) {
+        (0, errorHandler_1.handleError)(res, undefined, undefined, error);
+    }
+});
+exports.getSaveChats = getSaveChats;
+const saveChats = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const chats = JSON.parse(req.body.selectedItems);
+        const userId = req.body.userId;
+        const chatIds = chats.map((chat) => chat._id);
+        yield chatModel_1.Chat.updateMany({ _id: { $in: chatIds } }, { $addToSet: { isSavedIds: userId } });
+        const updatedChats = yield chatModel_1.Chat.find({ _id: { $in: chatIds } });
+        res.status(200).json({
+            results: updatedChats,
+            message: "The chats have been saved to your favorites",
+        });
+    }
+    catch (error) {
+        (0, errorHandler_1.handleError)(res, undefined, undefined, error);
+    }
+});
+exports.saveChats = saveChats;
+const pinChats = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const chats = JSON.parse(req.body.selectedItems);
+        const userId = req.body.userId;
+        const chatIds = chats.map((chat) => chat._id);
+        yield chatModel_1.Chat.updateMany({ _id: { $in: chatIds } }, { $addToSet: { isSavedIds: userId } });
+        const updatedChats = yield chatModel_1.Chat.find({ _id: { $in: chatIds } });
+        res.status(200).json({
+            results: updatedChats,
+            message: "The chats have been saved to your favorites",
+        });
+    }
+    catch (error) {
+        (0, errorHandler_1.handleError)(res, undefined, undefined, error);
+    }
+});
+exports.pinChats = pinChats;
+const unSaveChats = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const chats = JSON.parse(req.body.selectedItems);
+        const userId = req.body.userId;
+        const chatIds = chats.map((chat) => chat._id);
+        yield chatModel_1.Chat.updateMany({ _id: { $in: chatIds } }, { $pull: { isSavedIds: userId } });
+        const updatedChats = yield chatModel_1.Chat.find({ _id: { $in: chatIds } });
+        res.status(200).json({
+            results: updatedChats,
+            message: "The chats have been removed to your favorites",
+        });
+    }
+    catch (error) {
+        (0, errorHandler_1.handleError)(res, undefined, undefined, error);
+    }
+});
+exports.unSaveChats = unSaveChats;
 const addSearchedChats = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const id = req.query.chatId;
@@ -168,7 +257,6 @@ const addSearchedChats = (req, res) => __awaiter(void 0, void 0, void 0, functio
             return res.status(400).json({ message: "Item not found in database." });
         }
         const minDate = item.time;
-        console.log(maxDate, minDate);
         const chats = yield chatModel_1.Chat.find({
             time: {
                 $gte: minDate,

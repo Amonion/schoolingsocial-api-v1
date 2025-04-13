@@ -96,6 +96,37 @@ export const searchChats = async (req: Request, res: Response) => {
   }
 };
 
+export const searchFavChats = async (req: Request, res: Response) => {
+  try {
+    const searchTerm = String(req.query.word || "").trim();
+    const connection = String(req.query.connection || "").trim();
+    const userId = String(req.query.userId || "").trim();
+
+    if (!searchTerm) {
+      return res.status(400).json({ message: "Search term is required" });
+    }
+
+    const regex = new RegExp(searchTerm, "i");
+
+    const result = await Chat.find({
+      connection,
+      deletedId: { $ne: userId },
+      isSavedIds: { $in: userId },
+      $or: [
+        { content: { $regex: regex } },
+        { "media.name": { $regex: regex } },
+      ],
+    })
+      .select({ _id: 1, content: 1, "media.name": 1 })
+      .sort({ createdAt: -1 })
+      .limit(100);
+
+    res.status(200).json({ results: result });
+  } catch (error) {
+    handleError(res, undefined, undefined, error);
+  }
+};
+
 export const friendsChats = async (req: Request, res: Response) => {
   try {
     const id = String(req.query.id || "").trim();
@@ -162,6 +193,76 @@ export const readChats = async (req: Request, res: Response) => {
   }
 };
 
+export const getSaveChats = async (req: Request, res: Response) => {
+  try {
+    const result = await queryData<IChat>(Chat, req);
+
+    res.status(200).json(result);
+  } catch (error) {
+    handleError(res, undefined, undefined, error);
+  }
+};
+
+export const saveChats = async (req: Request, res: Response) => {
+  try {
+    const chats = JSON.parse(req.body.selectedItems);
+    const userId = req.body.userId;
+    const chatIds = chats.map((chat: { _id: string }) => chat._id);
+
+    await Chat.updateMany(
+      { _id: { $in: chatIds } },
+      { $addToSet: { isSavedIds: userId } }
+    );
+    const updatedChats = await Chat.find({ _id: { $in: chatIds } });
+    res.status(200).json({
+      results: updatedChats,
+      message: "The chats have been saved to your favorites",
+    });
+  } catch (error) {
+    handleError(res, undefined, undefined, error);
+  }
+};
+
+export const pinChats = async (req: Request, res: Response) => {
+  try {
+    const chats = JSON.parse(req.body.selectedItems);
+    const userId = req.body.userId;
+    const chatIds = chats.map((chat: { _id: string }) => chat._id);
+
+    await Chat.updateMany(
+      { _id: { $in: chatIds } },
+      { $addToSet: { isSavedIds: userId } }
+    );
+    const updatedChats = await Chat.find({ _id: { $in: chatIds } });
+    res.status(200).json({
+      results: updatedChats,
+      message: "The chats have been saved to your favorites",
+    });
+  } catch (error) {
+    handleError(res, undefined, undefined, error);
+  }
+};
+
+export const unSaveChats = async (req: Request, res: Response) => {
+  try {
+    const chats = JSON.parse(req.body.selectedItems);
+    const userId = req.body.userId;
+    const chatIds = chats.map((chat: { _id: string }) => chat._id);
+
+    await Chat.updateMany(
+      { _id: { $in: chatIds } },
+      { $pull: { isSavedIds: userId } }
+    );
+    const updatedChats = await Chat.find({ _id: { $in: chatIds } });
+    res.status(200).json({
+      results: updatedChats,
+      message: "The chats have been removed to your favorites",
+    });
+  } catch (error) {
+    handleError(res, undefined, undefined, error);
+  }
+};
+
 export const addSearchedChats = async (req: Request, res: Response) => {
   try {
     const id = req.query.chatId;
@@ -173,7 +274,6 @@ export const addSearchedChats = async (req: Request, res: Response) => {
     }
 
     const minDate = item.time;
-    console.log(maxDate, minDate);
     const chats = await Chat.find({
       time: {
         $gte: minDate,

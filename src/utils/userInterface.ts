@@ -36,6 +36,7 @@ export interface IChat extends Document {
   receiverUsername: string;
   receiverPicture: string;
   receiverId: string;
+  repliedChat: IRepliedChatContent;
   isPinned: boolean;
   isRead: boolean;
   isFriends: boolean;
@@ -133,6 +134,27 @@ export interface IPost extends Document {
   bookmarks: number;
   likes: number;
   reposts: number;
+}
+
+export interface IRepliedChatContent extends Document {
+  _id: string;
+  content: string;
+  received: boolean;
+  userId: string;
+  username: string;
+  picture: string;
+  media: [
+    {
+      source: string;
+      name: string;
+      duration: number;
+      size: number;
+    }
+  ];
+  receiverUsername: string;
+  receiverPicture: string;
+  receiverId: string;
+  createdAt: Date | null;
 }
 
 export interface IUpload extends Document {
