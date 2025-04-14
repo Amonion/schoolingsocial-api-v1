@@ -46,6 +46,14 @@ export interface IChat extends Document {
   senderId: string;
 }
 
+export interface IChatData extends Document {
+  to: string;
+  action: string;
+  receiverId: string;
+  userId: string;
+  data: unknown;
+}
+
 export interface IFollower extends Document {
   userId: string;
   username: string;

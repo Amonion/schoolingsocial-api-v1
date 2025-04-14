@@ -4,6 +4,8 @@ import { handleError } from "../../utils/errorHandler";
 import { IChat } from "../../utils/userInterface";
 import { queryData } from "../../utils/query";
 import { deleteFileFromS3 } from "../../utils/fileUpload";
+import { io } from "../../app";
+import { Notification, UserNotification } from "../../models/team/emailModel";
 
 const setConnectionKey = (id1: string, id2: string) => {
   const participants = [id1, id2].sort();
@@ -61,16 +63,44 @@ export const createChat = async (data: IChat) => {
       const receiverTime = new Date(currentTime - lastTime + lastReceiverTime);
       data.receiverTime = receiverTime;
       const post = await Chat.create(data);
-      return {
+
+      io.emit(connection, {
         key: connection,
         data: post,
-      };
+      });
     } else {
       const post = await Chat.create(data);
-      return {
+      io.emit(connection, {
         key: connection,
         data: post,
+      });
+
+      const notificationTemp = await Notification.findOne({
+        name: "friend_request",
+      });
+
+      const notification = {
+        greetings: notificationTemp?.greetings,
+        name: notificationTemp?.name,
+        title: notificationTemp?.title,
+        username: data.receiverUsername,
+        userId: data.userId,
+        content: notificationTemp?.content
+          .replace("{{sender_username}}", data.username)
+          .replace(
+            "{{click_here}}",
+            `<a href="/home/chat/${data.userId}" class="text-[var(--custom)]">click here</a>`
+          ),
       };
+      const newNotification = await UserNotification.create(notification);
+      const count = await UserNotification.countDocuments({
+        username: data.receiverUsername,
+        unread: true,
+      });
+      io.emit(data.receiverId, {
+        data: newNotification,
+        count: count,
+      });
     }
   } catch (error) {
     console.log(error);
@@ -173,6 +203,7 @@ export const friendsChats = async (req: Request, res: Response) => {
           createdAt: 1,
           picture: 1,
           username: 1,
+          connection: 1,
           receiverPicture: 1,
           receiverId: 1,
           unread: 1,

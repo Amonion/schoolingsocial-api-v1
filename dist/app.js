@@ -72,8 +72,7 @@ io.on("connection", (socket) => {
     socket.on("message", (data) => __awaiter(void 0, void 0, void 0, function* () {
         switch (data.to) {
             case "chat":
-                const chatResponse = yield (0, chatController_1.createChat)(data);
-                io.emit("chatResponse", chatResponse);
+                (0, chatController_1.createChat)(data);
                 break;
             case "read":
                 const readResponse = yield (0, chatController_1.readChats)(data);

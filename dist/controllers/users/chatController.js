@@ -14,6 +14,8 @@ const chatModel_1 = require("../../models/users/chatModel");
 const errorHandler_1 = require("../../utils/errorHandler");
 const query_1 = require("../../utils/query");
 const fileUpload_1 = require("../../utils/fileUpload");
+const app_1 = require("../../app");
+const emailModel_1 = require("../../models/team/emailModel");
 const setConnectionKey = (id1, id2) => {
     const participants = [id1, id2].sort();
     return participants.join("");
@@ -55,17 +57,37 @@ const createChat = (data) => __awaiter(void 0, void 0, void 0, function* () {
             const receiverTime = new Date(currentTime - lastTime + lastReceiverTime);
             data.receiverTime = receiverTime;
             const post = yield chatModel_1.Chat.create(data);
-            return {
+            app_1.io.emit(connection, {
                 key: connection,
                 data: post,
-            };
+            });
         }
         else {
             const post = yield chatModel_1.Chat.create(data);
-            return {
+            app_1.io.emit(connection, {
                 key: connection,
                 data: post,
+            });
+            const notificationTemp = yield emailModel_1.Notification.findOne({
+                name: "friend_request",
+            });
+            const notification = {
+                greetings: notificationTemp === null || notificationTemp === void 0 ? void 0 : notificationTemp.greetings,
+                name: notificationTemp === null || notificationTemp === void 0 ? void 0 : notificationTemp.name,
+                title: notificationTemp === null || notificationTemp === void 0 ? void 0 : notificationTemp.title,
+                username: data.receiverUsername,
+                userId: data.userId,
+                content: notificationTemp === null || notificationTemp === void 0 ? void 0 : notificationTemp.content.replace("{{sender_username}}", data.username).replace("{{click_here}}", `<a href="/home/chat/${data.userId}" class="text-[var(--custom)]">click here</a>`),
             };
+            const newNotification = yield emailModel_1.UserNotification.create(notification);
+            const count = yield emailModel_1.UserNotification.countDocuments({
+                username: data.receiverUsername,
+                unread: true,
+            });
+            app_1.io.emit(data.receiverId, {
+                data: newNotification,
+                count: count,
+            });
         }
     }
     catch (error) {
@@ -161,6 +183,7 @@ const friendsChats = (req, res) => __awaiter(void 0, void 0, void 0, function* (
                     createdAt: 1,
                     picture: 1,
                     username: 1,
+                    connection: 1,
                     receiverPicture: 1,
                     receiverId: 1,
                     unread: 1,

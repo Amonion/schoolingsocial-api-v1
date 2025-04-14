@@ -68,8 +68,7 @@ io.on("connection", (socket) => {
   socket.on("message", async (data) => {
     switch (data.to) {
       case "chat":
-        const chatResponse = await createChat(data);
-        io.emit("chatResponse", chatResponse);
+        createChat(data);
         break;
       case "read":
         const readResponse = await readChats(data);
