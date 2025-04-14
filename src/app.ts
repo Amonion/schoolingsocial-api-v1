@@ -19,6 +19,7 @@ import {
   confirmChats,
   createChat,
   deleteChat,
+  readChats,
 } from "./controllers/users/chatController";
 import { createPost } from "./controllers/users/postController";
 import { getPresignedUrl, removeFile } from "./utils/fileUpload";
@@ -69,6 +70,10 @@ io.on("connection", (socket) => {
       case "chat":
         const chatResponse = await createChat(data);
         io.emit("chatResponse", chatResponse);
+        break;
+      case "read":
+        const readResponse = await readChats(data);
+        io.emit("readResponse", readResponse);
         break;
       case "confirm":
         const confirmResponse = await confirmChats(data);

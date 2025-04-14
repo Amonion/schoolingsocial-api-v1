@@ -17,6 +17,7 @@ export interface IChat extends Document {
   _id: string;
   content: string;
   userId: string;
+  isReadIds: string[];
   action: string;
   username: string;
   picture: string;

@@ -14,6 +14,7 @@ interface Receive {
   ids: string[];
   receiverId: string;
   userId: string;
+  connection: string;
 }
 
 export const confirmChats = async (data: Receive) => {
@@ -159,10 +160,12 @@ export const friendsChats = async (req: Request, res: Response) => {
 
 export const getUserChats = async (req: Request, res: Response) => {
   try {
+    const userId = req.query.userId;
+    delete req.query.userId;
     const result = await queryData<IChat>(Chat, req);
     const unread = await Chat.countDocuments({
       connection: req.query.connection,
-      isRead: false,
+      isReadIds: { $nin: [userId] },
     });
     res.status(200).json({
       count: result.count,
@@ -175,21 +178,22 @@ export const getUserChats = async (req: Request, res: Response) => {
   }
 };
 
-export const readChats = async (req: Request, res: Response) => {
+export const readChats = async (data: Receive) => {
   try {
-    const result = await queryData<IChat>(Chat, req);
-    const unread = await Chat.countDocuments({
-      connection: req.query.connection,
-      isRead: false,
-    });
-    res.status(200).json({
-      count: result.count,
-      results: result.results,
-      unread: unread,
-      page: result.page,
-    });
+    const ids = data.ids;
+    const userId = data.userId;
+    const connection = data.connection;
+    await Chat.updateMany(
+      { _id: { $in: ids } },
+      { $addToSet: { isReadIds: userId } }
+    );
+    const updatedChats = await Chat.find({ _id: { $in: ids } });
+    return {
+      key: connection,
+      chats: updatedChats,
+    };
   } catch (error) {
-    handleError(res, undefined, undefined, error);
+    console.log(error);
   }
 };
 

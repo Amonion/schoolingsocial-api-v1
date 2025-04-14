@@ -151,10 +151,12 @@ const friendsChats = (req, res) => __awaiter(void 0, void 0, void 0, function* (
 exports.friendsChats = friendsChats;
 const getUserChats = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
+        const userId = req.query.userId;
+        delete req.query.userId;
         const result = yield (0, query_1.queryData)(chatModel_1.Chat, req);
         const unread = yield chatModel_1.Chat.countDocuments({
             connection: req.query.connection,
-            isRead: false,
+            isReadIds: { $nin: [userId] },
         });
         res.status(200).json({
             count: result.count,
@@ -168,22 +170,20 @@ const getUserChats = (req, res) => __awaiter(void 0, void 0, void 0, function* (
     }
 });
 exports.getUserChats = getUserChats;
-const readChats = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+const readChats = (data) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const result = yield (0, query_1.queryData)(chatModel_1.Chat, req);
-        const unread = yield chatModel_1.Chat.countDocuments({
-            connection: req.query.connection,
-            isRead: false,
-        });
-        res.status(200).json({
-            count: result.count,
-            results: result.results,
-            unread: unread,
-            page: result.page,
-        });
+        const ids = data.ids;
+        const userId = data.userId;
+        const connection = data.connection;
+        yield chatModel_1.Chat.updateMany({ _id: { $in: ids } }, { $addToSet: { isReadIds: userId } });
+        const updatedChats = yield chatModel_1.Chat.find({ _id: { $in: ids } });
+        return {
+            key: connection,
+            chats: updatedChats,
+        };
     }
     catch (error) {
-        (0, errorHandler_1.handleError)(res, undefined, undefined, error);
+        console.log(error);
     }
 });
 exports.readChats = readChats;
