@@ -34,6 +34,7 @@ export interface IChat extends Document {
   receiverTime: Date;
   createdAt: Date;
   time: number;
+  unread: number;
   receiverUsername: string;
   receiverPicture: string;
   receiverId: string;

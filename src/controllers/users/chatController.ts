@@ -44,6 +44,16 @@ export const createChat = async (data: IChat) => {
     }).sort({ createdAt: -1 });
     data.connection = connection;
 
+    const received = await Chat.findOne({ receiverId: data.userId });
+    data.isFriends = received ? true : false;
+
+    const unread = await Chat.countDocuments({
+      connection: connection,
+      isReadIds: { $nin: [data.userId] },
+    });
+
+    data.unread = unread;
+
     if (prev) {
       const lastTime = new Date(prev.createdAt).getTime();
       const lastReceiverTime = new Date(prev.receiverTime).getTime();
@@ -136,21 +146,44 @@ export const friendsChats = async (req: Request, res: Response) => {
       return res.status(400).json({ message: "User ID is required" });
     }
 
-    const result = await Chat.find({
-      $or: [{ userId: id }, { receiverId: id }],
-      isReceiverDeleted: false,
-      isFriends: true,
-    })
-      .select({
-        _id: 1,
-        content: 1,
-        createdAt: 1,
-        receiverPicture: 1,
-        receiverId: 1,
-        receiverUsername: 1,
-      })
-      .sort({ createdAt: -1 }) // Get latest first
-      .limit(10);
+    const result = await Chat.aggregate([
+      {
+        $match: {
+          deletedId: { $ne: id },
+          connection: { $regex: id },
+          isFriends: true,
+        },
+      },
+      {
+        $sort: { createdAt: -1 },
+      },
+      {
+        $group: {
+          _id: "$connection",
+          doc: { $first: "$$ROOT" },
+        },
+      },
+      {
+        $replaceRoot: { newRoot: "$doc" },
+      },
+      {
+        $project: {
+          _id: 1,
+          content: 1,
+          createdAt: 1,
+          picture: 1,
+          username: 1,
+          receiverPicture: 1,
+          receiverId: 1,
+          unread: 1,
+          userId: 1,
+          receiverUsername: 1,
+        },
+      },
+      {
+        $limit: 10, // Limit to 10 unique conversations
+      },
+    ]);
 
     res.status(200).json({ results: result });
   } catch (error) {

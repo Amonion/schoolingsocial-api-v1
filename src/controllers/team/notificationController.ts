@@ -18,10 +18,8 @@ export const routeNotification = async (data: Body) => {
   switch (data.action) {
     case "verification":
       return createVerificationNotification(data);
-      break;
     case "get-notifications":
       return getNotificationCounts(data);
-      break;
     case "read-notifications":
       return ReadNotification(data);
       break;

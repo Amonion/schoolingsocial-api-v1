@@ -17,10 +17,8 @@ const routeNotification = (data) => __awaiter(void 0, void 0, void 0, function* 
     switch (data.action) {
         case "verification":
             return (0, exports.createVerificationNotification)(data);
-            break;
         case "get-notifications":
             return (0, exports.getNotificationCounts)(data);
-            break;
         case "read-notifications":
             return (0, exports.ReadNotification)(data);
             break;

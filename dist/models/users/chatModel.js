@@ -53,6 +53,7 @@ const ChatSchema = new mongoose_1.Schema({
     receiverPicture: { type: String, default: "" },
     receiverId: { type: String, default: "" },
     time: { type: Number, default: 0 },
+    unread: { type: Number, default: 0 },
     deletedId: { type: String, default: "" },
     receiverTime: { type: Date, default: Date.now },
     senderTime: { type: Date, default: Date.now },
