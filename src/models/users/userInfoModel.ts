@@ -36,6 +36,7 @@ const UserInfoSchema: Schema = new Schema(
 
     currentSchoolContinent: { type: String, default: "" },
     currentSchoolCountry: { type: String, default: "" },
+    currentSchoolCountryFlag: { type: String, default: "" },
     currentSchoolCountrySymbol: { type: String, default: "" },
     currentSchoolState: { type: String, default: "" },
     currentSchoolPicture: { type: String, default: "" },

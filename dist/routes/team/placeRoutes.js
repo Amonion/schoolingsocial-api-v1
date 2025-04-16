@@ -9,6 +9,7 @@ const upload = (0, multer_1.default)();
 const placeController_1 = require("../../controllers/team/placeController");
 const router = express_1.default.Router();
 router.route("/").get(placeController_1.getPlaces).post(upload.any(), placeController_1.createPlace);
+router.route("/all").get(placeController_1.getAllPlaces);
 router.route("/search").get(placeController_1.searchPlace);
 router.route("/find").get(placeController_1.searchPlaces);
 router.route("/countries").get(placeController_1.getUniquePlaces);

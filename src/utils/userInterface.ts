@@ -203,6 +203,7 @@ export interface IUser extends Document {
   isContact: boolean;
   isBio: boolean;
   isRelated: boolean;
+  isOnVerification: boolean;
   isVerified: boolean;
   isFollowed: boolean;
   isEducationDocument: boolean;

@@ -15,7 +15,7 @@ const errorHandler_1 = require("../../utils/errorHandler");
 const query_1 = require("../../utils/query");
 const fileUpload_1 = require("../../utils/fileUpload");
 const app_1 = require("../../app");
-const emailModel_1 = require("../../models/team/emailModel");
+const sendEmail_1 = require("../../utils/sendEmail");
 const setConnectionKey = (id1, id2) => {
     const participants = [id1, id2].sort();
     return participants.join("");
@@ -57,37 +57,55 @@ const createChat = (data) => __awaiter(void 0, void 0, void 0, function* () {
             const receiverTime = new Date(currentTime - lastTime + lastReceiverTime);
             data.receiverTime = receiverTime;
             const post = yield chatModel_1.Chat.create(data);
-            app_1.io.emit(connection, {
+            app_1.io.emit(`createChat${connection}`, {
+                key: connection,
+                data: post,
+            });
+            app_1.io.emit(`createChat${data.userId}`, {
+                key: connection,
+                data: post,
+            });
+            app_1.io.emit(`createChat${data.receiverId}`, {
                 key: connection,
                 data: post,
             });
         }
         else {
             const post = yield chatModel_1.Chat.create(data);
-            app_1.io.emit(connection, {
+            app_1.io.emit(`createChat${connection}`, {
                 key: connection,
                 data: post,
             });
-            const notificationTemp = yield emailModel_1.Notification.findOne({
-                name: "friend_request",
+            app_1.io.emit(`createChat${data.userId}`, {
+                key: connection,
+                data: post,
             });
-            const notification = {
-                greetings: notificationTemp === null || notificationTemp === void 0 ? void 0 : notificationTemp.greetings,
-                name: notificationTemp === null || notificationTemp === void 0 ? void 0 : notificationTemp.name,
-                title: notificationTemp === null || notificationTemp === void 0 ? void 0 : notificationTemp.title,
-                username: data.receiverUsername,
-                userId: data.userId,
-                content: notificationTemp === null || notificationTemp === void 0 ? void 0 : notificationTemp.content.replace("{{sender_username}}", data.username).replace("{{click_here}}", `<a href="/home/chat/${data.userId}" class="text-[var(--custom)]">click here</a>`),
-            };
-            const newNotification = yield emailModel_1.UserNotification.create(notification);
-            const count = yield emailModel_1.UserNotification.countDocuments({
-                username: data.receiverUsername,
-                unread: true,
+            app_1.io.emit(`createChat${data.receiverId}`, {
+                key: connection,
+                data: post,
             });
-            app_1.io.emit(data.receiverId, {
-                data: newNotification,
-                count: count,
-            });
+            // const notificationTemp = await Notification.findOne({
+            //   name: "friend_request",
+            // });
+            // const notification = {
+            //   greetings: notificationTemp?.greetings,
+            //   name: notificationTemp?.name,
+            //   title: notificationTemp?.title,
+            //   username: data.receiverUsername,
+            //   userId: data.userId,
+            //   content: notificationTemp?.content
+            //     .replace("{{sender_username}}", data.username)
+            //     .replace(
+            //       "{{click_here}}",
+            //       `<a href="/home/chat/${data.userId}" class="text-[var(--custom)]">click here</a>`
+            //     ),
+            // };
+            const newNotification = yield (0, sendEmail_1.sendNotification)("friend_request", data);
+            // const count = await UserNotification.countDocuments({
+            //   username: data.receiverUsername,
+            //   unread: true,
+            // });
+            app_1.io.emit(data.receiverId, newNotification);
         }
     }
     catch (error) {
@@ -230,10 +248,7 @@ const readChats = (data) => __awaiter(void 0, void 0, void 0, function* () {
         const connection = data.connection;
         yield chatModel_1.Chat.updateMany({ _id: { $in: ids } }, { $addToSet: { isReadIds: userId } });
         const updatedChats = yield chatModel_1.Chat.find({ _id: { $in: ids } });
-        return {
-            key: connection,
-            chats: updatedChats,
-        };
+        app_1.io.emit(`readChat${connection}`, { chats: updatedChats });
     }
     catch (error) {
         console.log(error);

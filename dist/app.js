@@ -33,7 +33,6 @@ const userRoutes_1 = __importDefault(require("./routes/users/userRoutes"));
 const chatController_1 = require("./controllers/users/chatController");
 const postController_1 = require("./controllers/users/postController");
 const fileUpload_1 = require("./utils/fileUpload");
-const notificationController_1 = require("./controllers/team/notificationController");
 dotenv_1.default.config();
 const app = (0, express_1.default)();
 exports.app = app;
@@ -89,10 +88,6 @@ io.on("connection", (socket) => {
             case "users":
                 const response = yield (0, postController_1.createPost)(data);
                 io.emit("message", response);
-                break;
-            case "notifications":
-                const nResponse = yield (0, notificationController_1.routeNotification)(data);
-                io.emit("count", nResponse);
                 break;
             default:
                 break;

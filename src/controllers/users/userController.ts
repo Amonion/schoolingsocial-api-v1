@@ -8,21 +8,23 @@ import { queryData, search, followAccount } from "../../utils/query";
 import { uploadFilesToS3 } from "../../utils/fileUpload";
 import bcrypt from "bcryptjs";
 import { Follower, Post } from "../../models/users/postModel";
+import { io } from "../../app";
+import { sendNotification } from "../../utils/sendEmail";
+import { UserNotification } from "../../models/team/emailModel";
 
 export const createUser = async (
   req: Request,
   res: Response
 ): Promise<void> => {
   try {
-    const { email, phone, signupIp, password } = req.body;
+    const { email, signupIp, password } = req.body;
 
-    const userBio = new UserInfo({ email, phone, signupIp });
+    const userBio = new UserInfo({ email, signupIp });
     await userBio.save();
 
     const newUser = new User({
       userId: userBio._id,
       email,
-      phone,
       signupIp,
       password: await bcrypt.hash(password, 10),
     });
@@ -147,12 +149,22 @@ export const updateUserInfo = async (
   req: Request,
   res: Response
 ): Promise<void> => {
-  try {
-    if (req.body.isEducationHistory) {
+  switch (req.body.action) {
+    case "Contact":
+      const result = await UserInfo.findOne({ phone: req.body.phone });
+      if (result) {
+        res.status(400).json({
+          message: `Sorry a user with this phone number: ${result.phone} already exist`,
+        });
+      } else {
+        update(req, res);
+      }
+      break;
+    case "EducationHistory":
       req.body.pastSchool = JSON.parse(req.body.pastSchools);
-    }
-
-    if (req.body.isEducationDocument) {
+      update(req, res);
+      break;
+    case "EducationDocument":
       const pastSchools = JSON.parse(req.body.pastSchools);
       const uploadedFiles = await uploadFilesToS3(req);
       uploadedFiles.forEach((file) => {
@@ -162,9 +174,9 @@ export const updateUserInfo = async (
       pastSchools[req.body.number].schoolTempCertificate = undefined;
       req.body.pastSchool = pastSchools;
       req.body.pastSchools = JSON.stringify(pastSchools);
-    }
-
-    if (req.body.isDocument) {
+      update(req, res);
+      break;
+    case "Document":
       const user = await UserInfo.findById(req.params.id);
       const documents = user?.documents;
       const id = req.body.id;
@@ -204,9 +216,17 @@ export const updateUserInfo = async (
           );
         }
       }
-    }
+      update(req, res);
+      break;
+    default:
+      update(req, res);
+      break;
+  }
+};
 
-    await UserInfo.updateOne({ _id: req.params.id }, req.body, {
+export const update = async (req: Request, res: Response): Promise<void> => {
+  try {
+    await UserInfo.findByIdAndUpdate(req.params.id, req.body, {
       new: true,
     });
 
@@ -214,6 +234,37 @@ export const updateUserInfo = async (
       new: true,
       runValidators: false,
     });
+
+    if (
+      user &&
+      user.isBio &&
+      user.isContact &&
+      user.isDocument &&
+      user.isOrigin &&
+      user.isEducation &&
+      user.isEducationHistory &&
+      user.isEducationDocument &&
+      user.isRelated
+    ) {
+      const count = await UserNotification.countDocuments({
+        name: "verification_processing",
+        username: String(user.username),
+      });
+
+      if (count === 0) {
+        await User.findByIdAndUpdate(req.body.ID, { isOnVerification: true });
+        const newNotification = await sendNotification(
+          "verification_processing",
+          {
+            username: String(user?.username),
+            receiverUsername: String(user.username),
+            userId: user._id,
+          }
+        );
+        console.log(newNotification);
+        io.emit(req.body.ID, newNotification);
+      }
+    }
 
     res.status(200).json({
       user,
@@ -243,7 +294,6 @@ export const getUserInfoById = async (
 export const searchUserInfo = (req: Request, res: Response) => {
   return search(UserInfo, req, res);
 };
-
 //-----------------FOLLOW USER--------------------//
 export const followUser = async (req: Request, res: Response) => {
   try {

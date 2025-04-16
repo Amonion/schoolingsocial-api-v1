@@ -66,6 +66,7 @@ const UserInfoSchema = new mongoose_1.Schema({
     placeId: { type: String, default: "" },
     currentSchoolContinent: { type: String, default: "" },
     currentSchoolCountry: { type: String, default: "" },
+    currentSchoolCountryFlag: { type: String, default: "" },
     currentSchoolCountrySymbol: { type: String, default: "" },
     currentSchoolState: { type: String, default: "" },
     currentSchoolPicture: { type: String, default: "" },

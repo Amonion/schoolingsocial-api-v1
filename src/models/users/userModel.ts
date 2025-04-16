@@ -12,12 +12,7 @@ const UserSchema: Schema = new Schema(
     username: {
       type: String,
     },
-    phone: {
-      type: String,
-      required: [true, "Phone number is required"],
-      match: [/^\d{10,15}$/, "Phone number must be between 10 and 15 digits"],
-      unique: [true, "A user with this phone number already exists"],
-    },
+    phone: { type: String, default: "" },
     media: { type: String, default: "" },
     picture: { type: String, default: "" },
     displayName: { type: String, default: "" },
@@ -44,6 +39,8 @@ const UserSchema: Schema = new Schema(
     comments: { type: Number, default: 0 },
     uploads: { type: Number, default: 0 },
     exams: { type: Number, default: 0 },
+    isOnVerification: { type: Boolean, default: false },
+    isVerified: { type: Boolean, default: false },
     isFollowed: { type: Boolean, default: false },
     isDocument: { type: Boolean, default: false },
     isOrigin: { type: Boolean, default: false },

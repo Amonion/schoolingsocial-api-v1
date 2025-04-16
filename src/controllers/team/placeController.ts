@@ -290,6 +290,35 @@ export const getPlaces = async (req: Request, res: Response) => {
   }
 };
 
+export const getAllPlaces = async (req: Request, res: Response) => {
+  try {
+    const result = await Place.aggregate([
+      {
+        $match: {
+          $or: [
+            { area: { $regex: req.query.place, $options: "i" } },
+            { state: { $regex: req.query.place, $options: "i" } },
+            { country: { $regex: req.query.place, $options: "i" } },
+          ],
+        },
+      },
+      {
+        $group: {
+          _id: "$area", // Group by area
+          doc: { $first: "$$ROOT" }, // Keep first document per area
+        },
+      },
+      {
+        $replaceRoot: { newRoot: "$doc" }, // Flatten result
+      },
+    ]);
+
+    res.status(200).json({ results: result });
+  } catch (error) {
+    handleError(res, undefined, undefined, error);
+  }
+};
+
 export const updatePlace = async (req: Request, res: Response) => {
   try {
     if (req.files?.length || req.file) {

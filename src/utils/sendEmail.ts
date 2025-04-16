@@ -1,6 +1,12 @@
 import nodemailer from "nodemailer";
 import { promises as fs } from "fs";
 import path from "path";
+import { Notification, UserNotification } from "../models/team/emailModel";
+interface NotificationData {
+  username: string;
+  receiverUsername: string;
+  userId: string;
+}
 
 export async function sendEmail(
   user: { email: string },
@@ -61,3 +67,32 @@ export async function sendEmail(
     throw error;
   }
 }
+
+export const sendNotification = async (
+  templateName: string,
+  data: NotificationData
+) => {
+  const notificationTemp = await Notification.findOne({
+    name: templateName,
+  });
+
+  const notification = {
+    greetings: notificationTemp?.greetings,
+    name: notificationTemp?.name,
+    title: notificationTemp?.title,
+    username: data.receiverUsername,
+    userId: data.userId,
+    content: notificationTemp?.content
+      .replace("{{sender_username}}", data.username)
+      .replace(
+        "{{click_here}}",
+        `<a href="/home/chat/${data.userId}" class="text-[var(--custom)]">click here</a>`
+      ),
+  };
+  const newNotification = await UserNotification.create(notification);
+  const count = await UserNotification.countDocuments({
+    username: data.receiverUsername,
+    unread: true,
+  });
+  return { data: newNotification, count: count };
+};

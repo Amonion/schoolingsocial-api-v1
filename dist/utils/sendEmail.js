@@ -12,10 +12,12 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.sendNotification = void 0;
 exports.sendEmail = sendEmail;
 const nodemailer_1 = __importDefault(require("nodemailer"));
 const fs_1 = require("fs");
 const path_1 = __importDefault(require("path"));
+const emailModel_1 = require("../models/team/emailModel");
 function sendEmail(user, emailTemplateName, data) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
@@ -64,3 +66,23 @@ function sendEmail(user, emailTemplateName, data) {
         }
     });
 }
+const sendNotification = (templateName, data) => __awaiter(void 0, void 0, void 0, function* () {
+    const notificationTemp = yield emailModel_1.Notification.findOne({
+        name: templateName,
+    });
+    const notification = {
+        greetings: notificationTemp === null || notificationTemp === void 0 ? void 0 : notificationTemp.greetings,
+        name: notificationTemp === null || notificationTemp === void 0 ? void 0 : notificationTemp.name,
+        title: notificationTemp === null || notificationTemp === void 0 ? void 0 : notificationTemp.title,
+        username: data.receiverUsername,
+        userId: data.userId,
+        content: notificationTemp === null || notificationTemp === void 0 ? void 0 : notificationTemp.content.replace("{{sender_username}}", data.username).replace("{{click_here}}", `<a href="/home/chat/${data.userId}" class="text-[var(--custom)]">click here</a>`),
+    };
+    const newNotification = yield emailModel_1.UserNotification.create(notification);
+    const count = yield emailModel_1.UserNotification.countDocuments({
+        username: data.receiverUsername,
+        unread: true,
+    });
+    return { data: newNotification, count: count };
+});
+exports.sendNotification = sendNotification;

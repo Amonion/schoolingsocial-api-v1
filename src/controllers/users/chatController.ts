@@ -6,6 +6,7 @@ import { queryData } from "../../utils/query";
 import { deleteFileFromS3 } from "../../utils/fileUpload";
 import { io } from "../../app";
 import { Notification, UserNotification } from "../../models/team/emailModel";
+import { sendNotification } from "../../utils/sendEmail";
 
 const setConnectionKey = (id1: string, id2: string) => {
   const participants = [id1, id2].sort();
@@ -64,43 +65,56 @@ export const createChat = async (data: IChat) => {
       data.receiverTime = receiverTime;
       const post = await Chat.create(data);
 
-      io.emit(connection, {
+      io.emit(`createChat${connection}`, {
+        key: connection,
+        data: post,
+      });
+      io.emit(`createChat${data.userId}`, {
+        key: connection,
+        data: post,
+      });
+      io.emit(`createChat${data.receiverId}`, {
         key: connection,
         data: post,
       });
     } else {
       const post = await Chat.create(data);
-      io.emit(connection, {
+      io.emit(`createChat${connection}`, {
+        key: connection,
+        data: post,
+      });
+      io.emit(`createChat${data.userId}`, {
+        key: connection,
+        data: post,
+      });
+      io.emit(`createChat${data.receiverId}`, {
         key: connection,
         data: post,
       });
 
-      const notificationTemp = await Notification.findOne({
-        name: "friend_request",
-      });
+      // const notificationTemp = await Notification.findOne({
+      //   name: "friend_request",
+      // });
 
-      const notification = {
-        greetings: notificationTemp?.greetings,
-        name: notificationTemp?.name,
-        title: notificationTemp?.title,
-        username: data.receiverUsername,
-        userId: data.userId,
-        content: notificationTemp?.content
-          .replace("{{sender_username}}", data.username)
-          .replace(
-            "{{click_here}}",
-            `<a href="/home/chat/${data.userId}" class="text-[var(--custom)]">click here</a>`
-          ),
-      };
-      const newNotification = await UserNotification.create(notification);
-      const count = await UserNotification.countDocuments({
-        username: data.receiverUsername,
-        unread: true,
-      });
-      io.emit(data.receiverId, {
-        data: newNotification,
-        count: count,
-      });
+      // const notification = {
+      //   greetings: notificationTemp?.greetings,
+      //   name: notificationTemp?.name,
+      //   title: notificationTemp?.title,
+      //   username: data.receiverUsername,
+      //   userId: data.userId,
+      //   content: notificationTemp?.content
+      //     .replace("{{sender_username}}", data.username)
+      //     .replace(
+      //       "{{click_here}}",
+      //       `<a href="/home/chat/${data.userId}" class="text-[var(--custom)]">click here</a>`
+      //     ),
+      // };
+      const newNotification = await sendNotification("friend_request", data);
+      // const count = await UserNotification.countDocuments({
+      //   username: data.receiverUsername,
+      //   unread: true,
+      // });
+      io.emit(data.receiverId, newNotification);
     }
   } catch (error) {
     console.log(error);
@@ -252,10 +266,7 @@ export const readChats = async (data: Receive) => {
       { $addToSet: { isReadIds: userId } }
     );
     const updatedChats = await Chat.find({ _id: { $in: ids } });
-    return {
-      key: connection,
-      chats: updatedChats,
-    };
+    io.emit(`readChat${connection}`, { chats: updatedChats });
   } catch (error) {
     console.log(error);
   }

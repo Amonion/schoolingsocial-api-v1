@@ -9,7 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getUniquePlaces = exports.searchPlaces = exports.searchPlace = exports.deletePlaces = exports.deletePlace = exports.updatePlace = exports.getPlaces = exports.getPlaceById = exports.createPlace = exports.deleteBank = exports.getBankById = exports.getBanks = exports.updateBank = exports.createBank = exports.deleteDocument = exports.getDocumentById = exports.getDocuments = exports.updateDocument = exports.createDocument = exports.deleteAcademicLevel = exports.getAcademicLevels = exports.getAcademicLevelById = exports.updateAcademicLevel = exports.createAcademicLevel = exports.deleteAd = exports.updateAd = exports.getAds = exports.getAdById = exports.createAd = exports.deletePayment = exports.updatePayment = exports.getPayments = exports.getPaymentById = exports.createPayment = void 0;
+exports.getUniquePlaces = exports.searchPlaces = exports.searchPlace = exports.deletePlaces = exports.deletePlace = exports.updatePlace = exports.getAllPlaces = exports.getPlaces = exports.getPlaceById = exports.createPlace = exports.deleteBank = exports.getBankById = exports.getBanks = exports.updateBank = exports.createBank = exports.deleteDocument = exports.getDocumentById = exports.getDocuments = exports.updateDocument = exports.createDocument = exports.deleteAcademicLevel = exports.getAcademicLevels = exports.getAcademicLevelById = exports.updateAcademicLevel = exports.createAcademicLevel = exports.deleteAd = exports.updateAd = exports.getAds = exports.getAdById = exports.createAd = exports.deletePayment = exports.updatePayment = exports.getPayments = exports.getPaymentById = exports.createPayment = void 0;
 const academicLevelModel_1 = require("../../models/team/academicLevelModel");
 const placeModel_1 = require("../../models/team/placeModel");
 const paymentModel_1 = require("../../models/team/paymentModel");
@@ -229,6 +229,35 @@ const getPlaces = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     }
 });
 exports.getPlaces = getPlaces;
+const getAllPlaces = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const result = yield placeModel_1.Place.aggregate([
+            {
+                $match: {
+                    $or: [
+                        { area: { $regex: req.query.place, $options: "i" } },
+                        { state: { $regex: req.query.place, $options: "i" } },
+                        { country: { $regex: req.query.place, $options: "i" } },
+                    ],
+                },
+            },
+            {
+                $group: {
+                    _id: "$area", // Group by area
+                    doc: { $first: "$$ROOT" }, // Keep first document per area
+                },
+            },
+            {
+                $replaceRoot: { newRoot: "$doc" }, // Flatten result
+            },
+        ]);
+        res.status(200).json({ results: result });
+    }
+    catch (error) {
+        (0, errorHandler_1.handleError)(res, undefined, undefined, error);
+    }
+});
+exports.getAllPlaces = getAllPlaces;
 const updatePlace = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     var _a;
     try {

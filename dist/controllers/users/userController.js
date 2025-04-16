@@ -12,7 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.followUser = exports.searchUserInfo = exports.getUserInfoById = exports.updateUserInfo = exports.deleteUser = exports.updateUser = exports.getUsers = exports.getUserById = exports.createUser = void 0;
+exports.followUser = exports.searchUserInfo = exports.getUserInfoById = exports.update = exports.updateUserInfo = exports.deleteUser = exports.updateUser = exports.getUsers = exports.getUserById = exports.createUser = void 0;
 const userModel_1 = require("../../models/users/userModel");
 const userInfoModel_1 = require("../../models/users/userInfoModel");
 const staffModel_1 = require("../../models/team/staffModel");
@@ -21,15 +21,17 @@ const query_1 = require("../../utils/query");
 const fileUpload_1 = require("../../utils/fileUpload");
 const bcryptjs_1 = __importDefault(require("bcryptjs"));
 const postModel_1 = require("../../models/users/postModel");
+const app_1 = require("../../app");
+const sendEmail_1 = require("../../utils/sendEmail");
+const emailModel_1 = require("../../models/team/emailModel");
 const createUser = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const { email, phone, signupIp, password } = req.body;
-        const userBio = new userInfoModel_1.UserInfo({ email, phone, signupIp });
+        const { email, signupIp, password } = req.body;
+        const userBio = new userInfoModel_1.UserInfo({ email, signupIp });
         yield userBio.save();
         const newUser = new userModel_1.User({
             userId: userBio._id,
             email,
-            phone,
             signupIp,
             password: yield bcryptjs_1.default.hash(password, 10),
         });
@@ -139,11 +141,23 @@ const deleteUser = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
 exports.deleteUser = deleteUser;
 //-----------------INFO--------------------//
 const updateUserInfo = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    try {
-        if (req.body.isEducationHistory) {
+    switch (req.body.action) {
+        case "Contact":
+            const result = yield userInfoModel_1.UserInfo.findOne({ phone: req.body.phone });
+            if (result) {
+                res.status(400).json({
+                    message: `Sorry a user with this phone number: ${result.phone} already exist`,
+                });
+            }
+            else {
+                (0, exports.update)(req, res);
+            }
+            break;
+        case "EducationHistory":
             req.body.pastSchool = JSON.parse(req.body.pastSchools);
-        }
-        if (req.body.isEducationDocument) {
+            (0, exports.update)(req, res);
+            break;
+        case "EducationDocument":
             const pastSchools = JSON.parse(req.body.pastSchools);
             const uploadedFiles = yield (0, fileUpload_1.uploadFilesToS3)(req);
             uploadedFiles.forEach((file) => {
@@ -153,8 +167,9 @@ const updateUserInfo = (req, res) => __awaiter(void 0, void 0, void 0, function*
             pastSchools[req.body.number].schoolTempCertificate = undefined;
             req.body.pastSchool = pastSchools;
             req.body.pastSchools = JSON.stringify(pastSchools);
-        }
-        if (req.body.isDocument) {
+            (0, exports.update)(req, res);
+            break;
+        case "Document":
             const user = yield userInfoModel_1.UserInfo.findById(req.params.id);
             const documents = user === null || user === void 0 ? void 0 : user.documents;
             const id = req.body.id;
@@ -187,14 +202,47 @@ const updateUserInfo = (req, res) => __awaiter(void 0, void 0, void 0, function*
                     });
                 }
             }
-        }
-        yield userInfoModel_1.UserInfo.updateOne({ _id: req.params.id }, req.body, {
+            (0, exports.update)(req, res);
+            break;
+        default:
+            (0, exports.update)(req, res);
+            break;
+    }
+});
+exports.updateUserInfo = updateUserInfo;
+const update = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        yield userInfoModel_1.UserInfo.findByIdAndUpdate(req.params.id, req.body, {
             new: true,
         });
         const user = yield userModel_1.User.findByIdAndUpdate(req.body.ID, req.body, {
             new: true,
             runValidators: false,
         });
+        if (user &&
+            user.isBio &&
+            user.isContact &&
+            user.isDocument &&
+            user.isOrigin &&
+            user.isEducation &&
+            user.isEducationHistory &&
+            user.isEducationDocument &&
+            user.isRelated) {
+            const count = yield emailModel_1.UserNotification.countDocuments({
+                name: "verification_processing",
+                username: String(user.username),
+            });
+            if (count === 0) {
+                yield userModel_1.User.findByIdAndUpdate(req.body.ID, { isOnVerification: true });
+                const newNotification = yield (0, sendEmail_1.sendNotification)("verification_processing", {
+                    username: String(user === null || user === void 0 ? void 0 : user.username),
+                    receiverUsername: String(user.username),
+                    userId: user._id,
+                });
+                console.log(newNotification);
+                app_1.io.emit(req.body.ID, newNotification);
+            }
+        }
         res.status(200).json({
             user,
             results: req.body.pastSchool,
@@ -205,7 +253,7 @@ const updateUserInfo = (req, res) => __awaiter(void 0, void 0, void 0, function*
         (0, errorHandler_1.handleError)(res, undefined, undefined, error);
     }
 });
-exports.updateUserInfo = updateUserInfo;
+exports.update = update;
 const getUserInfoById = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const user = yield userInfoModel_1.UserInfo.findById(req.params.id);
