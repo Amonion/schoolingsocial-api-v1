@@ -41,7 +41,17 @@ export const createUser = async (
 export const getNotifications = async (req: Request, res: Response) => {
   try {
     const result = await queryData<IUserNotification>(UserNotification, req);
-    res.status(200).json(result);
+    const unread = await UserNotification.countDocuments({
+      username: req.query.username,
+      unread: true,
+    });
+    res.status(200).json({
+      page: result.page,
+      page_size: result.page_size,
+      results: result.results,
+      count: result.count,
+      unread: unread,
+    });
   } catch (error) {
     handleError(res, undefined, undefined, error);
   }

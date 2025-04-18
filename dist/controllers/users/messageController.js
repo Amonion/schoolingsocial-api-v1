@@ -48,7 +48,17 @@ exports.createUser = createUser;
 const getNotifications = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const result = yield (0, query_1.queryData)(emailModel_1.UserNotification, req);
-        res.status(200).json(result);
+        const unread = yield emailModel_1.UserNotification.countDocuments({
+            username: req.query.username,
+            unread: true,
+        });
+        res.status(200).json({
+            page: result.page,
+            page_size: result.page_size,
+            results: result.results,
+            count: result.count,
+            unread: unread,
+        });
     }
     catch (error) {
         (0, errorHandler_1.handleError)(res, undefined, undefined, error);

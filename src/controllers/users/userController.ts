@@ -10,7 +10,6 @@ import bcrypt from "bcryptjs";
 import { Follower, Post } from "../../models/users/postModel";
 import { io } from "../../app";
 import { sendNotification } from "../../utils/sendEmail";
-import { UserNotification } from "../../models/team/emailModel";
 
 export const createUser = async (
   req: Request,
@@ -244,15 +243,14 @@ export const update = async (req: Request, res: Response): Promise<void> => {
       user.isEducation &&
       user.isEducationHistory &&
       user.isEducationDocument &&
+      !user.isOnVerification &&
       user.isRelated
     ) {
-      const count = await UserNotification.countDocuments({
-        name: "verification_processing",
-        username: String(user.username),
-      });
-
-      if (count === 0) {
-        await User.findByIdAndUpdate(req.body.ID, { isOnVerification: true });
+      if (!user.isVerified) {
+        await User.findByIdAndUpdate(req.body.ID, {
+          isOnVerification: true,
+          verifyingAt: new Date(),
+        });
         const newNotification = await sendNotification(
           "verification_processing",
           {
@@ -261,8 +259,8 @@ export const update = async (req: Request, res: Response): Promise<void> => {
             userId: user._id,
           }
         );
-        console.log(newNotification);
         io.emit(req.body.ID, newNotification);
+        io.emit("team", { action: "verifying", type: "stat" });
       }
     }
 

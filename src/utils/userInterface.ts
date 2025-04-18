@@ -80,11 +80,6 @@ export interface IGeneral {
   id: string;
 }
 
-export interface IStat extends Document {
-  userId: string;
-  postId: string;
-}
-
 interface Media {
   source: string;
   type: string;
@@ -167,6 +162,11 @@ export interface IRepliedChatContent extends Document {
   createdAt: Date | null;
 }
 
+export interface IStat extends Document {
+  userId: string;
+  postId: string;
+}
+
 export interface IUpload extends Document {
   username: string;
   mediaName: string;
@@ -213,6 +213,11 @@ export interface IUser extends Document {
   isSuspendeded: boolean;
   isDeleted: boolean;
   isFirstTime: boolean;
+  online: boolean;
+  visitedAt: Date;
+  verifyingAt: Date;
+  verifiedAt: Date;
+  leftAt: Date;
   createdAt: Date;
   passwordResetToken?: string;
   password?: string;
@@ -281,6 +286,15 @@ export interface IUserNotification extends Document {
 export interface IUserInterest extends Document {
   userId: string;
   interests: string[];
+}
+
+export interface IUserStat extends Document {
+  online: boolean;
+  userId: string;
+  country: string;
+  countryCode: string;
+  ip: string;
+  username: string;
 }
 
 export interface IUserTestExam extends Document {

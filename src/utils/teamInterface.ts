@@ -285,6 +285,18 @@ export interface IPosition extends Document {
   createdAt: Date;
 }
 
+export interface ISocketData {
+  to: string;
+  action: string;
+  type: string;
+  postId: string;
+  data: IUserData;
+  content: string;
+  createdAt: Date;
+  media: File[];
+  types: string[];
+}
+
 export interface ISchool extends Document {
   country: string;
   state: string;
@@ -344,6 +356,16 @@ export interface IStaff extends Document {
   continent: string;
   isActive: boolean;
   createdAt: Date;
+}
+
+export interface IUserData {
+  ip: string;
+  bioId: string;
+  country: string;
+  countryCode: string;
+  userId: string;
+  username: string;
+  visitedAt: Date;
 }
 
 export interface IWeekend extends Document {

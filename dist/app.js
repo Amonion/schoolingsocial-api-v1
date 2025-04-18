@@ -27,12 +27,14 @@ const newsRoutes_1 = __importDefault(require("./routes/team/newsRoutes"));
 const placeRoutes_1 = __importDefault(require("./routes/team/placeRoutes"));
 const postRoutes_1 = __importDefault(require("./routes/users/postRoutes"));
 const schoolRoutes_1 = __importDefault(require("./routes/team/schoolRoutes"));
+const statRoutes_1 = __importDefault(require("./routes/team/statRoutes"));
 const userMessageRoutes_1 = __importDefault(require("./routes/users/userMessageRoutes"));
 const userCompetitionRoutes_1 = __importDefault(require("./routes/users/userCompetitionRoutes"));
 const userRoutes_1 = __importDefault(require("./routes/users/userRoutes"));
 const chatController_1 = require("./controllers/users/chatController");
 const postController_1 = require("./controllers/users/postController");
 const fileUpload_1 = require("./utils/fileUpload");
+const socketRoutes_1 = require("./routes/team/socketRoutes");
 dotenv_1.default.config();
 const app = (0, express_1.default)();
 exports.app = app;
@@ -89,6 +91,9 @@ io.on("connection", (socket) => {
                 const response = yield (0, postController_1.createPost)(data);
                 io.emit("message", response);
                 break;
+            case "team":
+                yield (0, socketRoutes_1.TeamSocket)(data);
+                break;
             default:
                 break;
         }
@@ -110,6 +115,7 @@ app.use("/api/v1/posts", postRoutes_1.default);
 app.use("/api/v1/schools", schoolRoutes_1.default);
 app.use("/api/v1/user-competitions", userCompetitionRoutes_1.default);
 app.use("/api/v1/user-messages", userMessageRoutes_1.default);
+app.use("/api/v1/user-stats", statRoutes_1.default);
 app.use("/api/v1/users", userRoutes_1.default);
 // ✅ Error Handling Middleware
 app.use((req, res, next) => {

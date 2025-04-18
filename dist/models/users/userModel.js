@@ -88,6 +88,11 @@ const UserSchema = new mongoose_1.Schema({
     isSuspendeded: { type: Boolean, default: false },
     isDeleted: { type: Boolean, default: false },
     isFirstTime: { type: Boolean, default: true },
+    online: { type: Boolean, default: true },
+    leftAt: { type: Date, default: Date.now },
+    visitedAt: { type: Date, default: Date.now },
+    verifyingAt: { type: Date, default: null },
+    verifiedAt: { type: Date, default: Date.now },
     createdAt: { type: Date, default: Date.now },
     passwordResetToken: { type: String, default: null },
     password: {

@@ -12,6 +12,7 @@ import newsRoutes from "./routes/team/newsRoutes";
 import placeRoutes from "./routes/team/placeRoutes";
 import postRoutes from "./routes/users/postRoutes";
 import schoolRoutes from "./routes/team/schoolRoutes";
+import statRoutes from "./routes/team/statRoutes";
 import userMessageRoutes from "./routes/users/userMessageRoutes";
 import userCompetitionRoutes from "./routes/users/userCompetitionRoutes";
 import userRoutes from "./routes/users/userRoutes";
@@ -23,7 +24,7 @@ import {
 } from "./controllers/users/chatController";
 import { createPost } from "./controllers/users/postController";
 import { getPresignedUrl, removeFile } from "./utils/fileUpload";
-import { routeNotification } from "./controllers/team/notificationController";
+import { TeamSocket } from "./routes/team/socketRoutes";
 
 dotenv.config();
 
@@ -86,6 +87,9 @@ io.on("connection", (socket) => {
         const response = await createPost(data);
         io.emit("message", response);
         break;
+      case "team":
+        await TeamSocket(data);
+        break;
       default:
         break;
     }
@@ -109,7 +113,7 @@ app.use("/api/v1/posts", postRoutes);
 app.use("/api/v1/schools", schoolRoutes);
 app.use("/api/v1/user-competitions", userCompetitionRoutes);
 app.use("/api/v1/user-messages", userMessageRoutes);
-
+app.use("/api/v1/user-stats", statRoutes);
 app.use("/api/v1/users", userRoutes);
 
 // ✅ Error Handling Middleware

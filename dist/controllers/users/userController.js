@@ -23,7 +23,6 @@ const bcryptjs_1 = __importDefault(require("bcryptjs"));
 const postModel_1 = require("../../models/users/postModel");
 const app_1 = require("../../app");
 const sendEmail_1 = require("../../utils/sendEmail");
-const emailModel_1 = require("../../models/team/emailModel");
 const createUser = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const { email, signupIp, password } = req.body;
@@ -227,20 +226,20 @@ const update = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
             user.isEducation &&
             user.isEducationHistory &&
             user.isEducationDocument &&
+            !user.isOnVerification &&
             user.isRelated) {
-            const count = yield emailModel_1.UserNotification.countDocuments({
-                name: "verification_processing",
-                username: String(user.username),
-            });
-            if (count === 0) {
-                yield userModel_1.User.findByIdAndUpdate(req.body.ID, { isOnVerification: true });
+            if (!user.isVerified) {
+                yield userModel_1.User.findByIdAndUpdate(req.body.ID, {
+                    isOnVerification: true,
+                    verifyingAt: new Date(),
+                });
                 const newNotification = yield (0, sendEmail_1.sendNotification)("verification_processing", {
                     username: String(user === null || user === void 0 ? void 0 : user.username),
                     receiverUsername: String(user.username),
                     userId: user._id,
                 });
-                console.log(newNotification);
                 app_1.io.emit(req.body.ID, newNotification);
+                app_1.io.emit("team", { action: "verifying", type: "stat" });
             }
         }
         res.status(200).json({
