@@ -16,6 +16,9 @@ const TeamSocket = (data) => __awaiter(void 0, void 0, void 0, function* () {
         case "visit":
             (0, statController_1.updateVisit)(data.data);
             break;
+        case "left":
+            (0, statController_1.visitorLeft)(data.data);
+            break;
         default:
             break;
     }

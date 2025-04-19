@@ -9,7 +9,7 @@ import {
   deleteUser,
   createUser,
   updateUserInfo,
-  getUserInfoById,
+  getUserInfo,
   searchUserInfo,
   followUser,
 } from "../../controllers/users/userController";
@@ -32,8 +32,8 @@ router.route("/staffs/:id").get(getStaffById).patch(upload.any(), updateStaff);
 router.route("/info").get(getStaffs);
 router.route("/people").get(searchUserInfo);
 router
-  .route("/info/:id")
-  .get(getUserInfoById)
+  .route("/userinfo/:username")
+  .get(getUserInfo)
   .post(upload.any(), updateUserInfo);
 
 router

@@ -267,6 +267,9 @@ export interface IUserInfo extends Document {
   isSuspendeded: boolean;
   isDeleted: boolean;
   isFirstTime: boolean;
+  isOnVerification: boolean;
+  verifyingAt: Date;
+  verifiedAt: Date;
   createdAt: Date;
   passwordResetToken?: string;
   password?: string;

@@ -19,8 +19,8 @@ router.route("/staffs/:id").get(staffController_1.getStaffById).patch(upload.any
 router.route("/info").get(staffController_1.getStaffs);
 router.route("/people").get(userController_1.searchUserInfo);
 router
-    .route("/info/:id")
-    .get(userController_1.getUserInfoById)
+    .route("/userinfo/:username")
+    .get(userController_1.getUserInfo)
     .post(upload.any(), userController_1.updateUserInfo);
 router
     .route("/:id")

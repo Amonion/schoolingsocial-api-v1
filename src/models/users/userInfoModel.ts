@@ -64,7 +64,9 @@ const UserInfoSchema: Schema = new Schema(
     occupation: { type: String, default: "" },
     nextKin: { type: String, default: "" },
     nextKinPhone: { type: String, default: "" },
-
+    isOnVerification: { type: Boolean, default: false },
+    verifyingAt: { type: Date, default: null },
+    verifiedAt: { type: Date, default: Date.now },
     dob: { type: Date, default: Date.now },
     createdAt: { type: Date, default: Date.now },
   },

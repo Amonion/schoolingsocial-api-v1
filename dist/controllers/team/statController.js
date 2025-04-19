@@ -9,7 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getUsersStat = exports.updateVisit = void 0;
+exports.getUsersStat = exports.visitorLeft = exports.updateVisit = void 0;
 const usersStatMode_1 = require("../../models/users/usersStatMode");
 const app_1 = require("../../app");
 const userModel_1 = require("../../models/users/userModel");
@@ -17,48 +17,64 @@ const chatModel_1 = require("../../models/users/chatModel");
 const errorHandler_1 = require("../../utils/errorHandler");
 const date_fns_1 = require("date-fns");
 const updateVisit = (data) => __awaiter(void 0, void 0, void 0, function* () {
-    const visitor = yield usersStatMode_1.UserStat.findOne({
-        $or: [
-            { _id: data.userId, online: true },
-            { ip: data.ip, online: true },
-        ],
+    yield usersStatMode_1.UserStat.findOneAndUpdate({
+        $or: [{ ip: data.ip }, { username: data.username }],
+    }, {
+        $set: {
+            visitedAt: new Date(),
+            online: true,
+            ip: data.ip,
+            country: data.country,
+            countryCode: data.countryCode,
+            username: data.username,
+            bioId: data.bioId,
+            userId: data.userId,
+        },
+    }, {
+        new: true,
+        upsert: true,
+        setDefaultsOnInsert: true,
     });
-    if (!visitor) {
-        yield usersStatMode_1.UserStat.findOneAndUpdate({
-            $or: [{ _id: data.userId }, { username: data.username }],
-        }, {
-            $set: {
-                visitedAt: new Date(),
-                online: true,
-                ip: data.ip,
-                country: data.country,
-                countryCode: data.countryCode,
-                username: data.username,
-                bioId: data.bioId,
-                userId: data.userId,
-            },
-        }, {
-            new: true,
-            upsert: true,
-            setDefaultsOnInsert: true,
+    if (data.userId) {
+        yield userModel_1.User.findOneAndUpdate({ _id: data.userId, online: false }, {
+            visitedAt: data.visitedAt,
+            online: true,
         });
-        if (data.userId) {
-            yield userModel_1.User.findByIdAndUpdate(data.userId, {
-                visitedAt: data.visitedAt,
-                online: true,
-            });
-            const chats = yield chatModel_1.Chat.find({
-                connection: { $regex: data.userId },
-            });
-            for (let i = 0; i < chats.length; i++) {
-                const el = chats[i];
-                app_1.io.emit(el.connection, { action: "visit" });
-            }
+        const chats = yield chatModel_1.Chat.find({
+            connection: { $regex: data.userId },
+        });
+        for (let i = 0; i < chats.length; i++) {
+            const el = chats[i];
+            app_1.io.emit(el.connection, { action: "visit" });
         }
-        app_1.io.emit("team", { action: "visit", type: "stat" });
     }
+    const visitors = yield usersStatMode_1.UserStat.countDocuments({ online: true });
+    app_1.io.emit("team", { action: "visit", type: "stat", visitors });
 });
 exports.updateVisit = updateVisit;
+const visitorLeft = (data) => __awaiter(void 0, void 0, void 0, function* () {
+    if (data.username) {
+        yield usersStatMode_1.UserStat.findOneAndUpdate({ username: data.username, online: true }, {
+            $set: {
+                leftAt: data.leftAt,
+                online: false,
+                ip: data.ip,
+            },
+        });
+    }
+    else {
+        yield usersStatMode_1.UserStat.findOneAndUpdate({ ip: data.ip, online: true }, {
+            $set: {
+                leftAt: data.leftAt,
+                online: false,
+                ip: data.ip,
+            },
+        });
+    }
+    const visitors = yield usersStatMode_1.UserStat.countDocuments({ online: true });
+    app_1.io.emit("team", { action: "visit", type: "stat", visitors });
+});
+exports.visitorLeft = visitorLeft;
 const getUsersStat = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const now = new Date();

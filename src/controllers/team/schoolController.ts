@@ -23,11 +23,19 @@ import {
   search,
 } from "../../utils/query";
 
+interface SchoolLevels {
+  id: string;
+  institution: string;
+}
+
 export const createSchool = async (
   req: Request,
   res: Response
 ): Promise<void> => {
-  req.body.level = JSON.parse(req.body.levels);
+  const levels: SchoolLevels[] = JSON.parse(req.body.levels);
+  const institutions = levels.map((item) => item.institution);
+  req.body.levels = levels;
+  req.body.institutions = institutions;
   createItem(req, res, School, "School was created successfully");
 };
 
@@ -57,6 +65,10 @@ export const getSchools = async (req: Request, res: Response) => {
 
 export const updateSchool = async (req: Request, res: Response) => {
   try {
+    const levels: SchoolLevels[] = JSON.parse(req.body.levels);
+    const institutions = levels.map((item) => item.institution);
+    req.body.levels = levels;
+    req.body.institutions = institutions;
     updateItem(
       req,
       res,

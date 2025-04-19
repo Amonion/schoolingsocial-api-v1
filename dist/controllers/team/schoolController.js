@@ -14,7 +14,10 @@ const errorHandler_1 = require("../../utils/errorHandler");
 const schoolModel_1 = require("../../models/team/schoolModel");
 const query_1 = require("../../utils/query");
 const createSchool = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    req.body.level = JSON.parse(req.body.levels);
+    const levels = JSON.parse(req.body.levels);
+    const institutions = levels.map((item) => item.institution);
+    req.body.levels = levels;
+    req.body.institutions = institutions;
     (0, query_1.createItem)(req, res, schoolModel_1.School, "School was created successfully");
 });
 exports.createSchool = createSchool;
@@ -43,6 +46,10 @@ const getSchools = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
 exports.getSchools = getSchools;
 const updateSchool = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
+        const levels = JSON.parse(req.body.levels);
+        const institutions = levels.map((item) => item.institution);
+        req.body.levels = levels;
+        req.body.institutions = institutions;
         (0, query_1.updateItem)(req, res, schoolModel_1.School, ["logo", "media", "picture"], ["School not found", "School was updated successfully"]);
     }
     catch (error) {

@@ -176,7 +176,7 @@ export const updateUserInfo = async (
       update(req, res);
       break;
     case "Document":
-      const user = await UserInfo.findById(req.params.id);
+      const user = await UserInfo.findOne({ username: req.params.username });
       const documents = user?.documents;
       const id = req.body.id;
       if (documents) {
@@ -206,7 +206,7 @@ export const updateUserInfo = async (
           };
           documents.push(doc);
           await UserInfo.updateOne(
-            { _id: req.params.id },
+            { username: req.params.username },
             { documents: documents },
             {
               new: true,
@@ -225,9 +225,13 @@ export const updateUserInfo = async (
 
 export const update = async (req: Request, res: Response): Promise<void> => {
   try {
-    await UserInfo.findByIdAndUpdate(req.params.id, req.body, {
-      new: true,
-    });
+    const userInfo = await UserInfo.findOneAndUpdate(
+      { username: req.params.username },
+      req.body,
+      {
+        new: true,
+      }
+    );
 
     const user = await User.findByIdAndUpdate(req.body.ID, req.body, {
       new: true,
@@ -244,27 +248,34 @@ export const update = async (req: Request, res: Response): Promise<void> => {
       user.isEducationHistory &&
       user.isEducationDocument &&
       !user.isOnVerification &&
-      user.isRelated
+      user.isRelated &&
+      !user.isVerified
     ) {
-      if (!user.isVerified) {
-        await User.findByIdAndUpdate(req.body.ID, {
+      await User.findByIdAndUpdate(req.body.ID, {
+        isOnVerification: true,
+        verifyingAt: new Date(),
+      });
+      await UserInfo.findOneAndUpdate(
+        { username: req.params.username },
+        {
           isOnVerification: true,
           verifyingAt: new Date(),
-        });
-        const newNotification = await sendNotification(
-          "verification_processing",
-          {
-            username: String(user?.username),
-            receiverUsername: String(user.username),
-            userId: user._id,
-          }
-        );
-        io.emit(req.body.ID, newNotification);
-        io.emit("team", { action: "verifying", type: "stat" });
-      }
+        }
+      );
+      const newNotification = await sendNotification(
+        "verification_processing",
+        {
+          username: String(user?.username),
+          receiverUsername: String(user.username),
+          userId: user._id,
+        }
+      );
+      io.emit(req.body.ID, newNotification);
+      io.emit("team", { action: "verifying", type: "stat" });
     }
 
     res.status(200).json({
+      userInfo,
       user,
       results: req.body.pastSchool,
       message: "your account is updated  successfully",
@@ -274,12 +285,12 @@ export const update = async (req: Request, res: Response): Promise<void> => {
   }
 };
 
-export const getUserInfoById = async (
+export const getUserInfo = async (
   req: Request,
   res: Response
 ): Promise<Response | void> => {
   try {
-    const user = await UserInfo.findById(req.params.id);
+    const user = await UserInfo.findOne({ username: req.params.username });
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }

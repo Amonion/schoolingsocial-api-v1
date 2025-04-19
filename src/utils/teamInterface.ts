@@ -365,6 +365,7 @@ export interface IUserData {
   countryCode: string;
   userId: string;
   username: string;
+  leftAt: Date;
   visitedAt: Date;
 }
 

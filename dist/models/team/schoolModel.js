@@ -38,9 +38,10 @@ const mongoose_1 = __importStar(require("mongoose"));
 const SchoolSchema = new mongoose_1.Schema({
     longitude: { type: Number, default: 0.0 },
     latitude: { type: Number, default: 0.0 },
+    resultPointSystem: { type: Number, default: 0.0 },
     logo: { type: String },
-    levels: { type: String },
-    levelNames: { type: Array, default: undefined },
+    levels: { type: Array },
+    institutions: { type: Array, default: [] },
     name: { type: String, default: "" },
     username: { type: String, default: "" },
     area: { type: String, default: "" },

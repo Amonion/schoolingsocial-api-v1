@@ -8,52 +8,76 @@ import { handleError } from "../../utils/errorHandler";
 import { startOfMonth, subMonths } from "date-fns";
 
 export const updateVisit = async (data: IUserData) => {
-  const visitor = await UserStat.findOne({
-    $or: [
-      { _id: data.userId, online: true },
-      { ip: data.ip, online: true },
-    ],
-  });
-
-  if (!visitor) {
-    await UserStat.findOneAndUpdate(
-      {
-        $or: [{ _id: data.userId }, { username: data.username }],
+  await UserStat.findOneAndUpdate(
+    {
+      $or: [{ ip: data.ip }, { username: data.username }],
+    },
+    {
+      $set: {
+        visitedAt: new Date(),
+        online: true,
+        ip: data.ip,
+        country: data.country,
+        countryCode: data.countryCode,
+        username: data.username,
+        bioId: data.bioId,
+        userId: data.userId,
       },
+    },
+    {
+      new: true,
+      upsert: true,
+      setDefaultsOnInsert: true,
+    }
+  );
+  if (data.userId) {
+    await User.findOneAndUpdate(
+      { _id: data.userId, online: false },
       {
-        $set: {
-          visitedAt: new Date(),
-          online: true,
-          ip: data.ip,
-          country: data.country,
-          countryCode: data.countryCode,
-          username: data.username,
-          bioId: data.bioId,
-          userId: data.userId,
-        },
-      },
-      {
-        new: true,
-        upsert: true,
-        setDefaultsOnInsert: true,
-      }
-    );
-    if (data.userId) {
-      await User.findByIdAndUpdate(data.userId, {
         visitedAt: data.visitedAt,
         online: true,
-      });
-      const chats = await Chat.find({
-        connection: { $regex: data.userId },
-      });
-
-      for (let i = 0; i < chats.length; i++) {
-        const el = chats[i];
-        io.emit(el.connection, { action: "visit" });
       }
+    );
+    const chats = await Chat.find({
+      connection: { $regex: data.userId },
+    });
+
+    for (let i = 0; i < chats.length; i++) {
+      const el = chats[i];
+      io.emit(el.connection, { action: "visit" });
     }
-    io.emit("team", { action: "visit", type: "stat" });
   }
+  const visitors = await UserStat.countDocuments({ online: true });
+  io.emit("team", { action: "visit", type: "stat", visitors });
+};
+
+export const visitorLeft = async (data: IUserData) => {
+  if (data.username) {
+    await UserStat.findOneAndUpdate(
+      { username: data.username, online: true },
+      {
+        $set: {
+          leftAt: data.leftAt,
+          online: false,
+          ip: data.ip,
+        },
+      }
+    );
+  } else {
+    await UserStat.findOneAndUpdate(
+      { ip: data.ip, online: true },
+      {
+        $set: {
+          leftAt: data.leftAt,
+          online: false,
+          ip: data.ip,
+        },
+      }
+    );
+  }
+
+  const visitors = await UserStat.countDocuments({ online: true });
+  io.emit("team", { action: "visit", type: "stat", visitors });
 };
 
 export const getUsersStat = async (

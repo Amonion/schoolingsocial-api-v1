@@ -12,7 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.followUser = exports.searchUserInfo = exports.getUserInfoById = exports.update = exports.updateUserInfo = exports.deleteUser = exports.updateUser = exports.getUsers = exports.getUserById = exports.createUser = void 0;
+exports.followUser = exports.searchUserInfo = exports.getUserInfo = exports.update = exports.updateUserInfo = exports.deleteUser = exports.updateUser = exports.getUsers = exports.getUserById = exports.createUser = void 0;
 const userModel_1 = require("../../models/users/userModel");
 const userInfoModel_1 = require("../../models/users/userInfoModel");
 const staffModel_1 = require("../../models/team/staffModel");
@@ -169,7 +169,7 @@ const updateUserInfo = (req, res) => __awaiter(void 0, void 0, void 0, function*
             (0, exports.update)(req, res);
             break;
         case "Document":
-            const user = yield userInfoModel_1.UserInfo.findById(req.params.id);
+            const user = yield userInfoModel_1.UserInfo.findOne({ username: req.params.username });
             const documents = user === null || user === void 0 ? void 0 : user.documents;
             const id = req.body.id;
             if (documents) {
@@ -195,7 +195,7 @@ const updateUserInfo = (req, res) => __awaiter(void 0, void 0, void 0, function*
                         tempDoc: "",
                     };
                     documents.push(doc);
-                    yield userInfoModel_1.UserInfo.updateOne({ _id: req.params.id }, { documents: documents }, {
+                    yield userInfoModel_1.UserInfo.updateOne({ username: req.params.username }, { documents: documents }, {
                         new: true,
                         upsert: true,
                     });
@@ -211,7 +211,7 @@ const updateUserInfo = (req, res) => __awaiter(void 0, void 0, void 0, function*
 exports.updateUserInfo = updateUserInfo;
 const update = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        yield userInfoModel_1.UserInfo.findByIdAndUpdate(req.params.id, req.body, {
+        const userInfo = yield userInfoModel_1.UserInfo.findOneAndUpdate({ username: req.params.username }, req.body, {
             new: true,
         });
         const user = yield userModel_1.User.findByIdAndUpdate(req.body.ID, req.body, {
@@ -227,22 +227,26 @@ const update = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
             user.isEducationHistory &&
             user.isEducationDocument &&
             !user.isOnVerification &&
-            user.isRelated) {
-            if (!user.isVerified) {
-                yield userModel_1.User.findByIdAndUpdate(req.body.ID, {
-                    isOnVerification: true,
-                    verifyingAt: new Date(),
-                });
-                const newNotification = yield (0, sendEmail_1.sendNotification)("verification_processing", {
-                    username: String(user === null || user === void 0 ? void 0 : user.username),
-                    receiverUsername: String(user.username),
-                    userId: user._id,
-                });
-                app_1.io.emit(req.body.ID, newNotification);
-                app_1.io.emit("team", { action: "verifying", type: "stat" });
-            }
+            user.isRelated &&
+            !user.isVerified) {
+            yield userModel_1.User.findByIdAndUpdate(req.body.ID, {
+                isOnVerification: true,
+                verifyingAt: new Date(),
+            });
+            yield userInfoModel_1.UserInfo.findOneAndUpdate({ username: req.params.username }, {
+                isOnVerification: true,
+                verifyingAt: new Date(),
+            });
+            const newNotification = yield (0, sendEmail_1.sendNotification)("verification_processing", {
+                username: String(user === null || user === void 0 ? void 0 : user.username),
+                receiverUsername: String(user.username),
+                userId: user._id,
+            });
+            app_1.io.emit(req.body.ID, newNotification);
+            app_1.io.emit("team", { action: "verifying", type: "stat" });
         }
         res.status(200).json({
+            userInfo,
             user,
             results: req.body.pastSchool,
             message: "your account is updated  successfully",
@@ -253,9 +257,9 @@ const update = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     }
 });
 exports.update = update;
-const getUserInfoById = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+const getUserInfo = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const user = yield userInfoModel_1.UserInfo.findById(req.params.id);
+        const user = yield userInfoModel_1.UserInfo.findOne({ username: req.params.username });
         if (!user) {
             return res.status(404).json({ message: "User not found" });
         }
@@ -265,7 +269,7 @@ const getUserInfoById = (req, res) => __awaiter(void 0, void 0, void 0, function
         (0, errorHandler_1.handleError)(res, undefined, undefined, error);
     }
 });
-exports.getUserInfoById = getUserInfoById;
+exports.getUserInfo = getUserInfo;
 const searchUserInfo = (req, res) => {
     return (0, query_1.search)(userInfoModel_1.UserInfo, req, res);
 };
