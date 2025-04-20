@@ -9,7 +9,7 @@ import { uploadFilesToS3 } from "../../utils/fileUpload";
 import bcrypt from "bcryptjs";
 import { Follower, Post } from "../../models/users/postModel";
 import { io } from "../../app";
-import { sendNotification } from "../../utils/sendEmail";
+import { sendEmail, sendNotification } from "../../utils/sendEmail";
 
 export const createUser = async (
   req: Request,
@@ -302,6 +302,70 @@ export const getUserInfo = async (
 
 export const searchUserInfo = (req: Request, res: Response) => {
   return search(UserInfo, req, res);
+};
+
+export const updateUserVerification = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
+  try {
+    if (req.body.action === "bio") {
+      req.body.isBio = false;
+    } else if (req.body.action === "ori") {
+      req.body.isOrigin = false;
+    } else if (req.body.action === "cont") {
+      req.body.isContact = false;
+    } else if (req.body.action === "rel") {
+      req.body.isRelated = false;
+    } else if (req.body.action === "doc") {
+      req.body.isDocument = false;
+    } else if (req.body.action === "edu") {
+      req.body.isEducation = false;
+    } else if (req.body.action === "pas") {
+      req.body.isEducationHistory = false;
+    }
+
+    if (req.body.status === "Approved") {
+      req.body.isOnVerification = false;
+      req.body.isVerified = true;
+    }
+
+    const userInfo = await UserInfo.findOneAndUpdate(
+      { username: req.params.username },
+      req.body,
+      {
+        new: true,
+      }
+    );
+
+    const user = await User.findByIdAndUpdate(req.body.id, req.body, {
+      new: true,
+      runValidators: false,
+    });
+
+    if (req.body.status === "Rejected") {
+      const newNotification = await sendNotification("verification_fail", {
+        username: String(user?.username),
+        receiverUsername: String(user?.username),
+        userId: String(user?._id),
+      });
+      sendEmail(
+        String(user?.username),
+        String(user?.email),
+        "verification_fail"
+      );
+      io.emit(req.body.id, newNotification);
+    }
+
+    res.status(200).json({
+      userInfo,
+      user,
+      results: req.body.pastSchool,
+      message: "your account is updated  successfully",
+    });
+  } catch (error) {
+    handleError(res, undefined, undefined, error);
+  }
 };
 //-----------------FOLLOW USER--------------------//
 export const followUser = async (req: Request, res: Response) => {

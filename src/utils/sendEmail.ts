@@ -1,7 +1,11 @@
 import nodemailer from "nodemailer";
 import { promises as fs } from "fs";
-import path from "path";
-import { Notification, UserNotification } from "../models/team/emailModel";
+import {
+  Email,
+  Notification,
+  UserNotification,
+} from "../models/team/emailModel";
+import { Company } from "../models/team/companyModel";
 interface NotificationData {
   username: string;
   receiverUsername: string;
@@ -9,28 +13,36 @@ interface NotificationData {
 }
 
 export async function sendEmail(
-  user: { email: string },
-  emailTemplateName: string,
-  data: Record<string, any>
+  username: string,
+  userEmail: string,
+  emailName: string,
+  data?: Record<string, any>
 ): Promise<void> {
   try {
-    const templatePath = path.join(
-      __dirname,
-      "emailTemplates",
-      `${emailTemplateName}.html`
-    );
+    const templatePath = "emailTemplate.html";
 
     if (!(await fs.stat(templatePath).catch(() => false))) {
-      throw new Error(`Template file "${emailTemplateName}.html" not found`);
+      throw new Error(`Template file "${templatePath}" not found`);
     }
 
-    const templateContent = await fs.readFile(templatePath, "utf-8");
+    let templateContent = await fs.readFile(templatePath, "utf-8");
+    const email = await Email.findOne({ name: emailName });
+    const results = await Company.find();
+    const company = results[0];
 
-    // Replace placeholders in the template
-    const emailContent = Object.keys(data).reduce((content, key) => {
-      const placeholder = new RegExp(`{{\\s*${key}\\s*}}`, "g");
-      return content.replace(placeholder, data[key]);
-    }, templateContent);
+    templateContent = templateContent.replace("{{username}}", username);
+    templateContent = templateContent.replace(
+      "{{greetings}}",
+      String(email?.greetings)
+    );
+    templateContent = templateContent.replace(
+      "{{logo}}",
+      `${company?.domain}/images/logos/SchoolingLogo.png`
+    );
+    templateContent = templateContent.replace(
+      "{{whiteLogo}}",
+      `${company?.domain}/images/logos/WhiteSchoolingLogo.png`
+    );
 
     // Create a nodemailer transporter
     const transporter = nodemailer.createTransport({
@@ -38,28 +50,27 @@ export async function sendEmail(
       port: parseInt(process.env.SMTP_PORT || "587"),
       secure: process.env.SMTP_SECURE === "true",
       auth: {
-        user: process.env.EMAIL_USERNAME,
+        user: company.email,
         pass: process.env.EMAIL_PASSWORD,
       },
     });
 
     const mailOptions = {
       from: `"Your App Name" <${process.env.EMAIL_USERNAME}>`,
-      to: user.email,
+      to: userEmail,
       subject: "Your Subject Here",
-      html: emailContent,
+      html: templateContent,
     };
 
     await transporter.sendMail(mailOptions);
 
-    console.log(`Email sent to ${user.email}`);
+    console.log(`Email sent to ${email}`);
   } catch (error) {
     if (error instanceof Error) {
       console.error("Error sending email:", {
         message: error.message,
         stack: error.stack,
-        user: user.email,
-        template: emailTemplateName,
+        user: userEmail,
       });
     } else {
       console.error("Unknown error occurred:", error);

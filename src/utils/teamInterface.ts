@@ -98,6 +98,7 @@ export interface IEmail extends Document {
   content: string;
   picture: string;
   title: string;
+  greetings: string;
   name: string;
   note: string;
   createdAt: Date;

@@ -21,7 +21,8 @@ router.route("/people").get(userController_1.searchUserInfo);
 router
     .route("/userinfo/:username")
     .get(userController_1.getUserInfo)
-    .post(upload.any(), userController_1.updateUserInfo);
+    .post(upload.any(), userController_1.updateUserInfo)
+    .patch(upload.any(), userController_1.updateUser);
 router
     .route("/:id")
     .get(userController_1.getUserById)

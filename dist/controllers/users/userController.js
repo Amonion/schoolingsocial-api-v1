@@ -12,7 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.followUser = exports.searchUserInfo = exports.getUserInfo = exports.update = exports.updateUserInfo = exports.deleteUser = exports.updateUser = exports.getUsers = exports.getUserById = exports.createUser = void 0;
+exports.followUser = exports.updateUserVerification = exports.searchUserInfo = exports.getUserInfo = exports.update = exports.updateUserInfo = exports.deleteUser = exports.updateUser = exports.getUsers = exports.getUserById = exports.createUser = void 0;
 const userModel_1 = require("../../models/users/userModel");
 const userInfoModel_1 = require("../../models/users/userInfoModel");
 const staffModel_1 = require("../../models/team/staffModel");
@@ -274,6 +274,61 @@ const searchUserInfo = (req, res) => {
     return (0, query_1.search)(userInfoModel_1.UserInfo, req, res);
 };
 exports.searchUserInfo = searchUserInfo;
+const updateUserVerification = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        if (req.body.action === "bio") {
+            req.body.isBio = false;
+        }
+        else if (req.body.action === "ori") {
+            req.body.isOrigin = false;
+        }
+        else if (req.body.action === "cont") {
+            req.body.isContact = false;
+        }
+        else if (req.body.action === "rel") {
+            req.body.isRelated = false;
+        }
+        else if (req.body.action === "doc") {
+            req.body.isDocument = false;
+        }
+        else if (req.body.action === "edu") {
+            req.body.isEducation = false;
+        }
+        else if (req.body.action === "pas") {
+            req.body.isEducationHistory = false;
+        }
+        if (req.body.status === "Approved") {
+            req.body.isOnVerification = false;
+            req.body.isVerified = true;
+        }
+        const userInfo = yield userInfoModel_1.UserInfo.findOneAndUpdate({ username: req.params.username }, req.body, {
+            new: true,
+        });
+        const user = yield userModel_1.User.findByIdAndUpdate(req.body.id, req.body, {
+            new: true,
+            runValidators: false,
+        });
+        if (req.body.status === "Rejected") {
+            const newNotification = yield (0, sendEmail_1.sendNotification)("verification_fail", {
+                username: String(user === null || user === void 0 ? void 0 : user.username),
+                receiverUsername: String(user === null || user === void 0 ? void 0 : user.username),
+                userId: String(user === null || user === void 0 ? void 0 : user._id),
+            });
+            (0, sendEmail_1.sendEmail)(String(user === null || user === void 0 ? void 0 : user.username), String(user === null || user === void 0 ? void 0 : user.email), "verification_fail");
+            app_1.io.emit(req.body.id, newNotification);
+        }
+        res.status(200).json({
+            userInfo,
+            user,
+            results: req.body.pastSchool,
+            message: "your account is updated  successfully",
+        });
+    }
+    catch (error) {
+        (0, errorHandler_1.handleError)(res, undefined, undefined, error);
+    }
+});
+exports.updateUserVerification = updateUserVerification;
 //-----------------FOLLOW USER--------------------//
 const followUser = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {

@@ -16,47 +16,48 @@ exports.sendNotification = void 0;
 exports.sendEmail = sendEmail;
 const nodemailer_1 = __importDefault(require("nodemailer"));
 const fs_1 = require("fs");
-const path_1 = __importDefault(require("path"));
 const emailModel_1 = require("../models/team/emailModel");
-function sendEmail(user, emailTemplateName, data) {
+const companyModel_1 = require("../models/team/companyModel");
+function sendEmail(username, userEmail, emailName, data) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
-            const templatePath = path_1.default.join(__dirname, "emailTemplates", `${emailTemplateName}.html`);
+            const templatePath = "emailTemplate.html";
             if (!(yield fs_1.promises.stat(templatePath).catch(() => false))) {
-                throw new Error(`Template file "${emailTemplateName}.html" not found`);
+                throw new Error(`Template file "${templatePath}" not found`);
             }
-            const templateContent = yield fs_1.promises.readFile(templatePath, "utf-8");
-            // Replace placeholders in the template
-            const emailContent = Object.keys(data).reduce((content, key) => {
-                const placeholder = new RegExp(`{{\\s*${key}\\s*}}`, "g");
-                return content.replace(placeholder, data[key]);
-            }, templateContent);
+            let templateContent = yield fs_1.promises.readFile(templatePath, "utf-8");
+            const email = yield emailModel_1.Email.findOne({ name: emailName });
+            const results = yield companyModel_1.Company.find();
+            const company = results[0];
+            templateContent = templateContent.replace("{{username}}", username);
+            templateContent = templateContent.replace("{{greetings}}", String(email === null || email === void 0 ? void 0 : email.greetings));
+            templateContent = templateContent.replace("{{logo}}", `${company === null || company === void 0 ? void 0 : company.domain}/images/logos/SchoolingLogo.png`);
+            templateContent = templateContent.replace("{{whiteLogo}}", `${company === null || company === void 0 ? void 0 : company.domain}/images/logos/WhiteSchoolingLogo.png`);
             // Create a nodemailer transporter
             const transporter = nodemailer_1.default.createTransport({
                 host: process.env.SMTP_HOST,
                 port: parseInt(process.env.SMTP_PORT || "587"),
                 secure: process.env.SMTP_SECURE === "true",
                 auth: {
-                    user: process.env.EMAIL_USERNAME,
+                    user: company.email,
                     pass: process.env.EMAIL_PASSWORD,
                 },
             });
             const mailOptions = {
                 from: `"Your App Name" <${process.env.EMAIL_USERNAME}>`,
-                to: user.email,
+                to: userEmail,
                 subject: "Your Subject Here",
-                html: emailContent,
+                html: templateContent,
             };
             yield transporter.sendMail(mailOptions);
-            console.log(`Email sent to ${user.email}`);
+            console.log(`Email sent to ${email}`);
         }
         catch (error) {
             if (error instanceof Error) {
                 console.error("Error sending email:", {
                     message: error.message,
                     stack: error.stack,
-                    user: user.email,
-                    template: emailTemplateName,
+                    user: userEmail,
                 });
             }
             else {

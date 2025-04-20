@@ -34,7 +34,8 @@ router.route("/people").get(searchUserInfo);
 router
   .route("/userinfo/:username")
   .get(getUserInfo)
-  .post(upload.any(), updateUserInfo);
+  .post(upload.any(), updateUserInfo)
+  .patch(upload.any(), updateUser);
 
 router
   .route("/:id")
