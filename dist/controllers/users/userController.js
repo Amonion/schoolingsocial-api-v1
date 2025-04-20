@@ -314,14 +314,27 @@ const updateUserVerification = (req, res) => __awaiter(void 0, void 0, void 0, f
                 receiverUsername: String(user === null || user === void 0 ? void 0 : user.username),
                 userId: String(user === null || user === void 0 ? void 0 : user._id),
             });
-            (0, sendEmail_1.sendEmail)(String(user === null || user === void 0 ? void 0 : user.username), String(user === null || user === void 0 ? void 0 : user.email), "verification_fail");
+            // sendEmail(
+            //   String(user?.username),
+            //   String(user?.email),
+            //   "verification_fail"
+            // );
             app_1.io.emit(req.body.id, newNotification);
+        }
+        else {
+            const newNotification = yield (0, sendEmail_1.sendNotification)("verification_successful", {
+                username: String(user === null || user === void 0 ? void 0 : user.username),
+                receiverUsername: String(user === null || user === void 0 ? void 0 : user.username),
+                userId: String(user === null || user === void 0 ? void 0 : user._id),
+            });
+            const notificationData = Object.assign(Object.assign({}, newNotification), { user });
+            app_1.io.emit(req.body.id, notificationData);
         }
         res.status(200).json({
             userInfo,
             user,
             results: req.body.pastSchool,
-            message: "your account is updated  successfully",
+            message: "The verification status has been sent to the user successfully.",
         });
     }
     catch (error) {

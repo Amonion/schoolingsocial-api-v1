@@ -349,19 +349,32 @@ export const updateUserVerification = async (
         receiverUsername: String(user?.username),
         userId: String(user?._id),
       });
-      sendEmail(
-        String(user?.username),
-        String(user?.email),
-        "verification_fail"
-      );
+      // sendEmail(
+      //   String(user?.username),
+      //   String(user?.email),
+      //   "verification_fail"
+      // );
+
       io.emit(req.body.id, newNotification);
+    } else {
+      const newNotification = await sendNotification(
+        "verification_successful",
+        {
+          username: String(user?.username),
+          receiverUsername: String(user?.username),
+          userId: String(user?._id),
+        }
+      );
+      const notificationData = { ...newNotification, user };
+      io.emit(req.body.id, notificationData);
     }
 
     res.status(200).json({
       userInfo,
       user,
       results: req.body.pastSchool,
-      message: "your account is updated  successfully",
+      message:
+        "The verification status has been sent to the user successfully.",
     });
   } catch (error) {
     handleError(res, undefined, undefined, error);

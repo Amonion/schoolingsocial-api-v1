@@ -22,7 +22,7 @@ router
     .route("/userinfo/:username")
     .get(userController_1.getUserInfo)
     .post(upload.any(), userController_1.updateUserInfo)
-    .patch(upload.any(), userController_1.updateUser);
+    .patch(upload.any(), userController_1.updateUserVerification);
 router
     .route("/:id")
     .get(userController_1.getUserById)

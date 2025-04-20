@@ -11,6 +11,7 @@ import {
   updateUserInfo,
   getUserInfo,
   searchUserInfo,
+  updateUserVerification,
   followUser,
 } from "../../controllers/users/userController";
 import {
@@ -35,7 +36,7 @@ router
   .route("/userinfo/:username")
   .get(getUserInfo)
   .post(upload.any(), updateUserInfo)
-  .patch(upload.any(), updateUser);
+  .patch(upload.any(), updateUserVerification);
 
 router
   .route("/:id")
