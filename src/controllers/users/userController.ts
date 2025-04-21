@@ -42,12 +42,12 @@ export const createUser = async (
   }
 };
 
-export const getUserById = async (
+export const getAUser = async (
   req: Request,
   res: Response
 ): Promise<Response | void> => {
   try {
-    const user = await User.findById(req.params.id);
+    const user = await User.findOne({ username: req.params.username });
     const followerId = req.query.userId;
     const follow = await Follower.findOne({
       userId: user?._id,

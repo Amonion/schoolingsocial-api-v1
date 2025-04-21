@@ -65,6 +65,7 @@ const FacultySchema: Schema = new Schema(
   {
     schoolId: { type: String },
     school: { type: String },
+    schoolUsername: { type: String },
     name: { type: String, default: "" },
     username: { type: String, default: "" },
     picture: { type: String, default: "" },
@@ -84,6 +85,7 @@ const DepartmentSchema: Schema = new Schema(
     schoolId: { type: String },
     facultyId: { type: String },
     faculty: { type: String },
+    facultyUsername: { type: String },
     name: { type: String, default: "" },
     username: { type: String, default: "" },
     picture: { type: String, default: "" },

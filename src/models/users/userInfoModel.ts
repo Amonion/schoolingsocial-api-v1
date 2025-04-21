@@ -48,6 +48,10 @@ const UserInfoSchema: Schema = new Schema(
     currentAcademicLevelName: { type: String, default: "" },
     currentSchoolLevel: { type: String, default: "" },
     currentSchoolPlaceId: { type: String, default: "" },
+    currentFaculty: { type: String, default: "" },
+    currentFacultyUsername: { type: String, default: "" },
+    currentDepartment: { type: String, default: "" },
+    currentDepartmentUsername: { type: String, default: "" },
 
     pastSchools: { type: String, default: "" },
     pastSchool: { type: Array, default: [] },
@@ -65,6 +69,7 @@ const UserInfoSchema: Schema = new Schema(
     nextKin: { type: String, default: "" },
     nextKinPhone: { type: String, default: "" },
     isOnVerification: { type: Boolean, default: false },
+    isSchoolRecorded: { type: Boolean, default: false },
     verifyingAt: { type: Date, default: null },
     verifiedAt: { type: Date, default: Date.now },
     dob: { type: Date, default: Date.now },

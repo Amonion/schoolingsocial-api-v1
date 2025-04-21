@@ -24,8 +24,8 @@ router
     .post(upload.any(), userController_1.updateUserInfo)
     .patch(upload.any(), userController_1.updateUserVerification);
 router
-    .route("/:id")
-    .get(userController_1.getUserById)
+    .route("/:username")
+    .get(userController_1.getAUser)
     .patch(upload.any(), userController_1.updateUser)
     .delete(userController_1.deleteUser);
 exports.default = router;

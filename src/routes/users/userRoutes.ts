@@ -3,7 +3,7 @@ import multer from "multer";
 const upload = multer();
 import { loginUser, getAuthUser } from "../../controllers/users/authController";
 import {
-  getUserById,
+  getAUser,
   getUsers,
   updateUser,
   deleteUser,
@@ -39,8 +39,8 @@ router
   .patch(upload.any(), updateUserVerification);
 
 router
-  .route("/:id")
-  .get(getUserById)
+  .route("/:username")
+  .get(getAUser)
   .patch(upload.any(), updateUser)
   .delete(deleteUser);
 

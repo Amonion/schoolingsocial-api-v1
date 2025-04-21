@@ -85,6 +85,7 @@ const UserSchema = new mongoose_1.Schema({
     isEducation: { type: Boolean, default: false },
     isAccountSet: { type: Boolean, default: false },
     isAccountOpen: { type: Boolean, default: false },
+    isSchoolRecorded: { type: Boolean, default: false },
     isSuspendeded: { type: Boolean, default: false },
     isDeleted: { type: Boolean, default: false },
     isFirstTime: { type: Boolean, default: true },

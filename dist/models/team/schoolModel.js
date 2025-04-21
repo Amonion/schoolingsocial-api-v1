@@ -80,6 +80,7 @@ exports.SchoolPayment = mongoose_1.default.model("SchoolPayment", SchoolPaymentS
 const FacultySchema = new mongoose_1.Schema({
     schoolId: { type: String },
     school: { type: String },
+    schoolUsername: { type: String },
     name: { type: String, default: "" },
     username: { type: String, default: "" },
     picture: { type: String, default: "" },
@@ -95,6 +96,7 @@ const DepartmentSchema = new mongoose_1.Schema({
     schoolId: { type: String },
     facultyId: { type: String },
     faculty: { type: String },
+    facultyUsername: { type: String },
     name: { type: String, default: "" },
     username: { type: String, default: "" },
     picture: { type: String, default: "" },

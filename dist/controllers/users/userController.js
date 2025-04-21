@@ -12,7 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.followUser = exports.updateUserVerification = exports.searchUserInfo = exports.getUserInfo = exports.update = exports.updateUserInfo = exports.deleteUser = exports.updateUser = exports.getUsers = exports.getUserById = exports.createUser = void 0;
+exports.followUser = exports.updateUserVerification = exports.searchUserInfo = exports.getUserInfo = exports.update = exports.updateUserInfo = exports.deleteUser = exports.updateUser = exports.getUsers = exports.getAUser = exports.createUser = void 0;
 const userModel_1 = require("../../models/users/userModel");
 const userInfoModel_1 = require("../../models/users/userInfoModel");
 const staffModel_1 = require("../../models/team/staffModel");
@@ -46,9 +46,9 @@ const createUser = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
     }
 });
 exports.createUser = createUser;
-const getUserById = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+const getAUser = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const user = yield userModel_1.User.findById(req.params.id);
+        const user = yield userModel_1.User.findOne({ username: req.params.username });
         const followerId = req.query.userId;
         const follow = yield postModel_1.Follower.findOne({
             userId: user === null || user === void 0 ? void 0 : user._id,
@@ -64,7 +64,7 @@ const getUserById = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
         (0, errorHandler_1.handleError)(res, undefined, undefined, error);
     }
 });
-exports.getUserById = getUserById;
+exports.getAUser = getAUser;
 const getUsers = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const result = yield (0, query_1.queryData)(userModel_1.User, req);

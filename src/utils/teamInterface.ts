@@ -5,6 +5,8 @@ export interface IAcademicLevel extends Document {
   level: number;
   maxLevel: number;
   levelName: string;
+  section: string;
+  subsection: string;
   institution: string;
   certificate: string;
   certificateName: string;
