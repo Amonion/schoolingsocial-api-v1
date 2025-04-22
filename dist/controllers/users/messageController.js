@@ -15,12 +15,9 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.updateNotification = exports.getNotifications = exports.createUser = void 0;
 const userModel_1 = require("../../models/users/userModel");
 const userInfoModel_1 = require("../../models/users/userInfoModel");
-const staffModel_1 = require("../../models/team/staffModel");
 const errorHandler_1 = require("../../utils/errorHandler");
 const query_1 = require("../../utils/query");
-const fileUpload_1 = require("../../utils/fileUpload");
 const bcryptjs_1 = __importDefault(require("bcryptjs"));
-const postModel_1 = require("../../models/users/postModel");
 const emailModel_1 = require("../../models/team/emailModel");
 const createUser = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
@@ -67,44 +64,20 @@ const getNotifications = (req, res) => __awaiter(void 0, void 0, void 0, functio
 exports.getNotifications = getNotifications;
 const updateNotification = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const uploadedFiles = yield (0, fileUpload_1.uploadFilesToS3)(req);
-        uploadedFiles.forEach((file) => {
-            req.body[file.fieldName] = file.s3Url;
+        const notifications = JSON.parse(req.body.notifications);
+        const ids = notifications.map((doc) => doc._id);
+        yield emailModel_1.UserNotification.updateMany({ _id: { $in: ids } }, { $set: { unread: false } });
+        const updatedNotifications = yield emailModel_1.UserNotification.find({
+            _id: { $in: ids },
         });
-        const user = yield userModel_1.User.findByIdAndUpdate(req.params.id, req.body, {
-            new: true,
-            runValidators: true,
+        const unread = yield emailModel_1.UserNotification.countDocuments({
+            username: req.params.username,
+            unread: true,
         });
-        if (!user) {
-            return res.status(404).json({ message: "User not found" });
-        }
-        if (req.body.picture) {
-            yield postModel_1.Post.updateMany({ userId: req.params.id }, { picture: req.body.picture });
-        }
-        if (req.body.isStaff) {
-            const staff = yield staffModel_1.Staff.findOne({ userId: req.params.id });
-            if (staff) {
-                yield staffModel_1.Staff.findOneAndUpdate({ userId: req.body.id }, req.body);
-            }
-            else {
-                yield staffModel_1.Staff.create(req.body);
-            }
-            const result = yield (0, query_1.queryData)(userModel_1.User, req);
-            const { page, page_size, count, results } = result;
-            res.status(200).json({
-                message: "User was updated successfully",
-                results,
-                count,
-                page,
-                page_size,
-            });
-        }
-        else if (req.body.media || req.body.picture || req.body.intro) {
-            res.status(200).json({
-                message: "Your profile was updated successfully",
-                data: user,
-            });
-        }
+        res.status(200).json({
+            results: updatedNotifications,
+            uread: unread,
+        });
     }
     catch (error) {
         (0, errorHandler_1.handleError)(res, undefined, undefined, error);

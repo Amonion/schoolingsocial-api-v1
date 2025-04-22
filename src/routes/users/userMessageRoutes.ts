@@ -20,7 +20,10 @@ import {
 
 const router = express.Router();
 
-router.route("/notifications").get(getNotifications);
+router
+  .route("/notifications")
+  .get(getNotifications)
+  .patch(upload.any(), updateNotification);
 router.route("/friends").get(friendsChats);
 router.route("/add-searched").get(addSearchedChats);
 router.route("/save").patch(upload.any(), saveChats).get(getSaveChats);
@@ -29,6 +32,8 @@ router.route("/search").get(searchChats);
 router.route("/search-fav").get(searchFavChats);
 router.route("/user-chats").get(getUserChats);
 router.route("/mass-delete").post(deleteChats);
-router.route("/notifications/:id").patch(upload.any(), updateNotification);
+router
+  .route("/notifications/:username")
+  .patch(upload.any(), updateNotification);
 
 export default router;

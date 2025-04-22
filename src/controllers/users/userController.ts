@@ -10,6 +10,8 @@ import bcrypt from "bcryptjs";
 import { Follower, Post } from "../../models/users/postModel";
 import { io } from "../../app";
 import { sendEmail, sendNotification } from "../../utils/sendEmail";
+import { AcademicLevel } from "../../models/team/academicLevelModel";
+import { School } from "../../models/team/schoolModel";
 
 export const createUser = async (
   req: Request,
@@ -159,8 +161,69 @@ export const updateUserInfo = async (
         update(req, res);
       }
       break;
+    case "Education":
+      if (req.body.isNew) {
+        const result = await School.findOne({
+          isNew: true,
+          name: req.body.currentSchoolName,
+        });
+        const level = await AcademicLevel.findOne({
+          country: req.body.currentSchoolCountry,
+          levelName: req.body.currentAcademicLevelName,
+        });
+        const form = {
+          institutions: [level?.institution],
+          levels: [level],
+          name: req.body.currentSchoolName,
+          area: req.body.currentSchoolArea,
+          state: req.body.currentSchoolState,
+          country: req.body.currentSchoolCountry,
+          continent: req.body.currentSchoolContinent,
+          isNew: true,
+        };
+
+        if (!result) {
+          await School.create(form);
+          const newSchools = await School.countDocuments({ isNew: true });
+          io.emit("team", { action: "new", type: "school", newSchools });
+        } else {
+          await School.findByIdAndUpdate(level?._id, form);
+        }
+      }
+      update(req, res);
+      break;
     case "EducationHistory":
-      req.body.pastSchool = JSON.parse(req.body.pastSchools);
+      req.body.pastSchools = JSON.parse(req.body.pastSchools);
+      const pasts = req.body.pastSchools;
+      for (let i = 0; i < pasts.length; i++) {
+        const el = pasts[i];
+        const result = await School.findOne({
+          isNew: true,
+          name: el.schoolName,
+        });
+        const level = await AcademicLevel.findOne({
+          country: el.schoolCountry,
+          level: el.academicLevel,
+        });
+        const form = {
+          institutions: [level?.institution],
+          levels: [level],
+          name: el.schoolName,
+          area: el.schoolArea,
+          state: el.schoolState,
+          country: el.schoolCountry,
+          continent: el.schoolContinent,
+          isNew: true,
+        };
+
+        if (el.isNew && !result) {
+          await School.create(form);
+          const newSchools = await School.countDocuments({ isNew: true });
+          io.emit("team", { action: "new", type: "school", newSchools });
+        } else if (el.isNew && result) {
+          await School.findByIdAndUpdate(level?._id, form);
+        }
+      }
       update(req, res);
       break;
     case "EducationDocument":
@@ -171,8 +234,8 @@ export const updateUserInfo = async (
       });
       pastSchools[req.body.number].schoolCertificate = req.body.certificate;
       pastSchools[req.body.number].schoolTempCertificate = undefined;
-      req.body.pastSchool = pastSchools;
-      req.body.pastSchools = JSON.stringify(pastSchools);
+      req.body.pastSchools = pastSchools;
+      // req.body.pastSchools = JSON.stringify(pastSchools);
       update(req, res);
       break;
     case "Document":
@@ -270,8 +333,11 @@ export const update = async (req: Request, res: Response): Promise<void> => {
           userId: user._id,
         }
       );
+      const verifyingUsers = await User.countDocuments({
+        isOnVerification: true,
+      });
       io.emit(req.body.ID, newNotification);
-      io.emit("team", { action: "verifying", type: "stat" });
+      io.emit("team", { action: "verifying", type: "stat", verifyingUsers });
     }
 
     res.status(200).json({

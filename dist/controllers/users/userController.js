@@ -23,6 +23,8 @@ const bcryptjs_1 = __importDefault(require("bcryptjs"));
 const postModel_1 = require("../../models/users/postModel");
 const app_1 = require("../../app");
 const sendEmail_1 = require("../../utils/sendEmail");
+const academicLevelModel_1 = require("../../models/team/academicLevelModel");
+const schoolModel_1 = require("../../models/team/schoolModel");
 const createUser = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const { email, signupIp, password } = req.body;
@@ -152,8 +154,69 @@ const updateUserInfo = (req, res) => __awaiter(void 0, void 0, void 0, function*
                 (0, exports.update)(req, res);
             }
             break;
+        case "Education":
+            if (req.body.isNew) {
+                const result = yield schoolModel_1.School.findOne({
+                    isNew: true,
+                    name: req.body.currentSchoolName,
+                });
+                const level = yield academicLevelModel_1.AcademicLevel.findOne({
+                    country: req.body.currentSchoolCountry,
+                    levelName: req.body.currentAcademicLevelName,
+                });
+                const form = {
+                    institutions: [level === null || level === void 0 ? void 0 : level.institution],
+                    levels: [level],
+                    name: req.body.currentSchoolName,
+                    area: req.body.currentSchoolArea,
+                    state: req.body.currentSchoolState,
+                    country: req.body.currentSchoolCountry,
+                    continent: req.body.currentSchoolContinent,
+                    isNew: true,
+                };
+                if (!result) {
+                    yield schoolModel_1.School.create(form);
+                    const newSchools = yield schoolModel_1.School.countDocuments({ isNew: true });
+                    app_1.io.emit("team", { action: "new", type: "school", newSchools });
+                }
+                else {
+                    yield schoolModel_1.School.findByIdAndUpdate(level === null || level === void 0 ? void 0 : level._id, form);
+                }
+            }
+            (0, exports.update)(req, res);
+            break;
         case "EducationHistory":
-            req.body.pastSchool = JSON.parse(req.body.pastSchools);
+            req.body.pastSchools = JSON.parse(req.body.pastSchools);
+            const pasts = req.body.pastSchools;
+            for (let i = 0; i < pasts.length; i++) {
+                const el = pasts[i];
+                const result = yield schoolModel_1.School.findOne({
+                    isNew: true,
+                    name: el.schoolName,
+                });
+                const level = yield academicLevelModel_1.AcademicLevel.findOne({
+                    country: el.schoolCountry,
+                    level: el.academicLevel,
+                });
+                const form = {
+                    institutions: [level === null || level === void 0 ? void 0 : level.institution],
+                    levels: [level],
+                    name: el.schoolName,
+                    area: el.schoolArea,
+                    state: el.schoolState,
+                    country: el.schoolCountry,
+                    continent: el.schoolContinent,
+                    isNew: true,
+                };
+                if (el.isNew && !result) {
+                    yield schoolModel_1.School.create(form);
+                    const newSchools = yield schoolModel_1.School.countDocuments({ isNew: true });
+                    app_1.io.emit("team", { action: "new", type: "school", newSchools });
+                }
+                else if (el.isNew && result) {
+                    yield schoolModel_1.School.findByIdAndUpdate(level === null || level === void 0 ? void 0 : level._id, form);
+                }
+            }
             (0, exports.update)(req, res);
             break;
         case "EducationDocument":
@@ -164,8 +227,8 @@ const updateUserInfo = (req, res) => __awaiter(void 0, void 0, void 0, function*
             });
             pastSchools[req.body.number].schoolCertificate = req.body.certificate;
             pastSchools[req.body.number].schoolTempCertificate = undefined;
-            req.body.pastSchool = pastSchools;
-            req.body.pastSchools = JSON.stringify(pastSchools);
+            req.body.pastSchools = pastSchools;
+            // req.body.pastSchools = JSON.stringify(pastSchools);
             (0, exports.update)(req, res);
             break;
         case "Document":
@@ -242,8 +305,11 @@ const update = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
                 receiverUsername: String(user.username),
                 userId: user._id,
             });
+            const verifyingUsers = yield userModel_1.User.countDocuments({
+                isOnVerification: true,
+            });
             app_1.io.emit(req.body.ID, newNotification);
-            app_1.io.emit("team", { action: "verifying", type: "stat" });
+            app_1.io.emit("team", { action: "verifying", type: "stat", verifyingUsers });
         }
         res.status(200).json({
             userInfo,

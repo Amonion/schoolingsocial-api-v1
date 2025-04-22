@@ -53,8 +53,7 @@ const UserInfoSchema: Schema = new Schema(
     currentDepartment: { type: String, default: "" },
     currentDepartmentUsername: { type: String, default: "" },
 
-    pastSchools: { type: String, default: "" },
-    pastSchool: { type: Array, default: [] },
+    pastSchools: { type: Array, default: [] },
 
     accountName: { type: String, default: "" },
     accountNumber: { type: String, default: "" },
