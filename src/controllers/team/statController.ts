@@ -6,7 +6,9 @@ import { User } from "../../models/users/userModel";
 import { Chat } from "../../models/users/chatModel";
 import { handleError } from "../../utils/errorHandler";
 import { startOfMonth, subMonths } from "date-fns";
+import { School } from "../../models/team/schoolModel";
 
+//-----------------USERS--------------------//
 export const updateVisit = async (data: IUserData) => {
   await UserStat.findOneAndUpdate(
     {
@@ -93,6 +95,9 @@ export const getUsersStat = async (
     const verifyingUsers = await User.countDocuments({
       isOnVerification: true,
     });
+    const verifiedUsers = await User.countDocuments({
+      isVerified: true,
+    });
     const totalUsers = await User.countDocuments();
     const thisMonthOnline = await UserStat.countDocuments({
       online: true,
@@ -105,6 +110,10 @@ export const getUsersStat = async (
     const thisMonthUsers = await User.countDocuments({
       createdAt: { $gte: currentMonthStart },
     });
+    const thisMonthVerifiedUsers = await User.countDocuments({
+      isVerified: true,
+      createdAt: { $gte: currentMonthStart },
+    });
 
     const lastMonthOnline = await UserStat.countDocuments({
       online: true,
@@ -115,6 +124,10 @@ export const getUsersStat = async (
       verifyingAt: { $gte: lastMonthStart, $lt: currentMonthStart },
     });
     const lastMonthUsers = await User.countDocuments({
+      createdAt: { $gte: lastMonthStart, $lt: currentMonthStart },
+    });
+    const lastMonthVerifiedUsers = await User.countDocuments({
+      isVerified: true,
       createdAt: { $gte: lastMonthStart, $lt: currentMonthStart },
     });
 
@@ -144,13 +157,129 @@ export const getUsersStat = async (
       totalUsersIncrease = 100;
     }
 
+    let verifiedUsersIncrease = 0;
+    if (lastMonthVerifiedUsers > 0) {
+      verifiedUsersIncrease =
+        ((thisMonthVerifiedUsers - lastMonthVerifiedUsers) /
+          lastMonthVerifiedUsers) *
+        100;
+    } else if (thisMonthVerifiedUsers > 0) {
+      verifiedUsersIncrease = 100;
+    }
+
     res.status(200).json({
       onlineUsers,
       onlineIncrease,
+      verifiedUsers,
+      verifiedUsersIncrease,
       verifyingUsers,
       verificationIncrease,
       totalUsers,
       totalUsersIncrease,
+    });
+  } catch (error) {
+    handleError(res, undefined, undefined, error);
+  }
+};
+
+//-----------------Schools--------------------//
+export const getSchoolStat = async (
+  req: Request,
+  res: Response
+): Promise<Response | void> => {
+  try {
+    const now = new Date();
+    const currentMonthStart = startOfMonth(now);
+    const lastMonthStart = startOfMonth(subMonths(now, 1));
+
+    const totalSchools = await School.countDocuments();
+    const thisMonthTotalSchools = await School.countDocuments({
+      createdAt: { $gte: currentMonthStart },
+    });
+    const lastMonthTotalSchools = await School.countDocuments({
+      createdAt: { $gte: lastMonthStart, $lt: currentMonthStart },
+    });
+
+    const verifiedSchools = await School.countDocuments({
+      isVerified: true,
+    });
+    const thisMonthVerifiedSchools = await School.countDocuments({
+      isVerified: true,
+      createdAt: { $gte: currentMonthStart },
+    });
+    const lastMonthVerifiedSchools = await School.countDocuments({
+      isVerified: true,
+      createdAt: { $gte: lastMonthStart, $lt: currentMonthStart },
+    });
+
+    const newSchools = await School.countDocuments({ isNew: true });
+    const thisMonthNewSchools = await School.countDocuments({
+      isNew: true,
+      createdAt: { $gte: currentMonthStart },
+    });
+    const lastMonthNewSchools = await School.countDocuments({
+      isNew: true,
+      createdAt: { $gte: lastMonthStart, $lt: currentMonthStart },
+    });
+
+    const recordedSchools = await School.countDocuments({ isRecorded: true });
+    const thisMonthRecordedSchools = await School.countDocuments({
+      isRecorded: true,
+      createdAt: { $gte: currentMonthStart },
+    });
+    const lastMonthRecordedSchools = await School.countDocuments({
+      isRecorded: true,
+      createdAt: { $gte: lastMonthStart, $lt: currentMonthStart },
+    });
+
+    let totalSchoolIncrease = 0;
+    if (lastMonthTotalSchools > 0) {
+      totalSchoolIncrease =
+        ((thisMonthTotalSchools - lastMonthTotalSchools) /
+          lastMonthTotalSchools) *
+        100;
+    } else if (thisMonthTotalSchools > 0) {
+      totalSchoolIncrease = 100;
+    }
+
+    let verifiedSchoolIncrease = 0;
+    if (lastMonthVerifiedSchools > 0) {
+      verifiedSchoolIncrease =
+        ((thisMonthVerifiedSchools - lastMonthVerifiedSchools) /
+          lastMonthVerifiedSchools) *
+        100;
+    } else if (thisMonthVerifiedSchools > 0) {
+      verifiedSchoolIncrease = 100;
+    }
+
+    let newSchoolIncrease = 0;
+    if (lastMonthNewSchools > 0) {
+      newSchoolIncrease =
+        ((thisMonthNewSchools - lastMonthNewSchools) / lastMonthNewSchools) *
+        100;
+    } else if (thisMonthNewSchools > 0) {
+      newSchoolIncrease = 100;
+    }
+
+    let recordedSchoolIncrease = 0;
+    if (lastMonthRecordedSchools > 0) {
+      recordedSchoolIncrease =
+        ((thisMonthRecordedSchools - lastMonthRecordedSchools) /
+          lastMonthRecordedSchools) *
+        100;
+    } else if (thisMonthRecordedSchools > 0) {
+      recordedSchoolIncrease = 100;
+    }
+
+    res.status(200).json({
+      totalSchools,
+      totalSchoolIncrease,
+      verifiedSchools,
+      verifiedSchoolIncrease,
+      newSchools,
+      newSchoolIncrease,
+      recordedSchools,
+      recordedSchoolIncrease,
     });
   } catch (error) {
     handleError(res, undefined, undefined, error);

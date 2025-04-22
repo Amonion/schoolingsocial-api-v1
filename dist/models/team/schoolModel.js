@@ -53,6 +53,9 @@ const SchoolSchema = new mongoose_1.Schema({
     description: { type: String, default: "" },
     media: { type: String, default: "" },
     picture: { type: String, default: "" },
+    isVerified: { type: Boolean, default: false },
+    isNew: { type: Boolean, default: false },
+    isRecorded: { type: Boolean, default: false },
     createdAt: { type: Date, default: Date.now },
 }, {
     timestamps: true,

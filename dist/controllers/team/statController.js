@@ -9,13 +9,15 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getUsersStat = exports.visitorLeft = exports.updateVisit = void 0;
+exports.getSchoolStat = exports.getUsersStat = exports.visitorLeft = exports.updateVisit = void 0;
 const usersStatMode_1 = require("../../models/users/usersStatMode");
 const app_1 = require("../../app");
 const userModel_1 = require("../../models/users/userModel");
 const chatModel_1 = require("../../models/users/chatModel");
 const errorHandler_1 = require("../../utils/errorHandler");
 const date_fns_1 = require("date-fns");
+const schoolModel_1 = require("../../models/team/schoolModel");
+//-----------------USERS--------------------//
 const updateVisit = (data) => __awaiter(void 0, void 0, void 0, function* () {
     yield usersStatMode_1.UserStat.findOneAndUpdate({
         $or: [{ ip: data.ip }, { username: data.username }],
@@ -84,6 +86,9 @@ const getUsersStat = (req, res) => __awaiter(void 0, void 0, void 0, function* (
         const verifyingUsers = yield userModel_1.User.countDocuments({
             isOnVerification: true,
         });
+        const verifiedUsers = yield userModel_1.User.countDocuments({
+            isVerified: true,
+        });
         const totalUsers = yield userModel_1.User.countDocuments();
         const thisMonthOnline = yield usersStatMode_1.UserStat.countDocuments({
             online: true,
@@ -96,6 +101,10 @@ const getUsersStat = (req, res) => __awaiter(void 0, void 0, void 0, function* (
         const thisMonthUsers = yield userModel_1.User.countDocuments({
             createdAt: { $gte: currentMonthStart },
         });
+        const thisMonthVerifiedUsers = yield userModel_1.User.countDocuments({
+            isVerified: true,
+            createdAt: { $gte: currentMonthStart },
+        });
         const lastMonthOnline = yield usersStatMode_1.UserStat.countDocuments({
             online: true,
             createdAt: { $gte: lastMonthStart, $lt: currentMonthStart },
@@ -105,6 +114,10 @@ const getUsersStat = (req, res) => __awaiter(void 0, void 0, void 0, function* (
             verifyingAt: { $gte: lastMonthStart, $lt: currentMonthStart },
         });
         const lastMonthUsers = yield userModel_1.User.countDocuments({
+            createdAt: { $gte: lastMonthStart, $lt: currentMonthStart },
+        });
+        const lastMonthVerifiedUsers = yield userModel_1.User.countDocuments({
+            isVerified: true,
             createdAt: { $gte: lastMonthStart, $lt: currentMonthStart },
         });
         let onlineIncrease = 0;
@@ -133,9 +146,21 @@ const getUsersStat = (req, res) => __awaiter(void 0, void 0, void 0, function* (
         else if (thisMonthUsers > 0) {
             totalUsersIncrease = 100;
         }
+        let verifiedUsersIncrease = 0;
+        if (lastMonthVerifiedUsers > 0) {
+            verifiedUsersIncrease =
+                ((thisMonthVerifiedUsers - lastMonthVerifiedUsers) /
+                    lastMonthVerifiedUsers) *
+                    100;
+        }
+        else if (thisMonthVerifiedUsers > 0) {
+            verifiedUsersIncrease = 100;
+        }
         res.status(200).json({
             onlineUsers,
             onlineIncrease,
+            verifiedUsers,
+            verifiedUsersIncrease,
             verifyingUsers,
             verificationIncrease,
             totalUsers,
@@ -147,3 +172,100 @@ const getUsersStat = (req, res) => __awaiter(void 0, void 0, void 0, function* (
     }
 });
 exports.getUsersStat = getUsersStat;
+//-----------------Schools--------------------//
+const getSchoolStat = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const now = new Date();
+        const currentMonthStart = (0, date_fns_1.startOfMonth)(now);
+        const lastMonthStart = (0, date_fns_1.startOfMonth)((0, date_fns_1.subMonths)(now, 1));
+        const totalSchools = yield schoolModel_1.School.countDocuments();
+        const thisMonthTotalSchools = yield schoolModel_1.School.countDocuments({
+            createdAt: { $gte: currentMonthStart },
+        });
+        const lastMonthTotalSchools = yield schoolModel_1.School.countDocuments({
+            createdAt: { $gte: lastMonthStart, $lt: currentMonthStart },
+        });
+        const verifiedSchools = yield schoolModel_1.School.countDocuments({
+            isVerified: true,
+        });
+        const thisMonthVerifiedSchools = yield schoolModel_1.School.countDocuments({
+            isVerified: true,
+            createdAt: { $gte: currentMonthStart },
+        });
+        const lastMonthVerifiedSchools = yield schoolModel_1.School.countDocuments({
+            isVerified: true,
+            createdAt: { $gte: lastMonthStart, $lt: currentMonthStart },
+        });
+        const newSchools = yield schoolModel_1.School.countDocuments({ isNew: true });
+        const thisMonthNewSchools = yield schoolModel_1.School.countDocuments({
+            isNew: true,
+            createdAt: { $gte: currentMonthStart },
+        });
+        const lastMonthNewSchools = yield schoolModel_1.School.countDocuments({
+            isNew: true,
+            createdAt: { $gte: lastMonthStart, $lt: currentMonthStart },
+        });
+        const recordedSchools = yield schoolModel_1.School.countDocuments({ isRecorded: true });
+        const thisMonthRecordedSchools = yield schoolModel_1.School.countDocuments({
+            isRecorded: true,
+            createdAt: { $gte: currentMonthStart },
+        });
+        const lastMonthRecordedSchools = yield schoolModel_1.School.countDocuments({
+            isRecorded: true,
+            createdAt: { $gte: lastMonthStart, $lt: currentMonthStart },
+        });
+        let totalSchoolIncrease = 0;
+        if (lastMonthTotalSchools > 0) {
+            totalSchoolIncrease =
+                ((thisMonthTotalSchools - lastMonthTotalSchools) /
+                    lastMonthTotalSchools) *
+                    100;
+        }
+        else if (thisMonthTotalSchools > 0) {
+            totalSchoolIncrease = 100;
+        }
+        let verifiedSchoolIncrease = 0;
+        if (lastMonthVerifiedSchools > 0) {
+            verifiedSchoolIncrease =
+                ((thisMonthVerifiedSchools - lastMonthVerifiedSchools) /
+                    lastMonthVerifiedSchools) *
+                    100;
+        }
+        else if (thisMonthVerifiedSchools > 0) {
+            verifiedSchoolIncrease = 100;
+        }
+        let newSchoolIncrease = 0;
+        if (lastMonthNewSchools > 0) {
+            newSchoolIncrease =
+                ((thisMonthNewSchools - lastMonthNewSchools) / lastMonthNewSchools) *
+                    100;
+        }
+        else if (thisMonthNewSchools > 0) {
+            newSchoolIncrease = 100;
+        }
+        let recordedSchoolIncrease = 0;
+        if (lastMonthRecordedSchools > 0) {
+            recordedSchoolIncrease =
+                ((thisMonthRecordedSchools - lastMonthRecordedSchools) /
+                    lastMonthRecordedSchools) *
+                    100;
+        }
+        else if (thisMonthRecordedSchools > 0) {
+            recordedSchoolIncrease = 100;
+        }
+        res.status(200).json({
+            totalSchools,
+            totalSchoolIncrease,
+            verifiedSchools,
+            verifiedSchoolIncrease,
+            newSchools,
+            newSchoolIncrease,
+            recordedSchools,
+            recordedSchoolIncrease,
+        });
+    }
+    catch (error) {
+        (0, errorHandler_1.handleError)(res, undefined, undefined, error);
+    }
+});
+exports.getSchoolStat = getSchoolStat;

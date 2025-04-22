@@ -7,4 +7,5 @@ const express_1 = __importDefault(require("express"));
 const statController_1 = require("../../controllers/team/statController");
 const router = express_1.default.Router();
 router.route("/").get(statController_1.getUsersStat);
+router.route("/schools").get(statController_1.getSchoolStat);
 exports.default = router;

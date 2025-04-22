@@ -72,7 +72,7 @@ const UserInfoSchema: Schema = new Schema(
     isSchoolRecorded: { type: Boolean, default: false },
     verifyingAt: { type: Date, default: null },
     verifiedAt: { type: Date, default: Date.now },
-    dob: { type: Date, default: Date.now },
+    dob: { type: Date, default: null },
     createdAt: { type: Date, default: Date.now },
   },
   {

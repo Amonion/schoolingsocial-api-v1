@@ -36,6 +36,7 @@ export const createSchool = async (
   const institutions = levels.map((item) => item.institution);
   req.body.levels = levels;
   req.body.institutions = institutions;
+  req.body.isRecorded = true;
   createItem(req, res, School, "School was created successfully");
 };
 
@@ -76,6 +77,15 @@ export const updateSchool = async (req: Request, res: Response) => {
       ["logo", "media", "picture"],
       ["School not found", "School was updated successfully"]
     );
+  } catch (error) {
+    handleError(res, undefined, undefined, error);
+  }
+};
+
+export const recordAll = async (req: Request, res: Response) => {
+  try {
+    const response = await School.updateMany({ isRecorded: true });
+    res.status(200).json({ response });
   } catch (error) {
     handleError(res, undefined, undefined, error);
   }

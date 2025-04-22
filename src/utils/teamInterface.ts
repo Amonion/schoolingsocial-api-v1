@@ -317,6 +317,9 @@ export interface ISchool extends Document {
   countryFlag: string;
   longitude: number;
   latitude: number;
+  isVerified: boolean;
+  isNew: boolean;
+  isRecorded: boolean;
 }
 
 export interface ISchoolPayment extends Document {

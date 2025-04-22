@@ -9,7 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.deleteFaculty = exports.updateFaculty = exports.getFaculties = exports.getFacultyById = exports.createFaculty = exports.deleteDepartment = exports.updateDepartment = exports.getDepartments = exports.getDepartmentById = exports.createDepartment = exports.deleteCourse = exports.updateCourse = exports.getCourses = exports.getCourseById = exports.createCourse = exports.searchSchools = exports.deleteSchoolPayment = exports.updateSchoolPayment = exports.getSchoolPayments = exports.getSchoolPaymentById = exports.createSchoolPayment = exports.updateLevels = exports.searchSchool = exports.deleteSchool = exports.updateSchool = exports.getSchools = exports.getSchoolById = exports.createSchool = void 0;
+exports.deleteFaculty = exports.updateFaculty = exports.getFaculties = exports.getFacultyById = exports.createFaculty = exports.deleteDepartment = exports.updateDepartment = exports.getDepartments = exports.getDepartmentById = exports.createDepartment = exports.deleteCourse = exports.updateCourse = exports.getCourses = exports.getCourseById = exports.createCourse = exports.searchSchools = exports.deleteSchoolPayment = exports.updateSchoolPayment = exports.getSchoolPayments = exports.getSchoolPaymentById = exports.createSchoolPayment = exports.updateLevels = exports.searchSchool = exports.deleteSchool = exports.recordAll = exports.updateSchool = exports.getSchools = exports.getSchoolById = exports.createSchool = void 0;
 const errorHandler_1 = require("../../utils/errorHandler");
 const schoolModel_1 = require("../../models/team/schoolModel");
 const query_1 = require("../../utils/query");
@@ -18,6 +18,7 @@ const createSchool = (req, res) => __awaiter(void 0, void 0, void 0, function* (
     const institutions = levels.map((item) => item.institution);
     req.body.levels = levels;
     req.body.institutions = institutions;
+    req.body.isRecorded = true;
     (0, query_1.createItem)(req, res, schoolModel_1.School, "School was created successfully");
 });
 exports.createSchool = createSchool;
@@ -57,6 +58,16 @@ const updateSchool = (req, res) => __awaiter(void 0, void 0, void 0, function* (
     }
 });
 exports.updateSchool = updateSchool;
+const recordAll = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const response = yield schoolModel_1.School.updateMany({ isRecorded: true });
+        res.status(200).json({ response });
+    }
+    catch (error) {
+        (0, errorHandler_1.handleError)(res, undefined, undefined, error);
+    }
+});
+exports.recordAll = recordAll;
 const deleteSchool = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     yield (0, query_1.deleteItem)(req, res, schoolModel_1.School, ["logo", "media", "picture"], "School not found");
 });

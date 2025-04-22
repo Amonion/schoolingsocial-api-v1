@@ -30,12 +30,14 @@ import {
   updateFaculty,
   deleteFaculty,
   createFaculty,
+  recordAll,
 } from "../../controllers/team/schoolController";
 
 const router = express.Router();
 
 router.route("/search").get(searchSchools);
 router.route("/find").get(searchSchool);
+router.route("/record-all").get(recordAll);
 router.route("/").get(getSchools).post(upload.any(), createSchool);
 router
   .route("/payments")
