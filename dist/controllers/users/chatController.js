@@ -9,7 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.deleteChats = exports.deleteChat = exports.addSearchedChats = exports.unSaveChats = exports.pinChats = exports.saveChats = exports.getSaveChats = exports.readChats = exports.getUserChats = exports.friendsChats = exports.searchFavChats = exports.searchChats = exports.createChat = exports.confirmChats = void 0;
+exports.deleteChats = exports.deleteChat = exports.addSearchedChats = exports.unSaveChats = exports.pinChats = exports.saveChats = exports.getSaveChats = exports.readChats = exports.getUserChats = exports.friendsChats = exports.searchFavChats = exports.searchChats = exports.createChat = void 0;
 const chatModel_1 = require("../../models/users/chatModel");
 const errorHandler_1 = require("../../utils/errorHandler");
 const query_1 = require("../../utils/query");
@@ -20,36 +20,63 @@ const setConnectionKey = (id1, id2) => {
     const participants = [id1, id2].sort();
     return participants.join("");
 };
-const confirmChats = (data) => __awaiter(void 0, void 0, void 0, function* () {
-    try {
-        yield chatModel_1.Chat.updateMany({ _id: { $in: data.ids } }, { $set: { received: true } });
-        const updatedChats = yield chatModel_1.Chat.find({ _id: { $in: data.ids } });
-        return {
-            key: updatedChats[0].connection,
-            data: updatedChats,
-            receiverId: data.receiverId,
-            userId: data.userId,
-        };
-    }
-    catch (error) {
-        console.log(error);
-    }
-});
-exports.confirmChats = confirmChats;
+// export const confirmChats = async (data: Receive) => {
+//   try {
+//     await Chat.updateMany(
+//       { _id: { $in: data.ids } },
+//       { $set: { isRead: true } }
+//     );
+//     const updatedChats = await Chat.find({ _id: { $in: data.ids } });
+//     const confirmResponse = {
+//       key: updatedChats[0].connection,
+//       data: updatedChats,
+//       receiverId: data.receiverId,
+//       userId: data.userId,
+//     };
+//     io.emit("confirmResponse", confirmResponse);
+//   } catch (error) {
+//     console.log(error);
+//   }
+// };
 const createChat = (data) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const connection = setConnectionKey(data.userId, data.receiverId);
+        const connection = setConnectionKey(data.username, data.receiverUsername);
         const prev = yield chatModel_1.Chat.findOne({
             connection: connection,
         }).sort({ createdAt: -1 });
         data.connection = connection;
-        const received = yield chatModel_1.Chat.findOne({ receiverId: data.userId });
+        const received = yield chatModel_1.Chat.findOne({ receiverUsername: data.username });
         data.isFriends = received ? true : false;
-        const unread = yield chatModel_1.Chat.countDocuments({
+        const unreadReceiver = yield chatModel_1.Chat.countDocuments({
             connection: connection,
-            isReadIds: { $nin: [data.userId] },
+            receiverUsername: data.receiverUsername,
+            isRead: false,
         });
-        data.unread = unread;
+        const unreadUser = yield chatModel_1.Chat.countDocuments({
+            connection: connection,
+            username: data.username,
+            isRead: false,
+        });
+        data.unreadReceiver = unreadReceiver + 1;
+        data.unreadUser = unreadUser;
+        data.isSent = true;
+        const sendCreatedChat = (post, isFriends) => {
+            app_1.io.emit(`createChat${connection}`, {
+                key: connection,
+                data: post,
+                message: data.action === "online" ? "online" : "",
+            });
+            // io.emit(`createChat${data.username}`, {
+            //   key: connection,
+            //   data: post,
+            // });
+            if (isFriends) {
+                app_1.io.emit(`createChat${data.receiverUsername}`, {
+                    key: connection,
+                    data: post,
+                });
+            }
+        };
         if (prev) {
             const lastTime = new Date(prev.createdAt).getTime();
             const lastReceiverTime = new Date(prev.receiverTime).getTime();
@@ -57,55 +84,13 @@ const createChat = (data) => __awaiter(void 0, void 0, void 0, function* () {
             const receiverTime = new Date(currentTime - lastTime + lastReceiverTime);
             data.receiverTime = receiverTime;
             const post = yield chatModel_1.Chat.create(data);
-            app_1.io.emit(`createChat${connection}`, {
-                key: connection,
-                data: post,
-            });
-            app_1.io.emit(`createChat${data.userId}`, {
-                key: connection,
-                data: post,
-            });
-            app_1.io.emit(`createChat${data.receiverId}`, {
-                key: connection,
-                data: post,
-            });
+            sendCreatedChat(post, data.isFriends);
         }
         else {
             const post = yield chatModel_1.Chat.create(data);
-            app_1.io.emit(`createChat${connection}`, {
-                key: connection,
-                data: post,
-            });
-            app_1.io.emit(`createChat${data.userId}`, {
-                key: connection,
-                data: post,
-            });
-            app_1.io.emit(`createChat${data.receiverId}`, {
-                key: connection,
-                data: post,
-            });
-            // const notificationTemp = await Notification.findOne({
-            //   name: "friend_request",
-            // });
-            // const notification = {
-            //   greetings: notificationTemp?.greetings,
-            //   name: notificationTemp?.name,
-            //   title: notificationTemp?.title,
-            //   username: data.receiverUsername,
-            //   userId: data.userId,
-            //   content: notificationTemp?.content
-            //     .replace("{{sender_username}}", data.username)
-            //     .replace(
-            //       "{{click_here}}",
-            //       `<a href="/home/chat/${data.userId}" class="text-[var(--custom)]">click here</a>`
-            //     ),
-            // };
+            sendCreatedChat(post, false);
             const newNotification = yield (0, sendEmail_1.sendNotification)("friend_request", data);
-            // const count = await UserNotification.countDocuments({
-            //   username: data.receiverUsername,
-            //   unread: true,
-            // });
-            app_1.io.emit(data.receiverId, newNotification);
+            app_1.io.emit(data.receiverUsername, newNotification);
         }
     }
     catch (error) {
@@ -170,16 +155,52 @@ const searchFavChats = (req, res) => __awaiter(void 0, void 0, void 0, function*
 exports.searchFavChats = searchFavChats;
 const friendsChats = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const id = String(req.query.id || "").trim();
-        if (!id) {
-            return res.status(400).json({ message: "User ID is required" });
-        }
+        const username = String(req.query.username || "").trim();
+        // const result = await Chat.aggregate([
+        //   {
+        //     $match: {
+        //       deletedUsername: { $ne: username },
+        //       connection: { $regex: username },
+        //       $or: [{ isFriends: true }, { username: username }],
+        //     },
+        //   },
+        //   {
+        //     $sort: { createdAt: -1 },
+        //   },
+        //   {
+        //     $group: {
+        //       _id: "$connection",
+        //       doc: { $first: "$$ROOT" },
+        //     },
+        //   },
+        //   {
+        //     $replaceRoot: { newRoot: "$doc" },
+        //   },
+        //   {
+        //     $project: {
+        //       _id: 1,
+        //       content: 1,
+        //       createdAt: 1,
+        //       picture: 1,
+        //       username: 1,
+        //       connection: 1,
+        //       receiverPicture: 1,
+        //       receiverId: 1,
+        //       unread: 1,
+        //       userId: 1,
+        //       receiverUsername: 1,
+        //     },
+        //   },
+        //   {
+        //     $limit: 10, // Limit to 10 unique conversations
+        //   },
+        // ]);
         const result = yield chatModel_1.Chat.aggregate([
             {
                 $match: {
-                    deletedId: { $ne: id },
-                    connection: { $regex: id },
-                    isFriends: true,
+                    deletedUsername: { $ne: username },
+                    connection: { $regex: username },
+                    $or: [{ isFriends: true }, { username: username }],
                 },
             },
             {
@@ -189,6 +210,16 @@ const friendsChats = (req, res) => __awaiter(void 0, void 0, void 0, function* (
                 $group: {
                     _id: "$connection",
                     doc: { $first: "$$ROOT" },
+                    unreadCount: {
+                        $sum: {
+                            $cond: [{ $eq: ["$unread", true] }, 1, 0],
+                        },
+                    },
+                },
+            },
+            {
+                $addFields: {
+                    "doc.unreadCount": "$unreadCount",
                 },
             },
             {
@@ -207,10 +238,11 @@ const friendsChats = (req, res) => __awaiter(void 0, void 0, void 0, function* (
                     unread: 1,
                     userId: 1,
                     receiverUsername: 1,
+                    unreadCount: 1,
                 },
             },
             {
-                $limit: 10, // Limit to 10 unique conversations
+                $limit: 10,
             },
         ]);
         res.status(200).json({ results: result });
@@ -222,12 +254,12 @@ const friendsChats = (req, res) => __awaiter(void 0, void 0, void 0, function* (
 exports.friendsChats = friendsChats;
 const getUserChats = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const userId = req.query.userId;
-        delete req.query.userId;
+        const username = req.query.username;
+        delete req.query.username;
         const result = yield (0, query_1.queryData)(chatModel_1.Chat, req);
         const unread = yield chatModel_1.Chat.countDocuments({
             connection: req.query.connection,
-            isReadIds: { $nin: [userId] },
+            isReadUsernames: { $nin: [username] },
         });
         res.status(200).json({
             count: result.count,
@@ -243,12 +275,12 @@ const getUserChats = (req, res) => __awaiter(void 0, void 0, void 0, function* (
 exports.getUserChats = getUserChats;
 const readChats = (data) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const ids = data.ids;
-        const userId = data.userId;
-        const connection = data.connection;
-        yield chatModel_1.Chat.updateMany({ _id: { $in: ids } }, { $addToSet: { isReadIds: userId } });
-        const updatedChats = yield chatModel_1.Chat.find({ _id: { $in: ids } });
-        app_1.io.emit(`readChat${connection}`, { chats: updatedChats });
+        yield chatModel_1.Chat.updateMany({ _id: { $in: data.ids } }, { $set: { isRead: true } });
+        const updatedChats = yield chatModel_1.Chat.find({ _id: { $in: data.ids } });
+        app_1.io.emit(`readChat${data.username}`, {
+            chats: updatedChats,
+            username: data.username,
+        });
     }
     catch (error) {
         console.log(error);

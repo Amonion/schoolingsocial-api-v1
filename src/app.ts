@@ -17,7 +17,6 @@ import userMessageRoutes from "./routes/users/userMessageRoutes";
 import userCompetitionRoutes from "./routes/users/userCompetitionRoutes";
 import userRoutes from "./routes/users/userRoutes";
 import {
-  confirmChats,
   createChat,
   deleteChat,
   readChats,
@@ -72,12 +71,7 @@ io.on("connection", (socket) => {
         createChat(data);
         break;
       case "read":
-        const readResponse = await readChats(data);
-        io.emit("readResponse", readResponse);
-        break;
-      case "confirm":
-        const confirmResponse = await confirmChats(data);
-        io.emit("confirmResponse", confirmResponse);
+        readChats(data);
         break;
       case "deleteChat":
         const deleteChatResponse = await deleteChat(data);
@@ -138,28 +132,3 @@ app.use((req, res, next) => {
 });
 
 export { app, server, io };
-//import fs from "fs";
-// import csv from "csv-parser";
-
-// interface IpRange {
-//   from: number;
-//   to: number;
-//   country: string;
-// }
-
-// const ipRanges: IpRange[] = [];
-
-// fs.createReadStream("src/file.csv")
-//   .pipe(csv({ headers: false }))
-//   .on("data", (row) => {
-//     const from = parseInt(row[0]);
-//     const to = parseInt(row[1]);
-//     const country = row[3];
-//     if (!isNaN(from) && !isNaN(to) && country) {
-//       ipRanges.push({ from, to, country });
-//     }
-//   })
-//   .on("end", () => {
-//     fs.writeFileSync("ip-country.json", JSON.stringify(ipRanges));
-//     console.log(`Saved ${ipRanges.length} records to ip-country.json`);
-//   });

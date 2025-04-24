@@ -77,7 +77,7 @@ const sendNotification = (templateName, data) => __awaiter(void 0, void 0, void 
         title: notificationTemp === null || notificationTemp === void 0 ? void 0 : notificationTemp.title,
         username: data.receiverUsername,
         userId: data.userId,
-        content: notificationTemp === null || notificationTemp === void 0 ? void 0 : notificationTemp.content.replace("{{sender_username}}", data.username).replace("{{click_here}}", `<a href="/home/chat/${data.userId}" class="text-[var(--custom)]">click here</a>`),
+        content: notificationTemp === null || notificationTemp === void 0 ? void 0 : notificationTemp.content.replace("{{sender_username}}", data.username).replace("{{click_here}}", `<a href="/home/friends/chat/${data.username}" class="text-[var(--custom)]">click here</a>`),
     };
     const newNotification = yield emailModel_1.UserNotification.create(notification);
     const count = yield emailModel_1.UserNotification.countDocuments({

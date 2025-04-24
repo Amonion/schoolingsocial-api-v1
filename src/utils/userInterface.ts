@@ -17,7 +17,7 @@ export interface IChat extends Document {
   _id: string;
   content: string;
   userId: string;
-  isReadIds: string[];
+  isReadUsernames: string[];
   action: string;
   username: string;
   picture: string;
@@ -29,12 +29,14 @@ export interface IChat extends Document {
       size: number;
     }
   ];
+  message: string;
   connection: string;
   senderTime: Date;
   receiverTime: Date;
   createdAt: Date;
   time: number;
-  unread: number;
+  unreadUser: number;
+  unreadReceiver: number;
   receiverUsername: string;
   receiverPicture: string;
   receiverId: string;
@@ -42,7 +44,7 @@ export interface IChat extends Document {
   isPinned: boolean;
   isRead: boolean;
   isFriends: boolean;
-  received: boolean;
+  isSent: boolean;
   senderId: string;
 }
 

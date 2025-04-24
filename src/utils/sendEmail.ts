@@ -97,7 +97,7 @@ export const sendNotification = async (
       .replace("{{sender_username}}", data.username)
       .replace(
         "{{click_here}}",
-        `<a href="/home/chat/${data.userId}" class="text-[var(--custom)]">click here</a>`
+        `<a href="/home/friends/chat/${data.username}" class="text-[var(--custom)]">click here</a>`
       ),
   };
   const newNotification = await UserNotification.create(notification);

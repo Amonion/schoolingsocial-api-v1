@@ -5,7 +5,6 @@ import { IChat } from "../../utils/userInterface";
 import { queryData } from "../../utils/query";
 import { deleteFileFromS3 } from "../../utils/fileUpload";
 import { io } from "../../app";
-import { Notification, UserNotification } from "../../models/team/emailModel";
 import { sendNotification } from "../../utils/sendEmail";
 
 const setConnectionKey = (id1: string, id2: string) => {
@@ -17,45 +16,73 @@ interface Receive {
   ids: string[];
   receiverId: string;
   userId: string;
+  username: string;
   connection: string;
 }
 
-export const confirmChats = async (data: Receive) => {
-  try {
-    await Chat.updateMany(
-      { _id: { $in: data.ids } },
-      { $set: { received: true } }
-    );
+// export const confirmChats = async (data: Receive) => {
+//   try {
+//     await Chat.updateMany(
+//       { _id: { $in: data.ids } },
+//       { $set: { isRead: true } }
+//     );
 
-    const updatedChats = await Chat.find({ _id: { $in: data.ids } });
-    return {
-      key: updatedChats[0].connection,
-      data: updatedChats,
-      receiverId: data.receiverId,
-      userId: data.userId,
-    };
-  } catch (error) {
-    console.log(error);
-  }
-};
+//     const updatedChats = await Chat.find({ _id: { $in: data.ids } });
+//     const confirmResponse = {
+//       key: updatedChats[0].connection,
+//       data: updatedChats,
+//       receiverId: data.receiverId,
+//       userId: data.userId,
+//     };
+//     io.emit("confirmResponse", confirmResponse);
+//   } catch (error) {
+//     console.log(error);
+//   }
+// };
 
 export const createChat = async (data: IChat) => {
   try {
-    const connection = setConnectionKey(data.userId, data.receiverId);
+    const connection = setConnectionKey(data.username, data.receiverUsername);
     const prev = await Chat.findOne({
       connection: connection,
     }).sort({ createdAt: -1 });
     data.connection = connection;
 
-    const received = await Chat.findOne({ receiverId: data.userId });
+    const received = await Chat.findOne({ receiverUsername: data.username });
     data.isFriends = received ? true : false;
 
-    const unread = await Chat.countDocuments({
+    const unreadReceiver = await Chat.countDocuments({
       connection: connection,
-      isReadIds: { $nin: [data.userId] },
+      receiverUsername: data.receiverUsername,
+      isRead: false,
+    });
+    const unreadUser = await Chat.countDocuments({
+      connection: connection,
+      username: data.username,
+      isRead: false,
     });
 
-    data.unread = unread;
+    data.unreadReceiver = unreadReceiver + 1;
+    data.unreadUser = unreadUser;
+    data.isSent = true;
+
+    const sendCreatedChat = (post: IChat, isFriends: boolean) => {
+      io.emit(`createChat${connection}`, {
+        key: connection,
+        data: post,
+        message: data.action === "online" ? "online" : "",
+      });
+      // io.emit(`createChat${data.username}`, {
+      //   key: connection,
+      //   data: post,
+      // });
+      if (isFriends) {
+        io.emit(`createChat${data.receiverUsername}`, {
+          key: connection,
+          data: post,
+        });
+      }
+    };
 
     if (prev) {
       const lastTime = new Date(prev.createdAt).getTime();
@@ -64,57 +91,12 @@ export const createChat = async (data: IChat) => {
       const receiverTime = new Date(currentTime - lastTime + lastReceiverTime);
       data.receiverTime = receiverTime;
       const post = await Chat.create(data);
-
-      io.emit(`createChat${connection}`, {
-        key: connection,
-        data: post,
-      });
-      io.emit(`createChat${data.userId}`, {
-        key: connection,
-        data: post,
-      });
-      io.emit(`createChat${data.receiverId}`, {
-        key: connection,
-        data: post,
-      });
+      sendCreatedChat(post, data.isFriends);
     } else {
       const post = await Chat.create(data);
-      io.emit(`createChat${connection}`, {
-        key: connection,
-        data: post,
-      });
-      io.emit(`createChat${data.userId}`, {
-        key: connection,
-        data: post,
-      });
-      io.emit(`createChat${data.receiverId}`, {
-        key: connection,
-        data: post,
-      });
-
-      // const notificationTemp = await Notification.findOne({
-      //   name: "friend_request",
-      // });
-
-      // const notification = {
-      //   greetings: notificationTemp?.greetings,
-      //   name: notificationTemp?.name,
-      //   title: notificationTemp?.title,
-      //   username: data.receiverUsername,
-      //   userId: data.userId,
-      //   content: notificationTemp?.content
-      //     .replace("{{sender_username}}", data.username)
-      //     .replace(
-      //       "{{click_here}}",
-      //       `<a href="/home/chat/${data.userId}" class="text-[var(--custom)]">click here</a>`
-      //     ),
-      // };
+      sendCreatedChat(post, false);
       const newNotification = await sendNotification("friend_request", data);
-      // const count = await UserNotification.countDocuments({
-      //   username: data.receiverUsername,
-      //   unread: true,
-      // });
-      io.emit(data.receiverId, newNotification);
+      io.emit(data.receiverUsername, newNotification);
     }
   } catch (error) {
     console.log(error);
@@ -184,18 +166,54 @@ export const searchFavChats = async (req: Request, res: Response) => {
 
 export const friendsChats = async (req: Request, res: Response) => {
   try {
-    const id = String(req.query.id || "").trim();
+    const username = String(req.query.username || "").trim();
 
-    if (!id) {
-      return res.status(400).json({ message: "User ID is required" });
-    }
+    // const result = await Chat.aggregate([
+    //   {
+    //     $match: {
+    //       deletedUsername: { $ne: username },
+    //       connection: { $regex: username },
+    //       $or: [{ isFriends: true }, { username: username }],
+    //     },
+    //   },
+    //   {
+    //     $sort: { createdAt: -1 },
+    //   },
+    //   {
+    //     $group: {
+    //       _id: "$connection",
+    //       doc: { $first: "$$ROOT" },
+    //     },
+    //   },
+    //   {
+    //     $replaceRoot: { newRoot: "$doc" },
+    //   },
+    //   {
+    //     $project: {
+    //       _id: 1,
+    //       content: 1,
+    //       createdAt: 1,
+    //       picture: 1,
+    //       username: 1,
+    //       connection: 1,
+    //       receiverPicture: 1,
+    //       receiverId: 1,
+    //       unread: 1,
+    //       userId: 1,
+    //       receiverUsername: 1,
+    //     },
+    //   },
+    //   {
+    //     $limit: 10, // Limit to 10 unique conversations
+    //   },
+    // ]);
 
     const result = await Chat.aggregate([
       {
         $match: {
-          deletedId: { $ne: id },
-          connection: { $regex: id },
-          isFriends: true,
+          deletedUsername: { $ne: username },
+          connection: { $regex: username },
+          $or: [{ isFriends: true }, { username: username }],
         },
       },
       {
@@ -205,6 +223,16 @@ export const friendsChats = async (req: Request, res: Response) => {
         $group: {
           _id: "$connection",
           doc: { $first: "$$ROOT" },
+          unreadCount: {
+            $sum: {
+              $cond: [{ $eq: ["$unread", true] }, 1, 0],
+            },
+          },
+        },
+      },
+      {
+        $addFields: {
+          "doc.unreadCount": "$unreadCount",
         },
       },
       {
@@ -223,10 +251,11 @@ export const friendsChats = async (req: Request, res: Response) => {
           unread: 1,
           userId: 1,
           receiverUsername: 1,
+          unreadCount: 1,
         },
       },
       {
-        $limit: 10, // Limit to 10 unique conversations
+        $limit: 10,
       },
     ]);
 
@@ -238,12 +267,12 @@ export const friendsChats = async (req: Request, res: Response) => {
 
 export const getUserChats = async (req: Request, res: Response) => {
   try {
-    const userId = req.query.userId;
-    delete req.query.userId;
+    const username = req.query.username;
+    delete req.query.username;
     const result = await queryData<IChat>(Chat, req);
     const unread = await Chat.countDocuments({
       connection: req.query.connection,
-      isReadIds: { $nin: [userId] },
+      isReadUsernames: { $nin: [username] },
     });
     res.status(200).json({
       count: result.count,
@@ -258,15 +287,16 @@ export const getUserChats = async (req: Request, res: Response) => {
 
 export const readChats = async (data: Receive) => {
   try {
-    const ids = data.ids;
-    const userId = data.userId;
-    const connection = data.connection;
     await Chat.updateMany(
-      { _id: { $in: ids } },
-      { $addToSet: { isReadIds: userId } }
+      { _id: { $in: data.ids } },
+      { $set: { isRead: true } }
     );
-    const updatedChats = await Chat.find({ _id: { $in: ids } });
-    io.emit(`readChat${connection}`, { chats: updatedChats });
+
+    const updatedChats = await Chat.find({ _id: { $in: data.ids } });
+    io.emit(`readChat${data.username}`, {
+      chats: updatedChats,
+      username: data.username,
+    });
   } catch (error) {
     console.log(error);
   }

@@ -76,12 +76,7 @@ io.on("connection", (socket) => {
                 (0, chatController_1.createChat)(data);
                 break;
             case "read":
-                const readResponse = yield (0, chatController_1.readChats)(data);
-                io.emit("readResponse", readResponse);
-                break;
-            case "confirm":
-                const confirmResponse = yield (0, chatController_1.confirmChats)(data);
-                io.emit("confirmResponse", confirmResponse);
+                (0, chatController_1.readChats)(data);
                 break;
             case "deleteChat":
                 const deleteChatResponse = yield (0, chatController_1.deleteChat)(data);
@@ -138,25 +133,3 @@ app.get("/api/v1/user-ip", (req, res) => {
 app.use((req, res, next) => {
     (0, errorHandler_1.handleError)(res, 404, `Request not found: ${req.method} ${req.originalUrl}`);
 });
-//import fs from "fs";
-// import csv from "csv-parser";
-// interface IpRange {
-//   from: number;
-//   to: number;
-//   country: string;
-// }
-// const ipRanges: IpRange[] = [];
-// fs.createReadStream("src/file.csv")
-//   .pipe(csv({ headers: false }))
-//   .on("data", (row) => {
-//     const from = parseInt(row[0]);
-//     const to = parseInt(row[1]);
-//     const country = row[3];
-//     if (!isNaN(from) && !isNaN(to) && country) {
-//       ipRanges.push({ from, to, country });
-//     }
-//   })
-//   .on("end", () => {
-//     fs.writeFileSync("ip-country.json", JSON.stringify(ipRanges));
-//     console.log(`Saved ${ipRanges.length} records to ip-country.json`);
-//   });
