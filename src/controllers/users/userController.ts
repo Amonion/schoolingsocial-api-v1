@@ -238,6 +238,14 @@ export const updateUserInfo = async (
       // req.body.pastSchools = JSON.stringify(pastSchools);
       update(req, res);
       break;
+    case "Profile":
+      const uploadedProfileFiles = await uploadFilesToS3(req);
+      uploadedProfileFiles.forEach((file) => {
+        req.body[file.fieldName] = file.s3Url;
+      });
+      update(req, res);
+      break;
+
     case "Document":
       const user = await UserInfo.findOne({ username: req.params.username });
       const documents = user?.documents;

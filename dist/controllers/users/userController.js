@@ -231,6 +231,13 @@ const updateUserInfo = (req, res) => __awaiter(void 0, void 0, void 0, function*
             // req.body.pastSchools = JSON.stringify(pastSchools);
             (0, exports.update)(req, res);
             break;
+        case "Profile":
+            const uploadedProfileFiles = yield (0, fileUpload_1.uploadFilesToS3)(req);
+            uploadedProfileFiles.forEach((file) => {
+                req.body[file.fieldName] = file.s3Url;
+            });
+            (0, exports.update)(req, res);
+            break;
         case "Document":
             const user = yield userInfoModel_1.UserInfo.findOne({ username: req.params.username });
             const documents = user === null || user === void 0 ? void 0 : user.documents;
