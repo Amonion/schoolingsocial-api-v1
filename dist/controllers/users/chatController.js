@@ -42,16 +42,17 @@ const createChat = (data) => __awaiter(void 0, void 0, void 0, function* () {
         data.unreadReceiver = unreadReceiver + 1;
         data.unreadUser = unreadUser;
         data.isSent = true;
-        const sendCreatedChat = (post, isFriends) => {
+        const sendCreatedChat = (post, isFriends, totalUread) => {
             app_1.io.emit(`createChat${connection}`, {
                 key: connection,
                 data: post,
                 message: data.action === "online" ? "online" : "",
             });
-            // io.emit(`createChat${data.username}`, {
-            //   key: connection,
-            //   data: post,
-            // });
+            app_1.io.emit(`createChat${data.username}`, {
+                key: connection,
+                data: post,
+                totalUread: totalUread,
+            });
             if (isFriends) {
                 app_1.io.emit(`createChat${data.receiverUsername}`, {
                     key: connection,
@@ -66,7 +67,11 @@ const createChat = (data) => __awaiter(void 0, void 0, void 0, function* () {
             const receiverTime = new Date(currentTime - lastTime + lastReceiverTime);
             data.receiverTime = receiverTime;
             const post = yield chatModel_1.Chat.create(data);
-            sendCreatedChat(post, data.isFriends);
+            const totalUread = yield chatModel_1.Chat.countDocuments({
+                isRead: false,
+                receiverUsername: data.receiverUsername,
+            });
+            sendCreatedChat(post, data.isFriends, totalUread);
         }
         else {
             const post = yield chatModel_1.Chat.create(data);
@@ -197,7 +202,11 @@ const friendsChats = (req, res) => __awaiter(void 0, void 0, void 0, function* (
                 $limit: 10,
             },
         ]);
-        res.status(200).json({ results: result });
+        const totalUnread = yield chatModel_1.Chat.countDocuments({
+            isRead: false,
+            receiverUsername: username,
+        });
+        res.status(200).json({ results: result, totalUnread: totalUnread });
     }
     catch (error) {
         (0, errorHandler_1.handleError)(res, undefined, undefined, error);

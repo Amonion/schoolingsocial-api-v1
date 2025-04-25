@@ -90,6 +90,81 @@ const UserInfoSchema = new mongoose_1.Schema({
     bankId: { type: String, default: "" },
     bankUsername: { type: String, default: "" },
     bankLogo: { type: String, default: "" },
+    bioInfo: {
+        type: Array,
+        default: [
+            {
+                title: "Your Government",
+                name: "government",
+                allowed: true,
+            },
+            {
+                title: "Your School",
+                name: "school",
+                allowed: true,
+            },
+            {
+                title: "Applied Institution",
+                name: "apply",
+                allowed: true,
+            },
+            {
+                title: "Authorized Friends",
+                name: "authorized",
+                allowed: true,
+            },
+        ],
+    },
+    eduInfo: {
+        type: Array,
+        default: [
+            {
+                title: "Your Government",
+                name: "government",
+                allowed: true,
+            },
+            {
+                title: "Your School",
+                name: "school",
+                allowed: true,
+            },
+            {
+                title: "Applied Institution",
+                name: "apply",
+                allowed: true,
+            },
+            {
+                title: "Authorized Friends",
+                name: "authorized",
+                allowed: true,
+            },
+        ],
+    },
+    result: {
+        type: Array,
+        default: [
+            {
+                title: "Your Government",
+                name: "government",
+                allowed: true,
+            },
+            {
+                title: "Your School",
+                name: "school",
+                allowed: true,
+            },
+            {
+                title: "Applied Institution",
+                name: "apply",
+                allowed: true,
+            },
+            {
+                title: "Authorized Friends",
+                name: "authorized",
+                allowed: true,
+            },
+        ],
+    },
     motherName: { type: String, default: "" },
     occupation: { type: String, default: "" },
     nextKin: { type: String, default: "" },

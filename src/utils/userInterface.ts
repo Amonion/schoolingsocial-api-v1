@@ -171,6 +171,12 @@ export interface IStat extends Document {
   postId: string;
 }
 
+interface ISocialSetObj {
+  name: string;
+  title: string;
+  allowed: boolean;
+}
+
 export interface IUpload extends Document {
   username: string;
   mediaName: string;
@@ -258,6 +264,9 @@ export interface IUserInfo extends Document {
   phone: string;
   email: string;
   passport: string;
+  bioInfo: ISocialSetObj[];
+  eduInfo: ISocialSetObj[];
+  results: ISocialSetObj[];
   currentAcademicLevelSymbol: string;
   isDocument: boolean;
   isOrigin: boolean;
