@@ -18,6 +18,7 @@ export interface IChat extends Document {
   content: string;
   userId: string;
   isReadUsernames: string[];
+  isSavedUsernames: string[];
   action: string;
   username: string;
   picture: string;
@@ -31,6 +32,7 @@ export interface IChat extends Document {
   ];
   message: string;
   connection: string;
+  deletedUsername: string;
   senderTime: Date;
   receiverTime: Date;
   createdAt: Date;

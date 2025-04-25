@@ -79,8 +79,7 @@ io.on("connection", (socket) => {
                 (0, chatController_1.readChats)(data);
                 break;
             case "deleteChat":
-                const deleteChatResponse = yield (0, chatController_1.deleteChat)(data);
-                io.emit("deleteChatResponse", deleteChatResponse);
+                (0, chatController_1.deleteChat)(data);
                 break;
             case "users":
                 const response = yield (0, postController_1.createPost)(data);
@@ -129,6 +128,14 @@ app.get("/api/v1/user-ip", (req, res) => {
         ip = ip.replace("::ffff:", "");
     }
     res.json({ ip });
+});
+app.get("/api/v1/network", (req, res) => {
+    try {
+        res.status(200).json({ message: `network` });
+    }
+    catch (error) {
+        res.status(400).json({ message: `no network` });
+    }
 });
 app.use((req, res, next) => {
     (0, errorHandler_1.handleError)(res, 404, `Request not found: ${req.method} ${req.originalUrl}`);

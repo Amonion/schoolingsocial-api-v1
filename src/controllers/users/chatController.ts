@@ -20,26 +20,6 @@ interface Receive {
   connection: string;
 }
 
-// export const confirmChats = async (data: Receive) => {
-//   try {
-//     await Chat.updateMany(
-//       { _id: { $in: data.ids } },
-//       { $set: { isRead: true } }
-//     );
-
-//     const updatedChats = await Chat.find({ _id: { $in: data.ids } });
-//     const confirmResponse = {
-//       key: updatedChats[0].connection,
-//       data: updatedChats,
-//       receiverId: data.receiverId,
-//       userId: data.userId,
-//     };
-//     io.emit("confirmResponse", confirmResponse);
-//   } catch (error) {
-//     console.log(error);
-//   }
-// };
-
 export const createChat = async (data: IChat) => {
   try {
     const connection = setConnectionKey(data.username, data.receiverUsername);
@@ -107,7 +87,7 @@ export const searchChats = async (req: Request, res: Response) => {
   try {
     const searchTerm = String(req.query.word || "").trim();
     const connection = String(req.query.connection || "").trim();
-    const userId = String(req.query.userId || "").trim();
+    const username = String(req.query.username || "").trim();
 
     if (!searchTerm) {
       return res.status(400).json({ message: "Search term is required" });
@@ -117,7 +97,7 @@ export const searchChats = async (req: Request, res: Response) => {
 
     const result = await Chat.find({
       connection,
-      deletedId: { $ne: userId },
+      deletedUsername: { $ne: username },
       $or: [
         { content: { $regex: regex } },
         { "media.name": { $regex: regex } },
@@ -137,7 +117,7 @@ export const searchFavChats = async (req: Request, res: Response) => {
   try {
     const searchTerm = String(req.query.word || "").trim();
     const connection = String(req.query.connection || "").trim();
-    const userId = String(req.query.userId || "").trim();
+    const username = String(req.query.username || "").trim();
 
     if (!searchTerm) {
       return res.status(400).json({ message: "Search term is required" });
@@ -147,8 +127,8 @@ export const searchFavChats = async (req: Request, res: Response) => {
 
     const result = await Chat.find({
       connection,
-      deletedId: { $ne: userId },
-      isSavedIds: { $in: userId },
+      deletedUsername: { $ne: username },
+      isSavedUsernames: { $in: username },
       $or: [
         { content: { $regex: regex } },
         { "media.name": { $regex: regex } },
@@ -168,46 +148,6 @@ export const friendsChats = async (req: Request, res: Response) => {
   try {
     const username = String(req.query.username || "").trim();
 
-    // const result = await Chat.aggregate([
-    //   {
-    //     $match: {
-    //       deletedUsername: { $ne: username },
-    //       connection: { $regex: username },
-    //       $or: [{ isFriends: true }, { username: username }],
-    //     },
-    //   },
-    //   {
-    //     $sort: { createdAt: -1 },
-    //   },
-    //   {
-    //     $group: {
-    //       _id: "$connection",
-    //       doc: { $first: "$$ROOT" },
-    //     },
-    //   },
-    //   {
-    //     $replaceRoot: { newRoot: "$doc" },
-    //   },
-    //   {
-    //     $project: {
-    //       _id: 1,
-    //       content: 1,
-    //       createdAt: 1,
-    //       picture: 1,
-    //       username: 1,
-    //       connection: 1,
-    //       receiverPicture: 1,
-    //       receiverId: 1,
-    //       unread: 1,
-    //       userId: 1,
-    //       receiverUsername: 1,
-    //     },
-    //   },
-    //   {
-    //     $limit: 10, // Limit to 10 unique conversations
-    //   },
-    // ]);
-
     const result = await Chat.aggregate([
       {
         $match: {
@@ -225,7 +165,16 @@ export const friendsChats = async (req: Request, res: Response) => {
           doc: { $first: "$$ROOT" },
           unreadCount: {
             $sum: {
-              $cond: [{ $eq: ["$unread", true] }, 1, 0],
+              $cond: [
+                {
+                  $and: [
+                    { $eq: ["$isRead", false] },
+                    { $eq: ["$receiverUsername", username] },
+                  ],
+                },
+                1,
+                0,
+              ],
             },
           },
         },
@@ -272,7 +221,8 @@ export const getUserChats = async (req: Request, res: Response) => {
     const result = await queryData<IChat>(Chat, req);
     const unread = await Chat.countDocuments({
       connection: req.query.connection,
-      isReadUsernames: { $nin: [username] },
+      isRead: false,
+      receiverUsername: username,
     });
     res.status(200).json({
       count: result.count,
@@ -315,12 +265,12 @@ export const getSaveChats = async (req: Request, res: Response) => {
 export const saveChats = async (req: Request, res: Response) => {
   try {
     const chats = JSON.parse(req.body.selectedItems);
-    const userId = req.body.userId;
+    const username = req.body.username;
     const chatIds = chats.map((chat: { _id: string }) => chat._id);
 
     await Chat.updateMany(
       { _id: { $in: chatIds } },
-      { $addToSet: { isSavedIds: userId } }
+      { $addToSet: { isSavedUsernames: username } }
     );
     const updatedChats = await Chat.find({ _id: { $in: chatIds } });
     res.status(200).json({
@@ -355,12 +305,12 @@ export const pinChats = async (req: Request, res: Response) => {
 export const unSaveChats = async (req: Request, res: Response) => {
   try {
     const chats = JSON.parse(req.body.selectedItems);
-    const userId = req.body.userId;
+    const username = req.body.username;
     const chatIds = chats.map((chat: { _id: string }) => chat._id);
 
     await Chat.updateMany(
       { _id: { $in: chatIds } },
-      { $pull: { isSavedIds: userId } }
+      { $pull: { isSavedUsernames: username } }
     );
     const updatedChats = await Chat.find({ _id: { $in: chatIds } });
     res.status(200).json({
@@ -401,6 +351,8 @@ interface Delete {
   connection: string;
   day: string;
   senderId: string;
+  receiverUsername: string;
+  username: string;
   isSender: boolean;
 }
 
@@ -419,18 +371,18 @@ export const deleteChat = async (data: Delete) => {
         }
       }
       await Chat.findByIdAndDelete(data.id);
+      io.emit(`deleteResponse${data.receiverUsername}`, {
+        id: data.id,
+        day: data.day,
+      });
     } else {
-      await Chat.findByIdAndUpdate(data.id, { deletedId: data.senderId });
+      await Chat.findByIdAndUpdate(data.id, { deletedUsername: data.username });
     }
 
-    const chat = await Chat.findById(data.id);
-
-    return {
+    io.emit(`deleteResponse${data.username}`, {
       id: data.id,
-      key: data.connection,
       day: data.day,
-      chat: chat,
-    };
+    });
   } catch (error) {
     console.log(error);
   }
@@ -439,10 +391,10 @@ export const deleteChat = async (data: Delete) => {
 export const deleteChats = async (req: Request, res: Response) => {
   try {
     const chats = req.body;
-    const senderId = req.query.senderId;
+    const senderUsername = req.query.senderUsername;
     for (let i = 0; i < chats.length; i++) {
       const el = chats[i];
-      const isSender = el.userId === senderId ? true : false;
+      const isSender = el.username === senderUsername ? true : false;
       if (isSender) {
         if (el.media.length > 0) {
           for (let i = 0; i < el.media.length; i++) {
@@ -452,7 +404,9 @@ export const deleteChats = async (req: Request, res: Response) => {
         }
         await Chat.findByIdAndDelete(el._id);
       } else {
-        await Chat.findByIdAndUpdate(el._id, { deletedId: senderId });
+        await Chat.findByIdAndUpdate(el._id, {
+          deletedUsername: senderUsername,
+        });
       }
     }
 
