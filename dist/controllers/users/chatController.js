@@ -42,7 +42,7 @@ const createChat = (data) => __awaiter(void 0, void 0, void 0, function* () {
         data.unreadReceiver = unreadReceiver + 1;
         data.unreadUser = unreadUser;
         data.isSent = true;
-        const sendCreatedChat = (post, isFriends, totalUread) => {
+        const sendCreatedChat = (post, isFriends, totalUnread) => {
             app_1.io.emit(`createChat${connection}`, {
                 key: connection,
                 data: post,
@@ -51,12 +51,12 @@ const createChat = (data) => __awaiter(void 0, void 0, void 0, function* () {
             app_1.io.emit(`createChat${data.username}`, {
                 key: connection,
                 data: post,
-                totalUread: totalUread,
             });
             if (isFriends) {
                 app_1.io.emit(`createChat${data.receiverUsername}`, {
                     key: connection,
                     data: post,
+                    totalUnread: totalUnread,
                 });
             }
         };
@@ -239,9 +239,17 @@ const readChats = (data) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         yield chatModel_1.Chat.updateMany({ _id: { $in: data.ids } }, { $set: { isRead: true } });
         const updatedChats = yield chatModel_1.Chat.find({ _id: { $in: data.ids } });
+        const totalUnread = yield chatModel_1.Chat.countDocuments({
+            isRead: false,
+            receiverUsername: data.receiverUsername,
+        });
         app_1.io.emit(`readChat${data.username}`, {
             chats: updatedChats,
-            username: data.username,
+            totalUnread: totalUnread,
+        });
+        app_1.io.emit(`readChat${data.receiverUsername}`, {
+            chats: updatedChats,
+            totalUnread: totalUnread,
         });
     }
     catch (error) {

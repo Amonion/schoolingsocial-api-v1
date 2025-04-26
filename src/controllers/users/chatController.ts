@@ -17,6 +17,7 @@ interface Receive {
   receiverId: string;
   userId: string;
   username: string;
+  receiverUsername: string;
   connection: string;
 }
 
@@ -49,7 +50,7 @@ export const createChat = async (data: IChat) => {
     const sendCreatedChat = (
       post: IChat,
       isFriends: boolean,
-      totalUread?: number
+      totalUnread?: number
     ) => {
       io.emit(`createChat${connection}`, {
         key: connection,
@@ -59,12 +60,12 @@ export const createChat = async (data: IChat) => {
       io.emit(`createChat${data.username}`, {
         key: connection,
         data: post,
-        totalUread: totalUread,
       });
       if (isFriends) {
         io.emit(`createChat${data.receiverUsername}`, {
           key: connection,
           data: post,
+          totalUnread: totalUnread,
         });
       }
     };
@@ -255,9 +256,17 @@ export const readChats = async (data: Receive) => {
     );
 
     const updatedChats = await Chat.find({ _id: { $in: data.ids } });
+    const totalUnread = await Chat.countDocuments({
+      isRead: false,
+      receiverUsername: data.receiverUsername,
+    });
     io.emit(`readChat${data.username}`, {
       chats: updatedChats,
-      username: data.username,
+      totalUnread: totalUnread,
+    });
+    io.emit(`readChat${data.receiverUsername}`, {
+      chats: updatedChats,
+      totalUnread: totalUnread,
     });
   } catch (error) {
     console.log(error);
