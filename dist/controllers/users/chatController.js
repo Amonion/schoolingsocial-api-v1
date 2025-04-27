@@ -27,8 +27,14 @@ const createChat = (data) => __awaiter(void 0, void 0, void 0, function* () {
             connection: connection,
         }).sort({ createdAt: -1 });
         data.connection = connection;
-        const received = yield chatModel_1.Chat.findOne({ receiverUsername: data.username });
+        const received = yield chatModel_1.Chat.findOne({
+            receiverUsername: data.username,
+            connection: connection,
+        });
         data.isFriends = received ? true : false;
+        if (data.isFriends) {
+            yield chatModel_1.Chat.findOneAndUpdate({ connection: connection }, { isFriends: true });
+        }
         const unreadReceiver = yield chatModel_1.Chat.countDocuments({
             connection: connection,
             receiverUsername: data.receiverUsername,
@@ -43,19 +49,21 @@ const createChat = (data) => __awaiter(void 0, void 0, void 0, function* () {
         data.unreadUser = unreadUser;
         data.isSent = true;
         const sendCreatedChat = (post, isFriends, totalUnread) => {
-            app_1.io.emit(`createChat${connection}`, {
+            app_1.io.emit(`createdChat${connection}`, {
+                key: connection,
+                data: post,
+            });
+            app_1.io.emit(`createdChat${data.username}`, {
                 key: connection,
                 data: post,
                 message: data.action === "online" ? "online" : "",
-            });
-            app_1.io.emit(`createChat${data.username}`, {
-                key: connection,
-                data: post,
+                totalUnread: totalUnread,
             });
             if (isFriends) {
-                app_1.io.emit(`createChat${data.receiverUsername}`, {
+                app_1.io.emit(`createdChat${data.receiverUsername}`, {
                     key: connection,
                     data: post,
+                    message: data.action === "online" ? "online" : "",
                     totalUnread: totalUnread,
                 });
             }
@@ -69,6 +77,7 @@ const createChat = (data) => __awaiter(void 0, void 0, void 0, function* () {
             const post = yield chatModel_1.Chat.create(data);
             const totalUread = yield chatModel_1.Chat.countDocuments({
                 isRead: false,
+                isFriends: true,
                 receiverUsername: data.receiverUsername,
             });
             sendCreatedChat(post, data.isFriends, totalUread);
@@ -204,6 +213,7 @@ const friendsChats = (req, res) => __awaiter(void 0, void 0, void 0, function* (
         ]);
         const totalUnread = yield chatModel_1.Chat.countDocuments({
             isRead: false,
+            isFriends: true,
             receiverUsername: username,
         });
         res.status(200).json({ results: result, totalUnread: totalUnread });
@@ -241,6 +251,12 @@ const readChats = (data) => __awaiter(void 0, void 0, void 0, function* () {
         const updatedChats = yield chatModel_1.Chat.find({ _id: { $in: data.ids } });
         const totalUnread = yield chatModel_1.Chat.countDocuments({
             isRead: false,
+            isFriends: true,
+            receiverUsername: data.username,
+        });
+        const totalUnread1 = yield chatModel_1.Chat.countDocuments({
+            isRead: false,
+            isFriends: true,
             receiverUsername: data.receiverUsername,
         });
         app_1.io.emit(`readChat${data.username}`, {
@@ -249,7 +265,7 @@ const readChats = (data) => __awaiter(void 0, void 0, void 0, function* () {
         });
         app_1.io.emit(`readChat${data.receiverUsername}`, {
             chats: updatedChats,
-            totalUnread: totalUnread,
+            totalUnread: totalUnread1,
         });
     }
     catch (error) {
