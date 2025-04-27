@@ -281,6 +281,7 @@ export interface IUserInfo extends Document {
   isDeleted: boolean;
   isFirstTime: boolean;
   isOnVerification: boolean;
+  isVerified: boolean;
   verifyingAt: Date;
   verifiedAt: Date;
   createdAt: Date;

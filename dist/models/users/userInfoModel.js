@@ -171,6 +171,7 @@ const UserInfoSchema = new mongoose_1.Schema({
     nextKinPhone: { type: String, default: "" },
     isOnVerification: { type: Boolean, default: false },
     isSchoolRecorded: { type: Boolean, default: false },
+    isVerified: { type: Boolean, default: false },
     verifyingAt: { type: Date, default: null },
     verifiedAt: { type: Date, default: Date.now },
     dob: { type: Date, default: null },

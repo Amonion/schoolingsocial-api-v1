@@ -247,8 +247,21 @@ const getUserChats = (req, res) => __awaiter(void 0, void 0, void 0, function* (
 exports.getUserChats = getUserChats;
 const readChats = (data) => __awaiter(void 0, void 0, void 0, function* () {
     try {
+        const connection = setConnectionKey(data.username, data.receiverUsername);
         yield chatModel_1.Chat.updateMany({ _id: { $in: data.ids } }, { $set: { isRead: true } });
         const updatedChats = yield chatModel_1.Chat.find({ _id: { $in: data.ids } });
+        const unreadCount = yield chatModel_1.Chat.countDocuments({
+            connection: connection,
+            isRead: false,
+            isFriends: true,
+            receiverUsername: data.username,
+        });
+        const unreadCount1 = yield chatModel_1.Chat.countDocuments({
+            connection: connection,
+            isRead: false,
+            isFriends: true,
+            receiverUsername: data.receiverUsername,
+        });
         const totalUnread = yield chatModel_1.Chat.countDocuments({
             isRead: false,
             isFriends: true,
@@ -262,10 +275,14 @@ const readChats = (data) => __awaiter(void 0, void 0, void 0, function* () {
         app_1.io.emit(`readChat${data.username}`, {
             chats: updatedChats,
             totalUnread: totalUnread,
+            username: data.username,
+            unreadCount: unreadCount,
         });
         app_1.io.emit(`readChat${data.receiverUsername}`, {
             chats: updatedChats,
             totalUnread: totalUnread1,
+            receiverUsername: data.receiverUsername,
+            unreadCount: unreadCount1,
         });
     }
     catch (error) {

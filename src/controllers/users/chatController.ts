@@ -229,6 +229,7 @@ export const friendsChats = async (req: Request, res: Response) => {
         $limit: 10,
       },
     ]);
+
     const totalUnread = await Chat.countDocuments({
       isRead: false,
       isFriends: true,
@@ -263,12 +264,27 @@ export const getUserChats = async (req: Request, res: Response) => {
 
 export const readChats = async (data: Receive) => {
   try {
+    const connection = setConnectionKey(data.username, data.receiverUsername);
+
     await Chat.updateMany(
       { _id: { $in: data.ids } },
       { $set: { isRead: true } }
     );
 
     const updatedChats = await Chat.find({ _id: { $in: data.ids } });
+    const unreadCount = await Chat.countDocuments({
+      connection: connection,
+      isRead: false,
+      isFriends: true,
+      receiverUsername: data.username,
+    });
+    const unreadCount1 = await Chat.countDocuments({
+      connection: connection,
+      isRead: false,
+      isFriends: true,
+      receiverUsername: data.receiverUsername,
+    });
+
     const totalUnread = await Chat.countDocuments({
       isRead: false,
       isFriends: true,
@@ -283,10 +299,14 @@ export const readChats = async (data: Receive) => {
     io.emit(`readChat${data.username}`, {
       chats: updatedChats,
       totalUnread: totalUnread,
+      username: data.username,
+      unreadCount: unreadCount,
     });
     io.emit(`readChat${data.receiverUsername}`, {
       chats: updatedChats,
       totalUnread: totalUnread1,
+      receiverUsername: data.receiverUsername,
+      unreadCount: unreadCount1,
     });
   } catch (error) {
     console.log(error);
