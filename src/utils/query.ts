@@ -56,8 +56,10 @@ const buildFilterQuery = (req: Request): Record<string, any> => {
       if (operators[op]) {
         const mongoOp = operators[op];
         const value = Array.isArray(rawValue) ? rawValue : [rawValue];
-
         const finalValues = value.map((v) => {
+          if (typeof v === "string" && v.includes(",")) {
+            return v.split(",").map((s) => s.trim());
+          }
           if (v === "true") return true;
           if (v === "false") return false;
           if (!isNaN(Number(v))) return Number(v);
@@ -66,13 +68,19 @@ const buildFilterQuery = (req: Request): Record<string, any> => {
 
         if (!filters[field]) filters[field] = {};
         filters[field][mongoOp] =
-          finalValues.length === 1 ? finalValues[0] : finalValues;
+          finalValues.length === 1 ? finalValues[0] : finalValues.flat();
       }
     } else {
       const value = Array.isArray(rawValue) ? rawValue : [rawValue];
       const normalizedValue = value[0];
 
-      if (normalizedValue === "") {
+      // Special handling for schoolName inside nested school array
+      if (key === "levelName") {
+        const namesArray = normalizedValue
+          .split(",")
+          .map((name: string) => name.trim());
+        filters["levels.levelName"] = { $in: namesArray };
+      } else if (normalizedValue === "") {
         filters[key] = { $exists: false };
       } else if (normalizedValue === "true" || normalizedValue === "false") {
         filters[key] = normalizedValue === "true";
@@ -260,6 +268,7 @@ function buildSearchQuery<T>(req: any): FilterQuery<T> {
   applyInFilter("schoolLevelName");
   applyInFilter("examCountries");
   applyInFilter("examStates");
+  applyInFilter("isVerified");
 
   if (cleanedQuery.publishedAt) {
     let [startDate, endDate] = cleanedQuery.publishedAt.split(",");
@@ -294,7 +303,6 @@ function buildSearchQuery<T>(req: any): FilterQuery<T> {
       [field]: { $regex: cleanedQuery[field], $options: "i" },
     })) as FilterQuery<T>[];
 
-  // ✨ Ignore documents by userId if passed
   if (cleanedQuery.userId) {
     Object.assign(searchQuery, {
       _id: { $ne: cleanedQuery.userId },
@@ -325,7 +333,6 @@ export const search = async <T>(
       .limit(limit)
       .sort({ createdAt: -1 });
     console.log(newSearchQuery);
-    // const results = await model.find(newSearchQuery);
     res.json(results);
   } catch (error) {
     handleError(res, undefined, undefined, error);

@@ -41,6 +41,7 @@ const UserInfoSchema: Schema = new Schema(
     currentSchoolState: { type: String, default: "" },
     currentSchoolPicture: { type: String, default: "" },
     currentSchoolArea: { type: String, default: "" },
+    currentSchoolUsername: { type: String, default: "" },
     currentSchoolName: { type: String, default: "" },
     currentSchoolId: { type: String, default: "" },
     currentAcademicLevelSymbol: { type: String, default: "" },

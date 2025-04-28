@@ -52,6 +52,9 @@ const buildFilterQuery = (req) => {
                 const mongoOp = operators[op];
                 const value = Array.isArray(rawValue) ? rawValue : [rawValue];
                 const finalValues = value.map((v) => {
+                    if (typeof v === "string" && v.includes(",")) {
+                        return v.split(",").map((s) => s.trim());
+                    }
                     if (v === "true")
                         return true;
                     if (v === "false")
@@ -63,13 +66,20 @@ const buildFilterQuery = (req) => {
                 if (!filters[field])
                     filters[field] = {};
                 filters[field][mongoOp] =
-                    finalValues.length === 1 ? finalValues[0] : finalValues;
+                    finalValues.length === 1 ? finalValues[0] : finalValues.flat();
             }
         }
         else {
             const value = Array.isArray(rawValue) ? rawValue : [rawValue];
             const normalizedValue = value[0];
-            if (normalizedValue === "") {
+            // Special handling for schoolName inside nested school array
+            if (key === "levelName") {
+                const namesArray = normalizedValue
+                    .split(",")
+                    .map((name) => name.trim());
+                filters["levels.levelName"] = { $in: namesArray };
+            }
+            else if (normalizedValue === "") {
                 filters[key] = { $exists: false };
             }
             else if (normalizedValue === "true" || normalizedValue === "false") {
@@ -224,6 +234,7 @@ function buildSearchQuery(req) {
     applyInFilter("schoolLevelName");
     applyInFilter("examCountries");
     applyInFilter("examStates");
+    applyInFilter("isVerified");
     if (cleanedQuery.publishedAt) {
         let [startDate, endDate] = cleanedQuery.publishedAt.split(",");
         if (!startDate || startDate === "undefined")
@@ -255,7 +266,6 @@ function buildSearchQuery(req) {
         .map((field) => ({
         [field]: { $regex: cleanedQuery[field], $options: "i" },
     }));
-    // ✨ Ignore documents by userId if passed
     if (cleanedQuery.userId) {
         Object.assign(searchQuery, {
             _id: { $ne: cleanedQuery.userId },
@@ -275,7 +285,6 @@ const search = (model, req, res) => __awaiter(void 0, void 0, void 0, function* 
             .limit(limit)
             .sort({ createdAt: -1 });
         console.log(newSearchQuery);
-        // const results = await model.find(newSearchQuery);
         res.json(results);
     }
     catch (error) {
