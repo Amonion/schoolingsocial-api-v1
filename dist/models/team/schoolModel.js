@@ -47,6 +47,7 @@ const SchoolSchema = new mongoose_1.Schema({
     area: { type: String, default: "" },
     state: { type: String, default: "" },
     country: { type: String, default: "" },
+    countrySymbol: { type: String, default: "" },
     continent: { type: String, default: "" },
     placeId: { type: String, default: "" },
     countryFlag: { type: String, default: "" },
@@ -89,6 +90,7 @@ const FacultySchema = new mongoose_1.Schema({
     picture: { type: String, default: "" },
     media: { type: String, default: "" },
     description: { type: String, default: "" },
+    isNew: { type: Boolean, default: false },
     createdAt: { type: Date, default: Date.now },
 }, {
     timestamps: true,
@@ -105,6 +107,7 @@ const DepartmentSchema = new mongoose_1.Schema({
     picture: { type: String, default: "" },
     media: { type: String, default: "" },
     description: { type: String, default: "" },
+    isNew: { type: Boolean, default: false },
     createdAt: { type: Date, default: Date.now },
 }, {
     timestamps: true,

@@ -17,12 +17,16 @@ router.route("/follow/:id").patch(upload.any(), userController_1.followUser);
 router.route("/staffs").get(staffController_1.getStaffs);
 router.route("/staffs/:id").get(staffController_1.getStaffById).patch(upload.any(), staffController_1.updateStaff);
 router.route("/info").get(staffController_1.getStaffs);
+router.route("/info/:id").patch(upload.any(), userController_1.updateInfo);
+router
+    .route("/details/:username")
+    .get(userController_1.getUserDetails)
+    .patch(upload.any(), userController_1.updateUserVerification);
 router.route("/people").get(userController_1.searchUserInfo);
 router
-    .route("/userinfo/:username")
+    .route("/userinfo/:id")
     .get(userController_1.getUserInfo)
-    .post(upload.any(), userController_1.updateUserInfo)
-    .patch(upload.any(), userController_1.updateUserVerification);
+    .post(upload.any(), userController_1.updateUserInfo);
 router
     .route("/:username")
     .get(userController_1.getAUser)

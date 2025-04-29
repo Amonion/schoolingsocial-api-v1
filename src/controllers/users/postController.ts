@@ -46,15 +46,16 @@ export const createAccount = async (
       },
       { new: true }
     );
-    await UserInfo.findByIdAndUpdate(
-      user?.userId,
+    await UserInfo.updateOne(
+      { "userAccounts.email": user?.email },
       {
-        picture: picture,
-        displayName: displayName,
-        username: username,
-        intro: description,
-      },
-      { new: true }
+        $set: {
+          "userAccounts.$.picture": user?.picture,
+          "userAccounts.$.displayName": user?.displayName,
+          "userAccounts.$.username": user?.username,
+          "userAccounts.$.intro": user?.intro,
+        },
+      }
     );
 
     if (!user) {

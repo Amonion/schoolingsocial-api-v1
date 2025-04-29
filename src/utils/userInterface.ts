@@ -177,6 +177,21 @@ interface ISocialSetObj {
   allowed: boolean;
 }
 
+export interface ISubUser extends Document {
+  _id: string;
+  username: string;
+  email: string;
+  displayName: string;
+  intro: string;
+  phone: string;
+  picture?: string;
+
+  following: number;
+  followers: number;
+  posts: number;
+  interests: number;
+}
+
 export interface IUpload extends Document {
   username: string;
   mediaName: string;
@@ -188,8 +203,8 @@ export interface IUpload extends Document {
 }
 
 export interface IUser extends Document {
-  _id?: string;
-  userId?: string;
+  _id: string;
+  userId: string;
   username?: string;
   email: string;
   displayName: string;
@@ -215,6 +230,7 @@ export interface IUser extends Document {
   isRelated: boolean;
   isOnVerification: boolean;
   isVerified: boolean;
+  isPublic: boolean;
   isFollowed: boolean;
   isEducationDocument: boolean;
   isEducationHistory: boolean;
@@ -267,6 +283,7 @@ export interface IUserInfo extends Document {
   bioInfo: ISocialSetObj[];
   eduInfo: ISocialSetObj[];
   results: ISocialSetObj[];
+  userAccounts: ISubUser[];
   currentAcademicLevelSymbol: string;
   isDocument: boolean;
   isOrigin: boolean;
@@ -282,6 +299,7 @@ export interface IUserInfo extends Document {
   isFirstTime: boolean;
   isOnVerification: boolean;
   isVerified: boolean;
+  isPublic: boolean;
   verifyingAt: Date;
   verifiedAt: Date;
   createdAt: Date;

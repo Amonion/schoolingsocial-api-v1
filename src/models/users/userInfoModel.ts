@@ -6,11 +6,10 @@ const UserInfoSchema: Schema = new Schema(
     firstName: { type: String, default: "" },
     middleName: { type: String, default: "" },
     lastName: { type: String, default: "" },
-    displayName: { type: String, default: "" },
     username: { type: String, default: "" },
     picture: { type: String, default: "" },
+    media: { type: String, default: "" },
     intro: { type: String, default: "" },
-    accountId: { type: String, default: "" },
     passport: { type: String, default: "" },
     gender: { type: String, default: "" },
     maritalStatus: { type: String, default: "" },
@@ -55,6 +54,7 @@ const UserInfoSchema: Schema = new Schema(
     currentDepartmentUsername: { type: String, default: "" },
 
     pastSchools: { type: Array, default: [] },
+    userAccounts: { type: Array, default: [] },
 
     accountName: { type: String, default: "" },
     accountNumber: { type: String, default: "" },
@@ -145,6 +145,7 @@ const UserInfoSchema: Schema = new Schema(
     isOnVerification: { type: Boolean, default: false },
     isSchoolRecorded: { type: Boolean, default: false },
     isVerified: { type: Boolean, default: false },
+    isPublic: { type: Boolean, default: false },
     verifyingAt: { type: Date, default: null },
     verifiedAt: { type: Date, default: Date.now },
     dob: { type: Date, default: null },

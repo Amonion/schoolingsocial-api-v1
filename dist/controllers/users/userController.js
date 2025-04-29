@@ -12,7 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.followUser = exports.updateUserVerification = exports.searchUserInfo = exports.getUserInfo = exports.update = exports.updateUserInfo = exports.deleteUser = exports.updateUser = exports.getUsers = exports.getAUser = exports.createUser = void 0;
+exports.followUser = exports.updateUserVerification = exports.searchUserInfo = exports.getUserDetails = exports.getUserInfo = exports.update = exports.updateUserInfo = exports.deleteUser = exports.updateInfo = exports.updateUser = exports.getUsers = exports.getAUser = exports.createUser = void 0;
 const userModel_1 = require("../../models/users/userModel");
 const userInfoModel_1 = require("../../models/users/userInfoModel");
 const staffModel_1 = require("../../models/team/staffModel");
@@ -37,7 +37,21 @@ const createUser = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
             password: yield bcryptjs_1.default.hash(password, 10),
         });
         yield newUser.save();
-        yield userInfoModel_1.UserInfo.updateOne({ _id: userBio._id }, { $set: { accountId: newUser._id } });
+        yield userInfoModel_1.UserInfo.updateOne({ _id: userBio._id }, {
+            $push: {
+                userAccounts: {
+                    _id: newUser._id,
+                    email: newUser.email,
+                    username: newUser.username,
+                    displayName: newUser.displayName,
+                    phone: newUser.phone,
+                    picture: newUser.picture,
+                    following: 0,
+                    followers: 0,
+                    posts: 0,
+                },
+            },
+        });
         res.status(201).json({
             message: "User created successfully",
             user: newUser,
@@ -127,6 +141,26 @@ const updateUser = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
     }
 });
 exports.updateUser = updateUser;
+const updateInfo = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const uploadedFiles = yield (0, fileUpload_1.uploadFilesToS3)(req);
+        uploadedFiles.forEach((file) => {
+            req.body[file.fieldName] = file.s3Url;
+        });
+        const user = yield userInfoModel_1.UserInfo.findByIdAndUpdate(req.params.id, req.body, {
+            new: true,
+            runValidators: true,
+        });
+        res.status(200).json({
+            message: "Your profile was updated successfully",
+            data: user,
+        });
+    }
+    catch (error) {
+        (0, errorHandler_1.handleError)(res, undefined, undefined, error);
+    }
+});
+exports.updateInfo = updateInfo;
 const deleteUser = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const user = yield userModel_1.User.findByIdAndDelete(req.params.id);
@@ -154,6 +188,10 @@ const updateUserInfo = (req, res) => __awaiter(void 0, void 0, void 0, function*
                 (0, exports.update)(req, res);
             }
             break;
+        case "Public":
+            req.body.isPublic = true;
+            (0, exports.update)(req, res);
+            break;
         case "Education":
             if (req.body.isNew) {
                 const result = yield schoolModel_1.School.findOne({
@@ -171,11 +209,30 @@ const updateUserInfo = (req, res) => __awaiter(void 0, void 0, void 0, function*
                     area: req.body.currentSchoolArea,
                     state: req.body.currentSchoolState,
                     country: req.body.currentSchoolCountry,
+                    countrySymbol: req.body.currentSchoolCountrySymbol,
                     continent: req.body.currentSchoolContinent,
                     isNew: true,
                 };
                 if (!result) {
-                    yield schoolModel_1.School.create(form);
+                    const school = yield schoolModel_1.School.create(form);
+                    if (!req.body.currentAcademicLevelName.includes("Primary") &&
+                        !req.body.currentAcademicLevelName.includes("Secondary") &&
+                        req.body.inSchool === "Yes") {
+                        const facultyForm = {
+                            schoolId: school._id,
+                            school: school.name,
+                            name: req.body.currentFaculty,
+                            isNew: true,
+                        };
+                        const faculty = yield schoolModel_1.Faculty.create(facultyForm);
+                        const departmentForm = {
+                            facultyId: faculty._id,
+                            faculty: faculty.name,
+                            name: req.body.currentDepartment,
+                            isNew: true,
+                        };
+                        yield schoolModel_1.Department.create(departmentForm);
+                    }
                     const newSchools = yield schoolModel_1.School.countDocuments({ isNew: true });
                     app_1.io.emit("team", { action: "new", type: "school", newSchools });
                 }
@@ -239,7 +296,7 @@ const updateUserInfo = (req, res) => __awaiter(void 0, void 0, void 0, function*
             (0, exports.update)(req, res);
             break;
         case "Document":
-            const user = yield userInfoModel_1.UserInfo.findOne({ username: req.params.username });
+            const user = yield userInfoModel_1.UserInfo.findById(req.params.id);
             const documents = user === null || user === void 0 ? void 0 : user.documents;
             const id = req.body.id;
             if (documents) {
@@ -265,7 +322,7 @@ const updateUserInfo = (req, res) => __awaiter(void 0, void 0, void 0, function*
                         tempDoc: "",
                     };
                     documents.push(doc);
-                    yield userInfoModel_1.UserInfo.updateOne({ username: req.params.username }, { documents: documents }, {
+                    yield userInfoModel_1.UserInfo.updateOne({ _id: req.params.id }, { documents: documents }, {
                         new: true,
                         upsert: true,
                     });
@@ -281,10 +338,11 @@ const updateUserInfo = (req, res) => __awaiter(void 0, void 0, void 0, function*
 exports.updateUserInfo = updateUserInfo;
 const update = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const userInfo = yield userInfoModel_1.UserInfo.findOneAndUpdate({ username: req.params.username }, req.body, {
+        const userInfo = yield userInfoModel_1.UserInfo.findByIdAndUpdate(req.params.id, req.body, {
             new: true,
         });
-        const user = yield userModel_1.User.findByIdAndUpdate(req.body.ID, req.body, {
+        const updateData = req.body.isPublic ? { isPublic: true } : req.body;
+        const user = yield userModel_1.User.findByIdAndUpdate(req.body.ID, updateData, {
             new: true,
             runValidators: false,
         });
@@ -295,6 +353,7 @@ const update = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
             user.isOrigin &&
             user.isEducation &&
             user.isEducationHistory &&
+            user.isPublic &&
             user.isEducationDocument &&
             !user.isOnVerification &&
             user.isRelated &&
@@ -303,7 +362,7 @@ const update = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
                 isOnVerification: true,
                 verifyingAt: new Date(),
             });
-            yield userInfoModel_1.UserInfo.findOneAndUpdate({ username: req.params.username }, {
+            yield userInfoModel_1.UserInfo.findByIdAndUpdate(req.params.id, {
                 isOnVerification: true,
                 verifyingAt: new Date(),
             });
@@ -315,7 +374,7 @@ const update = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
             const verifyingUsers = yield userModel_1.User.countDocuments({
                 isOnVerification: true,
             });
-            app_1.io.emit(req.body.ID, newNotification);
+            app_1.io.emit(String(user === null || user === void 0 ? void 0 : user.username), newNotification);
             app_1.io.emit("team", { action: "verifying", type: "stat", verifyingUsers });
         }
         res.status(200).json({
@@ -332,7 +391,7 @@ const update = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
 exports.update = update;
 const getUserInfo = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const user = yield userInfoModel_1.UserInfo.findOne({ username: req.params.username });
+        const user = yield userInfoModel_1.UserInfo.findById(req.params.id);
         if (!user) {
             return res.status(404).json({ message: "User not found" });
         }
@@ -343,6 +402,16 @@ const getUserInfo = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
     }
 });
 exports.getUserInfo = getUserInfo;
+const getUserDetails = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const user = yield userInfoModel_1.UserInfo.findOne({ username: req.params.username });
+        res.status(200).json(user);
+    }
+    catch (error) {
+        (0, errorHandler_1.handleError)(res, undefined, undefined, error);
+    }
+});
+exports.getUserDetails = getUserDetails;
 const searchUserInfo = (req, res) => {
     return (0, query_1.search)(userInfoModel_1.UserInfo, req, res);
 };
@@ -374,10 +443,11 @@ const updateUserVerification = (req, res) => __awaiter(void 0, void 0, void 0, f
             req.body.isOnVerification = false;
             req.body.isVerified = true;
         }
-        const userInfo = yield userInfoModel_1.UserInfo.findOneAndUpdate({ username: req.params.username }, req.body, {
+        const oldUser = yield userModel_1.User.findOne({ username: req.params.username });
+        const userInfo = yield userInfoModel_1.UserInfo.findByIdAndUpdate(oldUser === null || oldUser === void 0 ? void 0 : oldUser.userId, req.body, {
             new: true,
         });
-        const user = yield userModel_1.User.findByIdAndUpdate(req.body.id, req.body, {
+        const user = yield userModel_1.User.findByIdAndUpdate(oldUser === null || oldUser === void 0 ? void 0 : oldUser._id, req.body, {
             new: true,
             runValidators: false,
         });
@@ -401,7 +471,7 @@ const updateUserVerification = (req, res) => __awaiter(void 0, void 0, void 0, f
                 userId: String(user === null || user === void 0 ? void 0 : user._id),
             });
             const notificationData = Object.assign(Object.assign({}, newNotification), { user });
-            app_1.io.emit(req.body.id, notificationData);
+            app_1.io.emit(String(user === null || user === void 0 ? void 0 : user.username), notificationData);
         }
         res.status(200).json({
             userInfo,

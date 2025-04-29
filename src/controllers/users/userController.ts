@@ -11,7 +11,7 @@ import { Follower, Post } from "../../models/users/postModel";
 import { io } from "../../app";
 import { sendEmail, sendNotification } from "../../utils/sendEmail";
 import { AcademicLevel } from "../../models/team/academicLevelModel";
-import { School } from "../../models/team/schoolModel";
+import { Department, Faculty, School } from "../../models/team/schoolModel";
 
 export const createUser = async (
   req: Request,
@@ -33,7 +33,21 @@ export const createUser = async (
     await newUser.save();
     await UserInfo.updateOne(
       { _id: userBio._id },
-      { $set: { accountId: newUser._id } }
+      {
+        $push: {
+          userAccounts: {
+            _id: newUser._id,
+            email: newUser.email,
+            username: newUser.username,
+            displayName: newUser.displayName,
+            phone: newUser.phone,
+            picture: newUser.picture,
+            following: 0,
+            followers: 0,
+            posts: 0,
+          },
+        },
+      }
     );
     res.status(201).json({
       message: "User created successfully",
@@ -133,6 +147,27 @@ export const updateUser = async (req: Request, res: Response) => {
   }
 };
 
+export const updateInfo = async (req: Request, res: Response) => {
+  try {
+    const uploadedFiles = await uploadFilesToS3(req);
+    uploadedFiles.forEach((file) => {
+      req.body[file.fieldName] = file.s3Url;
+    });
+
+    const user = await UserInfo.findByIdAndUpdate(req.params.id, req.body, {
+      new: true,
+      runValidators: true,
+    });
+
+    res.status(200).json({
+      message: "Your profile was updated successfully",
+      data: user,
+    });
+  } catch (error) {
+    handleError(res, undefined, undefined, error);
+  }
+};
+
 export const deleteUser = async (req: Request, res: Response) => {
   try {
     const user = await User.findByIdAndDelete(req.params.id);
@@ -161,6 +196,10 @@ export const updateUserInfo = async (
         update(req, res);
       }
       break;
+    case "Public":
+      req.body.isPublic = true;
+      update(req, res);
+      break;
     case "Education":
       if (req.body.isNew) {
         const result = await School.findOne({
@@ -178,12 +217,34 @@ export const updateUserInfo = async (
           area: req.body.currentSchoolArea,
           state: req.body.currentSchoolState,
           country: req.body.currentSchoolCountry,
+          countrySymbol: req.body.currentSchoolCountrySymbol,
           continent: req.body.currentSchoolContinent,
           isNew: true,
         };
 
         if (!result) {
-          await School.create(form);
+          const school = await School.create(form);
+          if (
+            !req.body.currentAcademicLevelName.includes("Primary") &&
+            !req.body.currentAcademicLevelName.includes("Secondary") &&
+            req.body.inSchool === "Yes"
+          ) {
+            const facultyForm = {
+              schoolId: school._id,
+              school: school.name,
+              name: req.body.currentFaculty,
+              isNew: true,
+            };
+            const faculty = await Faculty.create(facultyForm);
+
+            const departmentForm = {
+              facultyId: faculty._id,
+              faculty: faculty.name,
+              name: req.body.currentDepartment,
+              isNew: true,
+            };
+            await Department.create(departmentForm);
+          }
           const newSchools = await School.countDocuments({ isNew: true });
           io.emit("team", { action: "new", type: "school", newSchools });
         } else {
@@ -247,7 +308,7 @@ export const updateUserInfo = async (
       break;
 
     case "Document":
-      const user = await UserInfo.findOne({ username: req.params.username });
+      const user = await UserInfo.findById(req.params.id);
       const documents = user?.documents;
       const id = req.body.id;
       if (documents) {
@@ -277,7 +338,7 @@ export const updateUserInfo = async (
           };
           documents.push(doc);
           await UserInfo.updateOne(
-            { username: req.params.username },
+            { _id: req.params.id },
             { documents: documents },
             {
               new: true,
@@ -296,15 +357,13 @@ export const updateUserInfo = async (
 
 export const update = async (req: Request, res: Response): Promise<void> => {
   try {
-    const userInfo = await UserInfo.findOneAndUpdate(
-      { username: req.params.username },
-      req.body,
-      {
-        new: true,
-      }
-    );
+    const userInfo = await UserInfo.findByIdAndUpdate(req.params.id, req.body, {
+      new: true,
+    });
 
-    const user = await User.findByIdAndUpdate(req.body.ID, req.body, {
+    const updateData = req.body.isPublic ? { isPublic: true } : req.body;
+
+    const user = await User.findByIdAndUpdate(req.body.ID, updateData, {
       new: true,
       runValidators: false,
     });
@@ -317,6 +376,7 @@ export const update = async (req: Request, res: Response): Promise<void> => {
       user.isOrigin &&
       user.isEducation &&
       user.isEducationHistory &&
+      user.isPublic &&
       user.isEducationDocument &&
       !user.isOnVerification &&
       user.isRelated &&
@@ -326,13 +386,10 @@ export const update = async (req: Request, res: Response): Promise<void> => {
         isOnVerification: true,
         verifyingAt: new Date(),
       });
-      await UserInfo.findOneAndUpdate(
-        { username: req.params.username },
-        {
-          isOnVerification: true,
-          verifyingAt: new Date(),
-        }
-      );
+      await UserInfo.findByIdAndUpdate(req.params.id, {
+        isOnVerification: true,
+        verifyingAt: new Date(),
+      });
       const newNotification = await sendNotification(
         "verification_processing",
         {
@@ -344,7 +401,7 @@ export const update = async (req: Request, res: Response): Promise<void> => {
       const verifyingUsers = await User.countDocuments({
         isOnVerification: true,
       });
-      io.emit(req.body.ID, newNotification);
+      io.emit(String(user?.username), newNotification);
       io.emit("team", { action: "verifying", type: "stat", verifyingUsers });
     }
 
@@ -364,10 +421,22 @@ export const getUserInfo = async (
   res: Response
 ): Promise<Response | void> => {
   try {
-    const user = await UserInfo.findOne({ username: req.params.username });
+    const user = await UserInfo.findById(req.params.id);
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
+    res.status(200).json(user);
+  } catch (error) {
+    handleError(res, undefined, undefined, error);
+  }
+};
+
+export const getUserDetails = async (
+  req: Request,
+  res: Response
+): Promise<Response | void> => {
+  try {
+    const user = await UserInfo.findOne({ username: req.params.username });
     res.status(200).json(user);
   } catch (error) {
     handleError(res, undefined, undefined, error);
@@ -404,15 +473,17 @@ export const updateUserVerification = async (
       req.body.isVerified = true;
     }
 
-    const userInfo = await UserInfo.findOneAndUpdate(
-      { username: req.params.username },
+    const oldUser = await User.findOne({ username: req.params.username });
+
+    const userInfo = await UserInfo.findByIdAndUpdate(
+      oldUser?.userId,
       req.body,
       {
         new: true,
       }
     );
 
-    const user = await User.findByIdAndUpdate(req.body.id, req.body, {
+    const user = await User.findByIdAndUpdate(oldUser?._id, req.body, {
       new: true,
       runValidators: false,
     });
@@ -440,7 +511,7 @@ export const updateUserVerification = async (
         }
       );
       const notificationData = { ...newNotification, user };
-      io.emit(req.body.id, notificationData);
+      io.emit(String(user?.username), notificationData);
     }
 
     res.status(200).json({

@@ -33,12 +33,14 @@ const createAccount = (req, res) => __awaiter(void 0, void 0, void 0, function* 
             interests: interests,
             intro: description,
         }, { new: true });
-        yield userInfoModel_1.UserInfo.findByIdAndUpdate(user === null || user === void 0 ? void 0 : user.userId, {
-            picture: picture,
-            displayName: displayName,
-            username: username,
-            intro: description,
-        }, { new: true });
+        yield userInfoModel_1.UserInfo.updateOne({ "userAccounts.email": user === null || user === void 0 ? void 0 : user.email }, {
+            $set: {
+                "userAccounts.$.picture": user === null || user === void 0 ? void 0 : user.picture,
+                "userAccounts.$.displayName": user === null || user === void 0 ? void 0 : user.displayName,
+                "userAccounts.$.username": user === null || user === void 0 ? void 0 : user.username,
+                "userAccounts.$.intro": user === null || user === void 0 ? void 0 : user.intro,
+            },
+        });
         if (!user) {
             throw new Error("User not found");
         }

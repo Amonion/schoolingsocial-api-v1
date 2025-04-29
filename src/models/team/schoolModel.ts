@@ -20,6 +20,7 @@ const SchoolSchema: Schema = new Schema(
     area: { type: String, default: "" },
     state: { type: String, default: "" },
     country: { type: String, default: "" },
+    countrySymbol: { type: String, default: "" },
     continent: { type: String, default: "" },
     placeId: { type: String, default: "" },
     countryFlag: { type: String, default: "" },
@@ -74,6 +75,7 @@ const FacultySchema: Schema = new Schema(
     picture: { type: String, default: "" },
     media: { type: String, default: "" },
     description: { type: String, default: "" },
+    isNew: { type: Boolean, default: false },
     createdAt: { type: Date, default: Date.now },
   },
   {
@@ -94,6 +96,7 @@ const DepartmentSchema: Schema = new Schema(
     picture: { type: String, default: "" },
     media: { type: String, default: "" },
     description: { type: String, default: "" },
+    isNew: { type: Boolean, default: false },
     createdAt: { type: Date, default: Date.now },
   },
   {

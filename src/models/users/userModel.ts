@@ -41,6 +41,7 @@ const UserSchema: Schema = new Schema(
     exams: { type: Number, default: 0 },
     isOnVerification: { type: Boolean, default: false },
     isVerified: { type: Boolean, default: false },
+    isPublic: { type: Boolean, default: false },
     isFollowed: { type: Boolean, default: false },
     isDocument: { type: Boolean, default: false },
     isOrigin: { type: Boolean, default: false },
