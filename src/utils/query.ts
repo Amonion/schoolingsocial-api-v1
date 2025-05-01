@@ -80,6 +80,11 @@ const buildFilterQuery = (req: Request): Record<string, any> => {
           .split(",")
           .map((name: string) => name.trim());
         filters["levels.levelName"] = { $in: namesArray };
+      } else if (key === "usernames") {
+        const namesArray = normalizedValue
+          .split(",")
+          .map((name: string) => name.trim());
+        filters["username"] = { $in: namesArray };
       } else if (normalizedValue === "") {
         filters[key] = { $exists: false };
       } else if (normalizedValue === "true" || normalizedValue === "false") {

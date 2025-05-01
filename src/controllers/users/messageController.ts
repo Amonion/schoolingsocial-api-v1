@@ -1,13 +1,10 @@
 import { Request, Response } from "express";
-import { IUser, IUserNotification } from "../../utils/userInterface";
+import { IUserNotification } from "../../utils/userInterface";
 import { User } from "../../models/users/userModel";
 import { UserInfo } from "../../models/users/userInfoModel";
-import { Staff } from "../../models/team/staffModel";
 import { handleError } from "../../utils/errorHandler";
 import { queryData } from "../../utils/query";
-import { uploadFilesToS3 } from "../../utils/fileUpload";
 import bcrypt from "bcryptjs";
-import { Post } from "../../models/users/postModel";
 import { UserNotification } from "../../models/team/emailModel";
 
 export const createUser = async (

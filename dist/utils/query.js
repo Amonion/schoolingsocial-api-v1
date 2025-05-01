@@ -79,6 +79,12 @@ const buildFilterQuery = (req) => {
                     .map((name) => name.trim());
                 filters["levels.levelName"] = { $in: namesArray };
             }
+            else if (key === "usernames") {
+                const namesArray = normalizedValue
+                    .split(",")
+                    .map((name) => name.trim());
+                filters["username"] = { $in: namesArray };
+            }
             else if (normalizedValue === "") {
                 filters[key] = { $exists: false };
             }

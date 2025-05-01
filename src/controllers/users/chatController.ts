@@ -35,9 +35,9 @@ export const createChat = async (data: IChat) => {
     });
     data.isFriends = received ? true : false;
     if (data.isFriends) {
-      await Chat.findOneAndUpdate(
+      await Chat.updateMany(
         { connection: connection },
-        { isFriends: true }
+        { $set: { isFriends: true } }
       );
     }
 
@@ -169,13 +169,20 @@ export const searchFavChats = async (req: Request, res: Response) => {
 export const friendsChats = async (req: Request, res: Response) => {
   try {
     const username = String(req.query.username || "").trim();
+    const accountUsername = String(req.query.accountUsername || "").trim();
 
     const result = await Chat.aggregate([
       {
         $match: {
-          deletedUsername: { $ne: username },
-          connection: { $regex: username },
-          $or: [{ isFriends: true }, { username: username }],
+          deletedUsername: { $nin: [username, accountUsername] },
+          connection: {
+            $in: [new RegExp(username, "i"), new RegExp(accountUsername, "i")],
+          },
+          $or: [
+            { isFriends: true },
+            { username: username },
+            { username: accountUsername },
+          ],
         },
       },
       {
@@ -191,7 +198,12 @@ export const friendsChats = async (req: Request, res: Response) => {
                 {
                   $and: [
                     { $eq: ["$isRead", false] },
-                    { $eq: ["$receiverUsername", username] },
+                    {
+                      $or: [
+                        { $eq: ["$receiverUsername", username] },
+                        { $eq: ["$receiverUsername", accountUsername] },
+                      ],
+                    },
                   ],
                 },
                 1,
@@ -216,6 +228,7 @@ export const friendsChats = async (req: Request, res: Response) => {
           createdAt: 1,
           picture: 1,
           username: 1,
+          from: 1,
           connection: 1,
           receiverPicture: 1,
           receiverId: 1,

@@ -33,7 +33,7 @@ const createChat = (data) => __awaiter(void 0, void 0, void 0, function* () {
         });
         data.isFriends = received ? true : false;
         if (data.isFriends) {
-            yield chatModel_1.Chat.findOneAndUpdate({ connection: connection }, { isFriends: true });
+            yield chatModel_1.Chat.updateMany({ connection: connection }, { $set: { isFriends: true } });
         }
         const unreadReceiver = yield chatModel_1.Chat.countDocuments({
             connection: connection,
@@ -152,12 +152,19 @@ exports.searchFavChats = searchFavChats;
 const friendsChats = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const username = String(req.query.username || "").trim();
+        const accountUsername = String(req.query.accountUsername || "").trim();
         const result = yield chatModel_1.Chat.aggregate([
             {
                 $match: {
-                    deletedUsername: { $ne: username },
-                    connection: { $regex: username },
-                    $or: [{ isFriends: true }, { username: username }],
+                    deletedUsername: { $nin: [username, accountUsername] },
+                    connection: {
+                        $in: [new RegExp(username, "i"), new RegExp(accountUsername, "i")],
+                    },
+                    $or: [
+                        { isFriends: true },
+                        { username: username },
+                        { username: accountUsername },
+                    ],
                 },
             },
             {
@@ -173,7 +180,12 @@ const friendsChats = (req, res) => __awaiter(void 0, void 0, void 0, function* (
                                 {
                                     $and: [
                                         { $eq: ["$isRead", false] },
-                                        { $eq: ["$receiverUsername", username] },
+                                        {
+                                            $or: [
+                                                { $eq: ["$receiverUsername", username] },
+                                                { $eq: ["$receiverUsername", accountUsername] },
+                                            ],
+                                        },
                                     ],
                                 },
                                 1,
@@ -198,6 +210,7 @@ const friendsChats = (req, res) => __awaiter(void 0, void 0, void 0, function* (
                     createdAt: 1,
                     picture: 1,
                     username: 1,
+                    from: 1,
                     connection: 1,
                     receiverPicture: 1,
                     receiverId: 1,

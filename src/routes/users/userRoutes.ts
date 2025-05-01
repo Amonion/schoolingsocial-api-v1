@@ -15,6 +15,7 @@ import {
   followUser,
   updateInfo,
   getUserDetails,
+  getExistingUsername,
 } from "../../controllers/users/userController";
 import {
   getStaffById,
@@ -34,6 +35,8 @@ router.route("/staffs/:id").get(getStaffById).patch(upload.any(), updateStaff);
 
 router.route("/info").get(getStaffs);
 router.route("/info/:id").patch(upload.any(), updateInfo);
+router.route("/username/:username").get(getExistingUsername);
+router.route("/details").get(getUserDetails);
 router
   .route("/details/:username")
   .get(getUserDetails)

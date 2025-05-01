@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import { IUser } from "../../utils/userInterface";
+import { IUser, IUserInfo } from "../../utils/userInterface";
 import { User } from "../../models/users/userModel";
 import { UserInfo } from "../../models/users/userInfoModel";
 import { Staff } from "../../models/team/staffModel";
@@ -396,6 +396,7 @@ export const update = async (req: Request, res: Response): Promise<void> => {
           username: String(user?.username),
           receiverUsername: String(user.username),
           userId: user._id,
+          from: user._id,
         }
       );
       const verifyingUsers = await User.countDocuments({
@@ -443,6 +444,33 @@ export const getUserDetails = async (
   }
 };
 
+export const getManyUserDetails = async (
+  req: Request,
+  res: Response
+): Promise<Response | void> => {
+  try {
+    const results = await queryData<IUserInfo>(UserInfo, req);
+    res.status(200).json(results);
+  } catch (error) {
+    handleError(res, undefined, undefined, error);
+  }
+};
+
+export const getExistingUsername = async (
+  req: Request,
+  res: Response
+): Promise<Response | void> => {
+  try {
+    const user =
+      (await UserInfo.findOne({ username: req.params.username })) ||
+      (await User.findOne({ username: req.params.username }));
+
+    res.status(200).json(user);
+  } catch (error) {
+    handleError(res, undefined, undefined, error);
+  }
+};
+
 export const searchUserInfo = (req: Request, res: Response) => {
   return search(UserInfo, req, res);
 };
@@ -471,17 +499,22 @@ export const updateUserVerification = async (
     if (req.body.status === "Approved") {
       req.body.isOnVerification = false;
       req.body.isVerified = true;
+      req.body.displayName = `${req.body.lastName?.[0]?.toUpperCase()}. ${req.body.middleName?.[0]?.toUpperCase()}. ${
+        req.body.firstName
+      }`;
     }
 
-    const oldUser = await User.findOne({ username: req.params.username });
+    const oldUser = await User.findOne({ email: req.body.email });
 
-    const userInfo = await UserInfo.findByIdAndUpdate(
-      oldUser?.userId,
+    const userInfo = await UserInfo.findOneAndUpdate(
+      { username: req.params.username },
       req.body,
       {
         new: true,
       }
     );
+
+    delete req.body.displayName;
 
     const user = await User.findByIdAndUpdate(oldUser?._id, req.body, {
       new: true,
@@ -493,12 +526,8 @@ export const updateUserVerification = async (
         username: String(user?.username),
         receiverUsername: String(user?.username),
         userId: String(user?._id),
+        from: String(user?._id),
       });
-      // sendEmail(
-      //   String(user?.username),
-      //   String(user?.email),
-      //   "verification_fail"
-      // );
 
       io.emit(req.body.id, newNotification);
     } else {
@@ -508,6 +537,7 @@ export const updateUserVerification = async (
           username: String(user?.username),
           receiverUsername: String(user?.username),
           userId: String(user?._id),
+          from: String(user?._id),
         }
       );
       const notificationData = { ...newNotification, user };

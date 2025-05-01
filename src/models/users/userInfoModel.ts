@@ -6,6 +6,7 @@ const UserInfoSchema: Schema = new Schema(
     firstName: { type: String, default: "" },
     middleName: { type: String, default: "" },
     lastName: { type: String, default: "" },
+    displayName: { type: String, default: "" },
     username: { type: String, default: "" },
     picture: { type: String, default: "" },
     media: { type: String, default: "" },

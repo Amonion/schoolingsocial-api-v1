@@ -71,13 +71,16 @@ const sendNotification = (templateName, data) => __awaiter(void 0, void 0, void 
     const notificationTemp = yield emailModel_1.Notification.findOne({
         name: templateName,
     });
+    const click_here = templateName === "friend_request"
+        ? `<a href="/home/chat/${data.from}/${data.username}" class="text-[var(--custom)]">click here</a>`
+        : "";
     const notification = {
         greetings: notificationTemp === null || notificationTemp === void 0 ? void 0 : notificationTemp.greetings,
         name: notificationTemp === null || notificationTemp === void 0 ? void 0 : notificationTemp.name,
         title: notificationTemp === null || notificationTemp === void 0 ? void 0 : notificationTemp.title,
         username: data.receiverUsername,
         userId: data.userId,
-        content: notificationTemp === null || notificationTemp === void 0 ? void 0 : notificationTemp.content.replace("{{sender_username}}", data.username).replace("{{click_here}}", `<a href="/home/friends/chat/${data.username}" class="text-[var(--custom)]">click here</a>`),
+        content: notificationTemp === null || notificationTemp === void 0 ? void 0 : notificationTemp.content.replace("{{sender_username}}", data.username).replace("{{click_here}}", click_here),
     };
     const newNotification = yield emailModel_1.UserNotification.create(notification);
     const count = yield emailModel_1.UserNotification.countDocuments({

@@ -15,6 +15,7 @@ export interface IAccount extends Document {
 
 export interface IChat extends Document {
   _id: string;
+  from: string;
   content: string;
   userId: string;
   isReadUsernames: string[];

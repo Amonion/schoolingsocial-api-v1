@@ -53,6 +53,7 @@ const ChatSchema = new mongoose_1.Schema({
     receiverUsername: { type: String, default: "" },
     receiverPicture: { type: String, default: "" },
     receiverId: { type: String, default: "" },
+    from: { type: String, default: "" },
     time: { type: Number, default: 0 },
     unreadUser: { type: Number, default: 0 },
     unreadReceiver: { type: Number, default: 0 },

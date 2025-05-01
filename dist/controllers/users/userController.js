@@ -12,7 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.followUser = exports.updateUserVerification = exports.searchUserInfo = exports.getUserDetails = exports.getUserInfo = exports.update = exports.updateUserInfo = exports.deleteUser = exports.updateInfo = exports.updateUser = exports.getUsers = exports.getAUser = exports.createUser = void 0;
+exports.followUser = exports.updateUserVerification = exports.searchUserInfo = exports.getExistingUsername = exports.getManyUserDetails = exports.getUserDetails = exports.getUserInfo = exports.update = exports.updateUserInfo = exports.deleteUser = exports.updateInfo = exports.updateUser = exports.getUsers = exports.getAUser = exports.createUser = void 0;
 const userModel_1 = require("../../models/users/userModel");
 const userInfoModel_1 = require("../../models/users/userInfoModel");
 const staffModel_1 = require("../../models/team/staffModel");
@@ -370,6 +370,7 @@ const update = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
                 username: String(user === null || user === void 0 ? void 0 : user.username),
                 receiverUsername: String(user.username),
                 userId: user._id,
+                from: user._id,
             });
             const verifyingUsers = yield userModel_1.User.countDocuments({
                 isOnVerification: true,
@@ -412,11 +413,33 @@ const getUserDetails = (req, res) => __awaiter(void 0, void 0, void 0, function*
     }
 });
 exports.getUserDetails = getUserDetails;
+const getManyUserDetails = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const results = yield (0, query_1.queryData)(userInfoModel_1.UserInfo, req);
+        res.status(200).json(results);
+    }
+    catch (error) {
+        (0, errorHandler_1.handleError)(res, undefined, undefined, error);
+    }
+});
+exports.getManyUserDetails = getManyUserDetails;
+const getExistingUsername = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const user = (yield userInfoModel_1.UserInfo.findOne({ username: req.params.username })) ||
+            (yield userModel_1.User.findOne({ username: req.params.username }));
+        res.status(200).json(user);
+    }
+    catch (error) {
+        (0, errorHandler_1.handleError)(res, undefined, undefined, error);
+    }
+});
+exports.getExistingUsername = getExistingUsername;
 const searchUserInfo = (req, res) => {
     return (0, query_1.search)(userInfoModel_1.UserInfo, req, res);
 };
 exports.searchUserInfo = searchUserInfo;
 const updateUserVerification = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    var _a, _b, _c, _d;
     try {
         if (req.body.action === "bio") {
             req.body.isBio = false;
@@ -442,11 +465,13 @@ const updateUserVerification = (req, res) => __awaiter(void 0, void 0, void 0, f
         if (req.body.status === "Approved") {
             req.body.isOnVerification = false;
             req.body.isVerified = true;
+            req.body.displayName = `${(_b = (_a = req.body.lastName) === null || _a === void 0 ? void 0 : _a[0]) === null || _b === void 0 ? void 0 : _b.toUpperCase()}. ${(_d = (_c = req.body.middleName) === null || _c === void 0 ? void 0 : _c[0]) === null || _d === void 0 ? void 0 : _d.toUpperCase()}. ${req.body.firstName}`;
         }
-        const oldUser = yield userModel_1.User.findOne({ username: req.params.username });
-        const userInfo = yield userInfoModel_1.UserInfo.findByIdAndUpdate(oldUser === null || oldUser === void 0 ? void 0 : oldUser.userId, req.body, {
+        const oldUser = yield userModel_1.User.findOne({ email: req.body.email });
+        const userInfo = yield userInfoModel_1.UserInfo.findOneAndUpdate({ username: req.params.username }, req.body, {
             new: true,
         });
+        delete req.body.displayName;
         const user = yield userModel_1.User.findByIdAndUpdate(oldUser === null || oldUser === void 0 ? void 0 : oldUser._id, req.body, {
             new: true,
             runValidators: false,
@@ -456,12 +481,8 @@ const updateUserVerification = (req, res) => __awaiter(void 0, void 0, void 0, f
                 username: String(user === null || user === void 0 ? void 0 : user.username),
                 receiverUsername: String(user === null || user === void 0 ? void 0 : user.username),
                 userId: String(user === null || user === void 0 ? void 0 : user._id),
+                from: String(user === null || user === void 0 ? void 0 : user._id),
             });
-            // sendEmail(
-            //   String(user?.username),
-            //   String(user?.email),
-            //   "verification_fail"
-            // );
             app_1.io.emit(req.body.id, newNotification);
         }
         else {
@@ -469,6 +490,7 @@ const updateUserVerification = (req, res) => __awaiter(void 0, void 0, void 0, f
                 username: String(user === null || user === void 0 ? void 0 : user.username),
                 receiverUsername: String(user === null || user === void 0 ? void 0 : user.username),
                 userId: String(user === null || user === void 0 ? void 0 : user._id),
+                from: String(user === null || user === void 0 ? void 0 : user._id),
             });
             const notificationData = Object.assign(Object.assign({}, newNotification), { user });
             app_1.io.emit(String(user === null || user === void 0 ? void 0 : user.username), notificationData);
