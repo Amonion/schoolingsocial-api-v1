@@ -1,5 +1,9 @@
 import mongoose, { Schema } from "mongoose";
-import { IUserInfo } from "../../utils/userInterface";
+import {
+  IUserInfo,
+  IUserSchoolInfo,
+  IUserFinanceInfo,
+} from "../../utils/userInterface";
 
 const UserInfoSchema: Schema = new Schema(
   {
@@ -15,6 +19,7 @@ const UserInfoSchema: Schema = new Schema(
     gender: { type: String, default: "" },
     maritalStatus: { type: String, default: "" },
     documents: { type: Array, default: [] },
+    signupIp: { type: String, default: "" },
 
     homeContinent: { type: String, default: "" },
     homeCountry: { type: String, default: "" },
@@ -23,9 +28,10 @@ const UserInfoSchema: Schema = new Schema(
     homeArea: { type: String, default: "" },
     homeAddress: { type: String, default: "" },
     homeId: { type: String, default: "" },
+    userStatus: { type: String, default: "User" },
+
     phone: { type: String, default: "" },
     email: { type: String, default: "" },
-
     continent: { type: String, default: "" },
     country: { type: String, default: "" },
     countrySymbol: { type: String, default: "" },
@@ -34,36 +40,6 @@ const UserInfoSchema: Schema = new Schema(
     address: { type: String, default: "" },
     placeId: { type: String, default: "" },
 
-    currentSchoolContinent: { type: String, default: "" },
-    currentSchoolCountry: { type: String, default: "" },
-    currentSchoolCountryFlag: { type: String, default: "" },
-    currentSchoolCountrySymbol: { type: String, default: "" },
-    currentSchoolState: { type: String, default: "" },
-    currentSchoolPicture: { type: String, default: "" },
-    currentSchoolArea: { type: String, default: "" },
-    currentSchoolUsername: { type: String, default: "" },
-    currentSchoolName: { type: String, default: "" },
-    currentSchoolId: { type: String, default: "" },
-    currentAcademicLevelSymbol: { type: String, default: "" },
-    currentAcademicLevel: { type: String, default: "" },
-    currentAcademicLevelName: { type: String, default: "" },
-    currentSchoolLevel: { type: String, default: "" },
-    currentSchoolPlaceId: { type: String, default: "" },
-    currentFaculty: { type: String, default: "" },
-    currentFacultyUsername: { type: String, default: "" },
-    currentDepartment: { type: String, default: "" },
-    currentDepartmentUsername: { type: String, default: "" },
-
-    pastSchools: { type: Array, default: [] },
-    userAccounts: { type: Array, default: [] },
-
-    accountName: { type: String, default: "" },
-    accountNumber: { type: String, default: "" },
-    bvn: { type: String, default: "" },
-    bankName: { type: String, default: "" },
-    bankId: { type: String, default: "" },
-    bankUsername: { type: String, default: "" },
-    bankLogo: { type: String, default: "" },
     bioInfo: {
       type: Array,
       default: [
@@ -144,7 +120,6 @@ const UserInfoSchema: Schema = new Schema(
     nextKin: { type: String, default: "" },
     nextKinPhone: { type: String, default: "" },
     isOnVerification: { type: Boolean, default: false },
-    isSchoolRecorded: { type: Boolean, default: false },
     isVerified: { type: Boolean, default: false },
     isPublic: { type: Boolean, default: false },
     verifyingAt: { type: Date, default: null },
@@ -158,3 +133,73 @@ const UserInfoSchema: Schema = new Schema(
 );
 
 export const UserInfo = mongoose.model<IUserInfo>("UserInfo", UserInfoSchema);
+
+const UserSchoolInfoSchema: Schema = new Schema(
+  {
+    displayName: { type: String, default: "" },
+    username: { type: String, default: "" },
+    picture: { type: String, default: "" },
+    media: { type: String, default: "" },
+    intro: { type: String, default: "" },
+    userId: { type: String, default: "" },
+
+    currentSchoolContinent: { type: String, default: "" },
+    currentSchoolCountry: { type: String, default: "" },
+    currentSchoolCountryFlag: { type: String, default: "" },
+    currentSchoolCountrySymbol: { type: String, default: "" },
+    currentSchoolState: { type: String, default: "" },
+    currentSchoolPicture: { type: String, default: "" },
+    currentSchoolArea: { type: String, default: "" },
+    currentSchoolUsername: { type: String, default: "" },
+    currentSchoolName: { type: String, default: "" },
+    currentSchoolId: { type: String, default: "" },
+    currentAcademicLevelSymbol: { type: String, default: "" },
+    currentAcademicLevel: { type: Object, default: {} },
+    currentAcademicLevelName: { type: String, default: "" },
+    currentSchoolLevel: { type: String, default: "" },
+    currentSchoolPlaceId: { type: String, default: "" },
+    currentFaculty: { type: String, default: "" },
+    currentFacultyUsername: { type: String, default: "" },
+    currentDepartment: { type: String, default: "" },
+    currentDepartmentUsername: { type: String, default: "" },
+    isSchoolRecorded: { type: Boolean, default: false },
+    pastSchools: { type: Array, default: [] },
+    createdAt: { type: Date, default: Date.now },
+  },
+  {
+    timestamps: true,
+  }
+);
+
+export const UserSchoolInfo = mongoose.model<IUserSchoolInfo>(
+  "UserSchoolInfo",
+  UserSchoolInfoSchema
+);
+
+const UserFinanceInfoSchema: Schema = new Schema(
+  {
+    displayName: { type: String, default: "" },
+    username: { type: String, default: "" },
+    picture: { type: String, default: "" },
+    media: { type: String, default: "" },
+    intro: { type: String, default: "" },
+    userId: { type: String, default: "" },
+
+    accountName: { type: String, default: "" },
+    accountNumber: { type: String, default: "" },
+    bvn: { type: String, default: "" },
+    bankName: { type: String, default: "" },
+    bankId: { type: String, default: "" },
+    bankUsername: { type: String, default: "" },
+    bankLogo: { type: String, default: "" },
+    createdAt: { type: Date, default: Date.now },
+  },
+  {
+    timestamps: true,
+  }
+);
+
+export const UserFinanceInfo = mongoose.model<IUserFinanceInfo>(
+  "UserFinanceInfo",
+  UserFinanceInfoSchema
+);

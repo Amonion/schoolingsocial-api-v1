@@ -30,6 +30,8 @@ const createUser = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
         const { email, signupIp, password } = req.body;
         const userBio = new userInfoModel_1.UserInfo({ email, signupIp });
         yield userBio.save();
+        yield userInfoModel_1.UserSchoolInfo.create({ userId: userBio._id });
+        yield userInfoModel_1.UserFinanceInfo.create({ userId: userBio._id });
         const newUser = new userModel_1.User({
             userId: userBio._id,
             email,
@@ -65,16 +67,22 @@ exports.createUser = createUser;
 const getAUser = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const user = yield userModel_1.User.findOne({ username: req.params.username });
+        const user1 = yield userInfoModel_1.UserInfo.findOne({ username: req.params.username });
         const followerId = req.query.userId;
         const follow = yield postModel_1.Follower.findOne({
             userId: user === null || user === void 0 ? void 0 : user._id,
             followerId: followerId,
         });
-        if (!user) {
+        if (user) {
+            const followedUser = Object.assign(Object.assign({}, user.toObject()), { isFollowed: !!follow });
+            res.status(200).json(followedUser);
+        }
+        if (user1) {
+            res.status(200).json(user1);
+        }
+        if (!user && !user1) {
             return res.status(404).json({ message: "User not found" });
         }
-        const followedUser = Object.assign(Object.assign({}, user.toObject()), { isFollowed: !!follow });
-        res.status(200).json(followedUser);
     }
     catch (error) {
         (0, errorHandler_1.handleError)(res, undefined, undefined, error);
@@ -190,6 +198,10 @@ const updateUserInfo = (req, res) => __awaiter(void 0, void 0, void 0, function*
             break;
         case "Public":
             req.body.isPublic = true;
+            const uploadedProfileFiles = yield (0, fileUpload_1.uploadFilesToS3)(req);
+            uploadedProfileFiles.forEach((file) => {
+                req.body[file.fieldName] = file.s3Url;
+            });
             (0, exports.update)(req, res);
             break;
         case "Education":
@@ -240,6 +252,7 @@ const updateUserInfo = (req, res) => __awaiter(void 0, void 0, void 0, function*
                     yield schoolModel_1.School.findByIdAndUpdate(level === null || level === void 0 ? void 0 : level._id, form);
                 }
             }
+            req.body.currentAcademicLevel = JSON.parse(req.body.currentAcademicLevel);
             (0, exports.update)(req, res);
             break;
         case "EducationHistory":
@@ -289,8 +302,8 @@ const updateUserInfo = (req, res) => __awaiter(void 0, void 0, void 0, function*
             (0, exports.update)(req, res);
             break;
         case "Profile":
-            const uploadedProfileFiles = yield (0, fileUpload_1.uploadFilesToS3)(req);
-            uploadedProfileFiles.forEach((file) => {
+            const uploadedProfileFiles1 = yield (0, fileUpload_1.uploadFilesToS3)(req);
+            uploadedProfileFiles1.forEach((file) => {
                 req.body[file.fieldName] = file.s3Url;
             });
             (0, exports.update)(req, res);
@@ -346,6 +359,12 @@ const update = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
             new: true,
             runValidators: false,
         });
+        const schoolInfo = yield userInfoModel_1.UserSchoolInfo.findOneAndUpdate({ userId: req.params.id }, req.body, {
+            new: true,
+        });
+        yield userInfoModel_1.UserFinanceInfo.findOneAndUpdate({ userId: req.params.id }, req.body, {
+            new: true,
+        });
         if (user &&
             user.isBio &&
             user.isContact &&
@@ -379,6 +398,7 @@ const update = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
             app_1.io.emit("team", { action: "verifying", type: "stat", verifyingUsers });
         }
         res.status(200).json({
+            schoolInfo,
             userInfo,
             user,
             results: req.body.pastSchool,
@@ -392,11 +412,20 @@ const update = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
 exports.update = update;
 const getUserInfo = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const user = yield userInfoModel_1.UserInfo.findById(req.params.id);
-        if (!user) {
-            return res.status(404).json({ message: "User not found" });
+        if (req.query.school) {
+            const user = yield userInfoModel_1.UserSchoolInfo.findOne({ userId: req.params.id });
+            if (!user) {
+                return res.status(404).json({ message: "User not found" });
+            }
+            res.status(200).json(user);
         }
-        res.status(200).json(user);
+        else {
+            const user = yield userInfoModel_1.UserInfo.findById(req.params.id);
+            if (!user) {
+                return res.status(404).json({ message: "User not found" });
+            }
+            res.status(200).json(user);
+        }
     }
     catch (error) {
         (0, errorHandler_1.handleError)(res, undefined, undefined, error);
@@ -469,6 +498,9 @@ const updateUserVerification = (req, res) => __awaiter(void 0, void 0, void 0, f
         }
         const oldUser = yield userModel_1.User.findOne({ email: req.body.email });
         const userInfo = yield userInfoModel_1.UserInfo.findOneAndUpdate({ username: req.params.username }, req.body, {
+            new: true,
+        });
+        yield userInfoModel_1.UserSchoolInfo.findOneAndUpdate({ username: req.params.username }, req.body, {
             new: true,
         });
         delete req.body.displayName;

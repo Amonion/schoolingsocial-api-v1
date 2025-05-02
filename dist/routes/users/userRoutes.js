@@ -19,7 +19,7 @@ router.route("/staffs/:id").get(staffController_1.getStaffById).patch(upload.any
 router.route("/info").get(staffController_1.getStaffs);
 router.route("/info/:id").patch(upload.any(), userController_1.updateInfo);
 router.route("/username/:username").get(userController_1.getExistingUsername);
-router.route("/details").get(userController_1.getUserDetails);
+router.route("/details").get(userController_1.getManyUserDetails);
 router
     .route("/details/:username")
     .get(userController_1.getUserDetails)

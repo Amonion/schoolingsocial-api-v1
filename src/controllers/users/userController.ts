@@ -1,7 +1,11 @@
 import { Request, Response } from "express";
 import { IUser, IUserInfo } from "../../utils/userInterface";
 import { User } from "../../models/users/userModel";
-import { UserInfo } from "../../models/users/userInfoModel";
+import {
+  UserInfo,
+  UserSchoolInfo,
+  UserFinanceInfo,
+} from "../../models/users/userInfoModel";
 import { Staff } from "../../models/team/staffModel";
 import { handleError } from "../../utils/errorHandler";
 import { queryData, search, followAccount } from "../../utils/query";
@@ -22,6 +26,8 @@ export const createUser = async (
 
     const userBio = new UserInfo({ email, signupIp });
     await userBio.save();
+    await UserSchoolInfo.create({ userId: userBio._id });
+    await UserFinanceInfo.create({ userId: userBio._id });
 
     const newUser = new User({
       userId: userBio._id,
@@ -64,21 +70,27 @@ export const getAUser = async (
 ): Promise<Response | void> => {
   try {
     const user = await User.findOne({ username: req.params.username });
+    const user1 = await UserInfo.findOne({ username: req.params.username });
     const followerId = req.query.userId;
     const follow = await Follower.findOne({
       userId: user?._id,
       followerId: followerId,
     });
 
-    if (!user) {
-      return res.status(404).json({ message: "User not found" });
+    if (user) {
+      const followedUser = {
+        ...user.toObject(),
+        isFollowed: !!follow,
+      };
+      res.status(200).json(followedUser);
+    }
+    if (user1) {
+      res.status(200).json(user1);
     }
 
-    const followedUser = {
-      ...user.toObject(),
-      isFollowed: !!follow,
-    };
-    res.status(200).json(followedUser);
+    if (!user && !user1) {
+      return res.status(404).json({ message: "User not found" });
+    }
   } catch (error) {
     handleError(res, undefined, undefined, error);
   }
@@ -198,6 +210,10 @@ export const updateUserInfo = async (
       break;
     case "Public":
       req.body.isPublic = true;
+      const uploadedProfileFiles = await uploadFilesToS3(req);
+      uploadedProfileFiles.forEach((file) => {
+        req.body[file.fieldName] = file.s3Url;
+      });
       update(req, res);
       break;
     case "Education":
@@ -251,6 +267,7 @@ export const updateUserInfo = async (
           await School.findByIdAndUpdate(level?._id, form);
         }
       }
+      req.body.currentAcademicLevel = JSON.parse(req.body.currentAcademicLevel);
       update(req, res);
       break;
     case "EducationHistory":
@@ -300,13 +317,12 @@ export const updateUserInfo = async (
       update(req, res);
       break;
     case "Profile":
-      const uploadedProfileFiles = await uploadFilesToS3(req);
-      uploadedProfileFiles.forEach((file) => {
+      const uploadedProfileFiles1 = await uploadFilesToS3(req);
+      uploadedProfileFiles1.forEach((file) => {
         req.body[file.fieldName] = file.s3Url;
       });
       update(req, res);
       break;
-
     case "Document":
       const user = await UserInfo.findById(req.params.id);
       const documents = user?.documents;
@@ -368,6 +384,22 @@ export const update = async (req: Request, res: Response): Promise<void> => {
       runValidators: false,
     });
 
+    const schoolInfo = await UserSchoolInfo.findOneAndUpdate(
+      { userId: req.params.id },
+      req.body,
+      {
+        new: true,
+      }
+    );
+
+    await UserFinanceInfo.findOneAndUpdate(
+      { userId: req.params.id },
+      req.body,
+      {
+        new: true,
+      }
+    );
+
     if (
       user &&
       user.isBio &&
@@ -407,6 +439,7 @@ export const update = async (req: Request, res: Response): Promise<void> => {
     }
 
     res.status(200).json({
+      schoolInfo,
       userInfo,
       user,
       results: req.body.pastSchool,
@@ -422,11 +455,19 @@ export const getUserInfo = async (
   res: Response
 ): Promise<Response | void> => {
   try {
-    const user = await UserInfo.findById(req.params.id);
-    if (!user) {
-      return res.status(404).json({ message: "User not found" });
+    if (req.query.school) {
+      const user = await UserSchoolInfo.findOne({ userId: req.params.id });
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      res.status(200).json(user);
+    } else {
+      const user = await UserInfo.findById(req.params.id);
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      res.status(200).json(user);
     }
-    res.status(200).json(user);
   } catch (error) {
     handleError(res, undefined, undefined, error);
   }
@@ -507,6 +548,13 @@ export const updateUserVerification = async (
     const oldUser = await User.findOne({ email: req.body.email });
 
     const userInfo = await UserInfo.findOneAndUpdate(
+      { username: req.params.username },
+      req.body,
+      {
+        new: true,
+      }
+    );
+    await UserSchoolInfo.findOneAndUpdate(
       { username: req.params.username },
       req.body,
       {

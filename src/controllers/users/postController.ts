@@ -46,17 +46,6 @@ export const createAccount = async (
       },
       { new: true }
     );
-    await UserInfo.updateOne(
-      { "userAccounts.email": user?.email },
-      {
-        $set: {
-          "userAccounts.$.picture": user?.picture,
-          "userAccounts.$.displayName": user?.displayName,
-          "userAccounts.$.username": user?.username,
-          "userAccounts.$.intro": user?.intro,
-        },
-      }
-    );
 
     if (!user) {
       throw new Error("User not found");

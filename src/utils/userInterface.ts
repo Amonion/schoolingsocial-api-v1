@@ -309,6 +309,58 @@ export interface IUserInfo extends Document {
   passwordExpiresAt?: Date;
 }
 
+export interface IUserSchoolInfo extends Document {
+  displayName: string;
+  username: string;
+  picture: string;
+  media: string;
+  intro: string;
+  userId: string;
+
+  currentSchoolContinent: string;
+  currentSchoolCountry: string;
+  currentSchoolCountryFlag: string;
+  currentSchoolCountrySymbol: string;
+  currentSchoolState: string;
+  currentSchoolPicture: string;
+  currentSchoolArea: string;
+  currentSchoolUsername: string;
+  currentSchoolName: string;
+  currentSchoolId: string;
+  currentAcademicLevelSymbol: string;
+  currentAcademicLevel: string;
+  currentAcademicLevelName: string;
+  currentSchoolLevel: string;
+  currentSchoolPlaceId: string;
+  currentFaculty: string;
+  currentFacultyUsername: string;
+  currentDepartment: string;
+  currentDepartmentUsername: string;
+  isSchoolRecorded: boolean;
+
+  pastSchools: any[];
+
+  createdAt: Date;
+}
+export interface IUserFinanceInfo extends Document {
+  displayName: string;
+  username: string;
+  picture: string;
+  media: string;
+  intro: string;
+  userId: string;
+
+  accountName: string;
+  accountNumber: string;
+  bvn: string;
+  bankName: string;
+  bankId: string;
+  bankUsername: string;
+  bankLogo: string;
+
+  createdAt: Date;
+}
+
 export interface IUserNotification extends Document {
   _id: string;
   content: string;

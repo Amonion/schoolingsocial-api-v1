@@ -33,7 +33,7 @@ var __importStar = (this && this.__importStar) || (function () {
     };
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.UserInfo = void 0;
+exports.UserFinanceInfo = exports.UserSchoolInfo = exports.UserInfo = void 0;
 const mongoose_1 = __importStar(require("mongoose"));
 const UserInfoSchema = new mongoose_1.Schema({
     firstName: { type: String, default: "" },
@@ -48,6 +48,7 @@ const UserInfoSchema = new mongoose_1.Schema({
     gender: { type: String, default: "" },
     maritalStatus: { type: String, default: "" },
     documents: { type: Array, default: [] },
+    signupIp: { type: String, default: "" },
     homeContinent: { type: String, default: "" },
     homeCountry: { type: String, default: "" },
     homeCountrySymbol: { type: String, default: "" },
@@ -55,6 +56,7 @@ const UserInfoSchema = new mongoose_1.Schema({
     homeArea: { type: String, default: "" },
     homeAddress: { type: String, default: "" },
     homeId: { type: String, default: "" },
+    userStatus: { type: String, default: "User" },
     phone: { type: String, default: "" },
     email: { type: String, default: "" },
     continent: { type: String, default: "" },
@@ -64,34 +66,6 @@ const UserInfoSchema = new mongoose_1.Schema({
     area: { type: String, default: "" },
     address: { type: String, default: "" },
     placeId: { type: String, default: "" },
-    currentSchoolContinent: { type: String, default: "" },
-    currentSchoolCountry: { type: String, default: "" },
-    currentSchoolCountryFlag: { type: String, default: "" },
-    currentSchoolCountrySymbol: { type: String, default: "" },
-    currentSchoolState: { type: String, default: "" },
-    currentSchoolPicture: { type: String, default: "" },
-    currentSchoolArea: { type: String, default: "" },
-    currentSchoolUsername: { type: String, default: "" },
-    currentSchoolName: { type: String, default: "" },
-    currentSchoolId: { type: String, default: "" },
-    currentAcademicLevelSymbol: { type: String, default: "" },
-    currentAcademicLevel: { type: String, default: "" },
-    currentAcademicLevelName: { type: String, default: "" },
-    currentSchoolLevel: { type: String, default: "" },
-    currentSchoolPlaceId: { type: String, default: "" },
-    currentFaculty: { type: String, default: "" },
-    currentFacultyUsername: { type: String, default: "" },
-    currentDepartment: { type: String, default: "" },
-    currentDepartmentUsername: { type: String, default: "" },
-    pastSchools: { type: Array, default: [] },
-    userAccounts: { type: Array, default: [] },
-    accountName: { type: String, default: "" },
-    accountNumber: { type: String, default: "" },
-    bvn: { type: String, default: "" },
-    bankName: { type: String, default: "" },
-    bankId: { type: String, default: "" },
-    bankUsername: { type: String, default: "" },
-    bankLogo: { type: String, default: "" },
     bioInfo: {
         type: Array,
         default: [
@@ -172,7 +146,6 @@ const UserInfoSchema = new mongoose_1.Schema({
     nextKin: { type: String, default: "" },
     nextKinPhone: { type: String, default: "" },
     isOnVerification: { type: Boolean, default: false },
-    isSchoolRecorded: { type: Boolean, default: false },
     isVerified: { type: Boolean, default: false },
     isPublic: { type: Boolean, default: false },
     verifyingAt: { type: Date, default: null },
@@ -183,3 +156,55 @@ const UserInfoSchema = new mongoose_1.Schema({
     timestamps: true,
 });
 exports.UserInfo = mongoose_1.default.model("UserInfo", UserInfoSchema);
+const UserSchoolInfoSchema = new mongoose_1.Schema({
+    displayName: { type: String, default: "" },
+    username: { type: String, default: "" },
+    picture: { type: String, default: "" },
+    media: { type: String, default: "" },
+    intro: { type: String, default: "" },
+    userId: { type: String, default: "" },
+    currentSchoolContinent: { type: String, default: "" },
+    currentSchoolCountry: { type: String, default: "" },
+    currentSchoolCountryFlag: { type: String, default: "" },
+    currentSchoolCountrySymbol: { type: String, default: "" },
+    currentSchoolState: { type: String, default: "" },
+    currentSchoolPicture: { type: String, default: "" },
+    currentSchoolArea: { type: String, default: "" },
+    currentSchoolUsername: { type: String, default: "" },
+    currentSchoolName: { type: String, default: "" },
+    currentSchoolId: { type: String, default: "" },
+    currentAcademicLevelSymbol: { type: String, default: "" },
+    currentAcademicLevel: { type: Object, default: {} },
+    currentAcademicLevelName: { type: String, default: "" },
+    currentSchoolLevel: { type: String, default: "" },
+    currentSchoolPlaceId: { type: String, default: "" },
+    currentFaculty: { type: String, default: "" },
+    currentFacultyUsername: { type: String, default: "" },
+    currentDepartment: { type: String, default: "" },
+    currentDepartmentUsername: { type: String, default: "" },
+    isSchoolRecorded: { type: Boolean, default: false },
+    pastSchools: { type: Array, default: [] },
+    createdAt: { type: Date, default: Date.now },
+}, {
+    timestamps: true,
+});
+exports.UserSchoolInfo = mongoose_1.default.model("UserSchoolInfo", UserSchoolInfoSchema);
+const UserFinanceInfoSchema = new mongoose_1.Schema({
+    displayName: { type: String, default: "" },
+    username: { type: String, default: "" },
+    picture: { type: String, default: "" },
+    media: { type: String, default: "" },
+    intro: { type: String, default: "" },
+    userId: { type: String, default: "" },
+    accountName: { type: String, default: "" },
+    accountNumber: { type: String, default: "" },
+    bvn: { type: String, default: "" },
+    bankName: { type: String, default: "" },
+    bankId: { type: String, default: "" },
+    bankUsername: { type: String, default: "" },
+    bankLogo: { type: String, default: "" },
+    createdAt: { type: Date, default: Date.now },
+}, {
+    timestamps: true,
+});
+exports.UserFinanceInfo = mongoose_1.default.model("UserFinanceInfo", UserFinanceInfoSchema);
