@@ -25,6 +25,7 @@ router
     .get(userController_1.getUserDetails)
     .patch(upload.any(), userController_1.updateUserVerification);
 router.route("/people").get(userController_1.searchUserInfo);
+router.route("/accounts").get(userController_1.searchAccounts);
 router
     .route("/userinfo/:id")
     .get(userController_1.getUserInfo)

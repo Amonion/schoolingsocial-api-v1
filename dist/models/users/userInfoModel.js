@@ -147,6 +147,7 @@ const UserInfoSchema = new mongoose_1.Schema({
     nextKinPhone: { type: String, default: "" },
     isOnVerification: { type: Boolean, default: false },
     isVerified: { type: Boolean, default: false },
+    inSchool: { type: Boolean, default: false },
     isPublic: { type: Boolean, default: false },
     verifyingAt: { type: Date, default: null },
     verifiedAt: { type: Date, default: Date.now },
@@ -183,6 +184,7 @@ const UserSchoolInfoSchema = new mongoose_1.Schema({
     currentDepartment: { type: String, default: "" },
     currentDepartmentUsername: { type: String, default: "" },
     isSchoolRecorded: { type: Boolean, default: false },
+    inSchool: { type: Boolean, default: false },
     pastSchools: { type: Array, default: [] },
     createdAt: { type: Date, default: Date.now },
 }, {

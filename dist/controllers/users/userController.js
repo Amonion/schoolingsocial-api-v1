@@ -12,7 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.followUser = exports.updateUserVerification = exports.searchUserInfo = exports.getExistingUsername = exports.getManyUserDetails = exports.getUserDetails = exports.getUserInfo = exports.update = exports.updateUserInfo = exports.deleteUser = exports.updateInfo = exports.updateUser = exports.getUsers = exports.getAUser = exports.createUser = void 0;
+exports.followUser = exports.updateUserVerification = exports.searchAccounts = exports.searchUserInfo = exports.getExistingUsername = exports.getManyUserDetails = exports.getUserDetails = exports.getUserInfo = exports.update = exports.updateUserInfo = exports.deleteUser = exports.updateInfo = exports.updateUser = exports.getUsers = exports.getAUser = exports.createUser = void 0;
 const userModel_1 = require("../../models/users/userModel");
 const userInfoModel_1 = require("../../models/users/userInfoModel");
 const staffModel_1 = require("../../models/team/staffModel");
@@ -253,6 +253,7 @@ const updateUserInfo = (req, res) => __awaiter(void 0, void 0, void 0, function*
                 }
             }
             req.body.currentAcademicLevel = JSON.parse(req.body.currentAcademicLevel);
+            req.body.inSchool = req.body.inSchool === "Yes" ? true : false;
             (0, exports.update)(req, res);
             break;
         case "EducationHistory":
@@ -464,9 +465,13 @@ const getExistingUsername = (req, res) => __awaiter(void 0, void 0, void 0, func
 });
 exports.getExistingUsername = getExistingUsername;
 const searchUserInfo = (req, res) => {
-    return (0, query_1.search)(userInfoModel_1.UserInfo, req, res);
+    return (0, query_1.search)(userInfoModel_1.UserSchoolInfo, req, res);
 };
 exports.searchUserInfo = searchUserInfo;
+const searchAccounts = (req, res) => {
+    return (0, query_1.search)(userModel_1.User, req, res);
+};
+exports.searchAccounts = searchAccounts;
 const updateUserVerification = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     var _a, _b, _c, _d;
     try {
@@ -525,6 +530,7 @@ const updateUserVerification = (req, res) => __awaiter(void 0, void 0, void 0, f
                 from: String(user === null || user === void 0 ? void 0 : user._id),
             });
             const notificationData = Object.assign(Object.assign({}, newNotification), { user });
+            // console.log(notificationData);
             app_1.io.emit(String(user === null || user === void 0 ? void 0 : user.username), notificationData);
         }
         res.status(200).json({

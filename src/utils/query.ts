@@ -254,8 +254,14 @@ function buildSearchQuery<T>(req: any): FilterQuery<T> {
 
   const applyInFilter = (field: string) => {
     if (cleanedQuery[field]) {
+      const values = cleanedQuery[field].split(",").map((val: string) => {
+        if (val === "true") return true;
+        if (val === "false") return false;
+        return val;
+      });
+
       Object.assign(searchQuery, {
-        [field]: { $in: cleanedQuery[field].split(",") },
+        [field]: { $in: values },
       });
     }
   };
@@ -310,7 +316,7 @@ function buildSearchQuery<T>(req: any): FilterQuery<T> {
 
   if (cleanedQuery.userId) {
     Object.assign(searchQuery, {
-      _id: { $ne: cleanedQuery.userId },
+      userId: { $ne: cleanedQuery.userId },
     });
   }
 
@@ -328,8 +334,8 @@ export const search = async <T>(
   try {
     const newSearchQuery = buildSearchQuery(req);
 
-    const page = parseInt(req.query.page as string) || 1; // default page = 1
-    const limit = parseInt(req.query.limit as string) || 20; // default limit = 20
+    const page = parseInt(req.query.page as string) || 1;
+    const limit = parseInt(req.query.limit as string) || 20;
     const skip = (page - 1) * limit;
 
     const results = await model

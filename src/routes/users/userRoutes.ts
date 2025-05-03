@@ -17,6 +17,7 @@ import {
   getUserDetails,
   getExistingUsername,
   getManyUserDetails,
+  searchAccounts,
 } from "../../controllers/users/userController";
 import {
   getStaffById,
@@ -43,6 +44,7 @@ router
   .get(getUserDetails)
   .patch(upload.any(), updateUserVerification);
 router.route("/people").get(searchUserInfo);
+router.route("/accounts").get(searchAccounts);
 router
   .route("/userinfo/:id")
   .get(getUserInfo)

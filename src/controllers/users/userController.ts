@@ -268,6 +268,7 @@ export const updateUserInfo = async (
         }
       }
       req.body.currentAcademicLevel = JSON.parse(req.body.currentAcademicLevel);
+      req.body.inSchool = req.body.inSchool === "Yes" ? true : false;
       update(req, res);
       break;
     case "EducationHistory":
@@ -513,7 +514,11 @@ export const getExistingUsername = async (
 };
 
 export const searchUserInfo = (req: Request, res: Response) => {
-  return search(UserInfo, req, res);
+  return search(UserSchoolInfo, req, res);
+};
+
+export const searchAccounts = (req: Request, res: Response) => {
+  return search(User, req, res);
 };
 
 export const updateUserVerification = async (
@@ -589,6 +594,7 @@ export const updateUserVerification = async (
         }
       );
       const notificationData = { ...newNotification, user };
+      // console.log(notificationData);
       io.emit(String(user?.username), notificationData);
     }
 

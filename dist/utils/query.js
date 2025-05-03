@@ -222,8 +222,15 @@ function buildSearchQuery(req) {
     let searchQuery = {};
     const applyInFilter = (field) => {
         if (cleanedQuery[field]) {
+            const values = cleanedQuery[field].split(",").map((val) => {
+                if (val === "true")
+                    return true;
+                if (val === "false")
+                    return false;
+                return val;
+            });
             Object.assign(searchQuery, {
-                [field]: { $in: cleanedQuery[field].split(",") },
+                [field]: { $in: values },
             });
         }
     };
@@ -274,7 +281,7 @@ function buildSearchQuery(req) {
     }));
     if (cleanedQuery.userId) {
         Object.assign(searchQuery, {
-            _id: { $ne: cleanedQuery.userId },
+            userId: { $ne: cleanedQuery.userId },
         });
     }
     return Object.assign(Object.assign({}, searchQuery), (regexConditions.length ? { $or: regexConditions } : {}));
@@ -282,8 +289,8 @@ function buildSearchQuery(req) {
 const search = (model, req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const newSearchQuery = buildSearchQuery(req);
-        const page = parseInt(req.query.page) || 1; // default page = 1
-        const limit = parseInt(req.query.limit) || 20; // default limit = 20
+        const page = parseInt(req.query.page) || 1;
+        const limit = parseInt(req.query.limit) || 20;
         const skip = (page - 1) * limit;
         const results = yield model
             .find(newSearchQuery)
