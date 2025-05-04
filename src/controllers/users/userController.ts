@@ -610,18 +610,18 @@ export const updateUserVerification = async (
   }
 };
 //-----------------FOLLOW USER--------------------//
-export const followUser = async (req: Request, res: Response) => {
+export const followUserAccount = async (req: Request, res: Response) => {
   try {
-    const { follow, message } = await followAccount(req, res);
-    const user = req.body.user;
-    user.isFollowed = follow ? false : true;
-    user.followers = follow
-      ? Number(user.followers) - 1
-      : Number(user.followers) + 1;
+    const { follow } = await followAccount(req, res);
+    let isFollowed = req.body.isFollowed;
+    let followers = await Follower.countDocuments({ userId: req.params.id });
+
+    isFollowed = follow ? false : true;
 
     res.status(200).json({
-      message: message,
-      data: user,
+      isFollowed: isFollowed,
+      followers: followers,
+      id: req.params.id,
     });
   } catch (error) {
     handleError(res, undefined, undefined, error);

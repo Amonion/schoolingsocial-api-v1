@@ -102,7 +102,7 @@ export const deleteSchool = async (req: Request, res: Response) => {
 };
 
 export const searchSchool = (req: Request, res: Response) => {
-  return search(School, req, res);
+  search(School, req, res);
 };
 
 export const updateLevels = async (req: Request, res: Response) => {

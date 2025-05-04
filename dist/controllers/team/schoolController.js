@@ -73,7 +73,7 @@ const deleteSchool = (req, res) => __awaiter(void 0, void 0, void 0, function* (
 });
 exports.deleteSchool = deleteSchool;
 const searchSchool = (req, res) => {
-    return (0, query_1.search)(schoolModel_1.School, req, res);
+    (0, query_1.search)(schoolModel_1.School, req, res);
 };
 exports.searchSchool = searchSchool;
 const updateLevels = (req, res) => __awaiter(void 0, void 0, void 0, function* () {

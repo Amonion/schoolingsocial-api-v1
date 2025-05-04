@@ -12,12 +12,13 @@ import {
   getUserInfo,
   searchUserInfo,
   updateUserVerification,
-  followUser,
+  // followUser,
   updateInfo,
   getUserDetails,
   getExistingUsername,
   getManyUserDetails,
   searchAccounts,
+  followUserAccount,
 } from "../../controllers/users/userController";
 import {
   getStaffById,
@@ -31,7 +32,8 @@ router.route("/auth/:id").get(getAuthUser);
 
 router.route("/").get(getUsers).post(upload.any(), createUser);
 
-router.route("/follow/:id").patch(upload.any(), followUser);
+router.route("/follow/:id").patch(upload.any(), followUserAccount);
+// router.route("/followUser/:id").patch(upload.any(), followUser);
 router.route("/staffs").get(getStaffs);
 router.route("/staffs/:id").get(getStaffById).patch(upload.any(), updateStaff);
 

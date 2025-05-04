@@ -61,6 +61,7 @@ const UserSchema = new mongoose_1.Schema({
     signupCountry: { type: String, default: "" },
     level: { type: Number, default: 1 },
     followers: { type: Number, default: 0 },
+    following: { type: Number, default: 0 },
     posts: { type: Number, default: 0 },
     comments: { type: Number, default: 0 },
     uploads: { type: Number, default: 0 },

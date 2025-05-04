@@ -12,7 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.followUser = exports.updateUserVerification = exports.searchAccounts = exports.searchUserInfo = exports.getExistingUsername = exports.getManyUserDetails = exports.getUserDetails = exports.getUserInfo = exports.update = exports.updateUserInfo = exports.deleteUser = exports.updateInfo = exports.updateUser = exports.getUsers = exports.getAUser = exports.createUser = void 0;
+exports.followUserAccount = exports.updateUserVerification = exports.searchAccounts = exports.searchUserInfo = exports.getExistingUsername = exports.getManyUserDetails = exports.getUserDetails = exports.getUserInfo = exports.update = exports.updateUserInfo = exports.deleteUser = exports.updateInfo = exports.updateUser = exports.getUsers = exports.getAUser = exports.createUser = void 0;
 const userModel_1 = require("../../models/users/userModel");
 const userInfoModel_1 = require("../../models/users/userInfoModel");
 const staffModel_1 = require("../../models/team/staffModel");
@@ -546,21 +546,20 @@ const updateUserVerification = (req, res) => __awaiter(void 0, void 0, void 0, f
 });
 exports.updateUserVerification = updateUserVerification;
 //-----------------FOLLOW USER--------------------//
-const followUser = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+const followUserAccount = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const { follow, message } = yield (0, query_1.followAccount)(req, res);
-        const user = req.body.user;
-        user.isFollowed = follow ? false : true;
-        user.followers = follow
-            ? Number(user.followers) - 1
-            : Number(user.followers) + 1;
+        const { follow } = yield (0, query_1.followAccount)(req, res);
+        let isFollowed = req.body.isFollowed;
+        let followers = yield postModel_1.Follower.countDocuments({ userId: req.params.id });
+        isFollowed = follow ? false : true;
         res.status(200).json({
-            message: message,
-            data: user,
+            isFollowed: isFollowed,
+            followers: followers,
+            id: req.params.id,
         });
     }
     catch (error) {
         (0, errorHandler_1.handleError)(res, undefined, undefined, error);
     }
 });
-exports.followUser = followUser;
+exports.followUserAccount = followUserAccount;

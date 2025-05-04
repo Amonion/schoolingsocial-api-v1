@@ -334,16 +334,35 @@ export const search = async <T>(
   try {
     const newSearchQuery = buildSearchQuery(req);
 
+    console.log(newSearchQuery);
     const page = parseInt(req.query.page as string) || 1;
     const limit = parseInt(req.query.limit as string) || 20;
     const skip = (page - 1) * limit;
 
-    const results = await model
+    let results = await model
       .find(newSearchQuery)
       .skip(skip)
       .limit(limit)
       .sort({ createdAt: -1 });
-    console.log(newSearchQuery);
+
+    if (req.query.followerId) {
+      const followings = await Follower.find({
+        followerId: req.query.followerId,
+      });
+
+      const followedUserIds = new Set(
+        followings.map((f: any) => f.userId.toString())
+      );
+
+      results = results.map((item: any) => {
+        const obj = item.toObject();
+        obj.isFollowed = followedUserIds.has(obj._id.toString());
+        return obj;
+      });
+    }
+
+    // console.log(results);
+
     res.json(results);
   } catch (error) {
     handleError(res, undefined, undefined, error);

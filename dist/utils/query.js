@@ -289,15 +289,27 @@ function buildSearchQuery(req) {
 const search = (model, req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const newSearchQuery = buildSearchQuery(req);
+        console.log(newSearchQuery);
         const page = parseInt(req.query.page) || 1;
         const limit = parseInt(req.query.limit) || 20;
         const skip = (page - 1) * limit;
-        const results = yield model
+        let results = yield model
             .find(newSearchQuery)
             .skip(skip)
             .limit(limit)
             .sort({ createdAt: -1 });
-        console.log(newSearchQuery);
+        if (req.query.followerId) {
+            const followings = yield postModel_1.Follower.find({
+                followerId: req.query.followerId,
+            });
+            const followedUserIds = new Set(followings.map((f) => f.userId.toString()));
+            results = results.map((item) => {
+                const obj = item.toObject();
+                obj.isFollowed = followedUserIds.has(obj._id.toString());
+                return obj;
+            });
+        }
+        // console.log(results);
         res.json(results);
     }
     catch (error) {
