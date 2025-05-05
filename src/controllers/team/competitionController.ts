@@ -15,6 +15,7 @@ import {
   IObjective,
 } from "../../utils/teamInterface";
 import { queryData, updateItem, createItem, search } from "../../utils/query";
+import { Attempt } from "../../models/users/competitionModel";
 
 export const createWeekend = async (
   req: Request,
@@ -92,13 +93,17 @@ export const getExamById = async (
   req: Request,
   res: Response
 ): Promise<Response | void> => {
-  console.log(req.params.id);
   try {
     const item = await Exam.findById(req.params.id);
+    const attempt = await Attempt.findOne({
+      paperId: req.params.id,
+      userId: req.query.userId,
+    });
+
     if (!item) {
       return res.status(404).json({ message: "Exam not found" });
     }
-    res.status(200).json(item);
+    res.status(200).json({ exam: item, attempt: attempt?.attempts });
   } catch (error) {
     handleError(res, undefined, undefined, error);
   }

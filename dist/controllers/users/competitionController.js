@@ -59,7 +59,7 @@ const createExam = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
         const picture = req.body.picture;
         const started = Number(req.body.started);
         const ended = Number(req.body.ended);
-        const attempts = Number(req.body.attempts);
+        // const attempts = Number(req.body.attempts);
         const instruction = req.body.instruction;
         const questions = req.body.questions ? JSON.parse(req.body.questions) : [];
         const rate = (1000 * questions.length) / (ended - started);
@@ -68,6 +68,8 @@ const createExam = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
             paperId: paperId,
             userId: userId,
         });
+        const paper = yield competitionModel_2.UserTestExam.findOne({ paperId: paperId });
+        const attempts = Number(paper === null || paper === void 0 ? void 0 : paper.attempts) + 1;
         let correctAnswer = 0;
         for (let i = 0; i < questions.length; i++) {
             const el = questions[i];
@@ -133,6 +135,7 @@ const createExam = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
         });
         yield competitionModel_2.UserTest.deleteMany({ userId: userId, paperId: paperId });
         yield competitionModel_2.UserTest.insertMany(updatedQuestions);
+        const attempt = yield competitionModel_2.Attempt.findOne({ userId: userId, paperId: paperId });
         if (participant.length === 0) {
             yield competitionModel_1.Exam.updateOne({ _id: paperId }, {
                 $inc: {
@@ -140,21 +143,36 @@ const createExam = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
                 },
             });
         }
+        if (attempt) {
+            yield competitionModel_2.Attempt.findByIdAndUpdate(attempt._id, {
+                $inc: {
+                    attempts: 1,
+                },
+            });
+        }
+        else {
+            yield competitionModel_2.Attempt.create({ paperId: paperId, userId: userId, attempts: 1 });
+        }
         const result = yield (0, query_1.queryData)(competitionModel_2.UserTest, req);
+        const newAttempt = yield competitionModel_2.Attempt.findOne({
+            userId: userId,
+            paperId: paperId,
+        });
         const data = {
             exam,
+            attempt: Number(newAttempt === null || newAttempt === void 0 ? void 0 : newAttempt.attempts),
             results: result.results,
             message: "Exam submitted successfull",
         };
         res.status(200).json(data);
     }
     catch (error) {
+        console.log(error);
         (0, errorHandler_1.handleError)(res, undefined, undefined, error);
     }
 });
 exports.createExam = createExam;
 const getExamById = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    console.log(req.params.id);
     try {
         const item = yield competitionModel_1.Exam.findById(req.params.id);
         if (!item) {

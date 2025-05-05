@@ -361,7 +361,7 @@ export const search = async <T>(
       });
     }
 
-    // console.log(results);
+    // console.log(results)
 
     res.json(results);
   } catch (error) {

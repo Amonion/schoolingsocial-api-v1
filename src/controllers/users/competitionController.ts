@@ -15,7 +15,11 @@ import {
   IObjective,
 } from "../../utils/teamInterface";
 import { queryData, updateItem, createItem, search } from "../../utils/query";
-import { UserTest, UserTestExam } from "../../models/users/competitionModel";
+import {
+  Attempt,
+  UserTest,
+  UserTestExam,
+} from "../../models/users/competitionModel";
 import { IUserTest, IUserTestExam } from "../../utils/userInterface";
 
 export const createWeekend = async (
@@ -75,7 +79,7 @@ export const createExam = async (
     const picture = req.body.picture;
     const started = Number(req.body.started);
     const ended = Number(req.body.ended);
-    const attempts = Number(req.body.attempts);
+    // const attempts = Number(req.body.attempts);
     const instruction = req.body.instruction;
     const questions = req.body.questions ? JSON.parse(req.body.questions) : [];
 
@@ -86,6 +90,8 @@ export const createExam = async (
       userId: userId,
     });
 
+    const paper = await UserTestExam.findOne({ paperId: paperId });
+    const attempts = Number(paper?.attempts) + 1;
     let correctAnswer = 0;
     for (let i = 0; i < questions.length; i++) {
       const el = questions[i];
@@ -161,6 +167,7 @@ export const createExam = async (
     );
     await UserTest.deleteMany({ userId: userId, paperId: paperId });
     await UserTest.insertMany(updatedQuestions);
+    const attempt = await Attempt.findOne({ userId: userId, paperId: paperId });
     if (participant.length === 0) {
       await Exam.updateOne(
         { _id: paperId },
@@ -171,16 +178,32 @@ export const createExam = async (
         }
       );
     }
+    if (attempt) {
+      await Attempt.findByIdAndUpdate(attempt._id, {
+        $inc: {
+          attempts: 1,
+        },
+      });
+    } else {
+      await Attempt.create({ paperId: paperId, userId: userId, attempts: 1 });
+    }
 
     const result = await queryData<IUserTest>(UserTest, req);
+    const newAttempt = await Attempt.findOne({
+      userId: userId,
+      paperId: paperId,
+    });
+
     const data = {
       exam,
+      attempt: Number(newAttempt?.attempts),
       results: result.results,
       message: "Exam submitted successfull",
     };
 
     res.status(200).json(data);
   } catch (error) {
+    console.log(error);
     handleError(res, undefined, undefined, error);
   }
 };
@@ -189,7 +212,6 @@ export const getExamById = async (
   req: Request,
   res: Response
 ): Promise<Response | void> => {
-  console.log(req.params.id);
   try {
     const item = await Exam.findById(req.params.id);
     if (!item) {

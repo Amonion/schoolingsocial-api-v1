@@ -13,6 +13,13 @@ export interface IAccount extends Document {
   isVerified: boolean;
 }
 
+export interface IAttempt extends Document {
+  username: string;
+  userId: string;
+  paperId: string;
+  attempts: number;
+}
+
 export interface IChat extends Document {
   _id: string;
   from: string;

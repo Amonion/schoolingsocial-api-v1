@@ -309,7 +309,7 @@ const search = (model, req, res) => __awaiter(void 0, void 0, void 0, function* 
                 return obj;
             });
         }
-        // console.log(results);
+        // console.log(results)
         res.json(results);
     }
     catch (error) {

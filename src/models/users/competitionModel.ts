@@ -3,6 +3,7 @@ import {
   IUserTestExam,
   IUserTest,
   IParticipant,
+  IAttempt,
 } from "../../utils/userInterface";
 
 const UserTestExamSchema: Schema = new Schema(
@@ -67,3 +68,17 @@ export const Participant = mongoose.model<IParticipant>(
   "Participant",
   ParticipantSchema
 );
+
+const AttemptSchema: Schema = new Schema(
+  {
+    userId: { type: String },
+    paperId: { type: String, default: "" },
+    username: { type: String, default: false },
+    attempts: { type: Number, default: 0 },
+    createdAt: { type: Date, default: Date.now },
+  },
+  {
+    timestamps: true,
+  }
+);
+export const Attempt = mongoose.model<IAttempt>("Attempt", AttemptSchema);

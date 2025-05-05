@@ -33,7 +33,7 @@ var __importStar = (this && this.__importStar) || (function () {
     };
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.Participant = exports.UserTest = exports.UserTestExam = void 0;
+exports.Attempt = exports.Participant = exports.UserTest = exports.UserTestExam = void 0;
 const mongoose_1 = __importStar(require("mongoose"));
 const UserTestExamSchema = new mongoose_1.Schema({
     username: { type: String },
@@ -80,3 +80,13 @@ const ParticipantSchema = new mongoose_1.Schema({
     timestamps: true,
 });
 exports.Participant = mongoose_1.default.model("Participant", ParticipantSchema);
+const AttemptSchema = new mongoose_1.Schema({
+    userId: { type: String },
+    paperId: { type: String, default: "" },
+    username: { type: String, default: false },
+    attempts: { type: Number, default: 0 },
+    createdAt: { type: Date, default: Date.now },
+}, {
+    timestamps: true,
+});
+exports.Attempt = mongoose_1.default.model("Attempt", AttemptSchema);
