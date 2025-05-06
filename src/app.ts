@@ -77,8 +77,7 @@ io.on("connection", (socket) => {
         deleteChat(data);
         break;
       case "users":
-        const response = await createPost(data);
-        io.emit("message", response);
+        createPost(data);
         break;
       case "team":
         await TeamSocket(data);

@@ -238,9 +238,9 @@ export const createObjective = async (
 
   for (let i = 0; i < questions.length; i++) {
     const el = questions[i];
-    if (el._id && el._id !== undefined && el._id !== "") {
-      await Objective.updateOne(
-        { _id: el._id },
+    if (el._id !== undefined && el._id !== "") {
+      await Objective.findByIdAndUpdate(
+        el._id,
         {
           $set: {
             question: el.question,

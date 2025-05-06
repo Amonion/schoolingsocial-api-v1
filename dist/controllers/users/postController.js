@@ -17,6 +17,7 @@ const userModel_1 = require("../../models/users/userModel");
 const query_1 = require("../../utils/query");
 const statModel_1 = require("../../models/users/statModel");
 const computation_1 = require("../../utils/computation");
+const app_1 = require("../../app");
 const createAccount = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const uploadedFiles = yield (0, fileUpload_1.uploadFilesToS3)(req);
@@ -115,10 +116,14 @@ const createPost = (data) => __awaiter(void 0, void 0, void 0, function* () {
                 $push: { users: sender.username },
             });
         }
-        return {
+        app_1.io.emit(`post${sender._id}`, {
             message: "Your post was created successfully",
             data: post,
-        };
+        });
+        // return {
+        //   message: "Your post was created successfully",
+        //   data: post,
+        // };
     }
     catch (error) {
         console.log(error);

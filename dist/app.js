@@ -82,8 +82,7 @@ io.on("connection", (socket) => {
                 (0, chatController_1.deleteChat)(data);
                 break;
             case "users":
-                const response = yield (0, postController_1.createPost)(data);
-                io.emit("message", response);
+                (0, postController_1.createPost)(data);
                 break;
             case "team":
                 yield (0, socketRoutes_1.TeamSocket)(data);

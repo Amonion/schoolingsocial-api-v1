@@ -14,6 +14,7 @@ import { IPost } from "../../utils/userInterface";
 import { Bookmark, Like, View } from "../../models/users/statModel";
 import { postScore } from "../../utils/computation";
 import { UserInfo } from "../../models/users/userInfoModel";
+import { io } from "../../app";
 
 export const createAccount = async (
   req: Request,
@@ -162,11 +163,15 @@ export const createPost = async (data: IPost) => {
         }
       );
     }
-
-    return {
+    io.emit(`post${sender._id}`, {
       message: "Your post was created successfully",
       data: post,
-    };
+    });
+
+    // return {
+    //   message: "Your post was created successfully",
+    //   data: post,
+    // };
   } catch (error) {
     console.log(error);
   }

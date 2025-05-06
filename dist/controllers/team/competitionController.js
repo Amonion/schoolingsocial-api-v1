@@ -193,8 +193,8 @@ const createObjective = (req, res) => __awaiter(void 0, void 0, void 0, function
     }
     for (let i = 0; i < questions.length; i++) {
         const el = questions[i];
-        if (el._id && el._id !== undefined && el._id !== "") {
-            yield competitionModel_1.Objective.updateOne({ _id: el._id }, {
+        if (el._id !== undefined && el._id !== "") {
+            yield competitionModel_1.Objective.findByIdAndUpdate(el._id, {
                 $set: {
                     question: el.question,
                     options: el.options,
