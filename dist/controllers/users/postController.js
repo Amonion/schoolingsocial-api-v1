@@ -84,6 +84,7 @@ const createPost = (data) => __awaiter(void 0, void 0, void 0, function* () {
             username: sender.username,
             displayName: sender.displayName,
             polls: data.polls,
+            users: data.users,
             userId: sender._id,
             postId: data.postId,
             postType: data.postType,
@@ -97,33 +98,25 @@ const createPost = (data) => __awaiter(void 0, void 0, void 0, function* () {
             yield userModel_1.User.updateOne({ _id: sender._id }, {
                 $inc: { comments: 1 },
             });
-            yield postModel_1.Post.updateOne({ _id: data.postId }, {
-                $inc: { replies: 1 },
-                $push: { users: sender.username },
-            });
+            yield postModel_1.Post.updateOne({ _id: post._id }, {});
         }
         else {
-            yield statModel_1.View.create({
-                postId: post._id,
-                userId: sender._id,
-            });
             yield userModel_1.User.updateOne({ _id: sender._id }, {
                 $inc: { posts: 1 },
             });
-            const score = (0, computation_1.postScore)(post.likes, post.replies, post.shares, post.bookmarks, post.views);
-            yield postModel_1.Post.updateOne({ _id: post._id }, {
-                $inc: { score: score },
-                $push: { users: sender.username },
-            });
         }
+        const score = (0, computation_1.postScore)(post.likes, post.replies, post.shares, post.bookmarks, post.views);
+        yield postModel_1.Post.updateOne({ _id: data.postId }, {
+            $inc: { score: score, replies: 1 },
+        });
+        yield statModel_1.View.create({
+            postId: post._id,
+            userId: sender._id,
+        });
         app_1.io.emit(`post${sender._id}`, {
             message: "Your post was created successfully",
             data: post,
         });
-        // return {
-        //   message: "Your post was created successfully",
-        //   data: post,
-        // };
     }
     catch (error) {
         console.log(error);
@@ -291,6 +284,10 @@ const updatePostStat = (req, res) => __awaiter(void 0, void 0, void 0, function*
                 yield statModel_1.View.create({ userId: userId, postId: id });
             }
         }
+        const score = (0, computation_1.postScore)(post.likes, post.replies, post.shares, post.bookmarks, post.views);
+        yield postModel_1.Post.updateOne({ _id: post._id }, {
+            $inc: { score: score },
+        });
         if (Object.keys(updateQuery).length > 0) {
             yield postModel_1.Post.findByIdAndUpdate(id, updateQuery, {
                 new: true,
@@ -326,11 +323,13 @@ const followUser = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
     try {
         const { follow, message } = yield (0, query_1.followAccount)(req, res);
         const post = req.body.post;
-        post.isFollowed = follow ? false : true;
+        post.followed = follow ? false : true;
         post.isActive = false;
         res.status(200).json({
             message: message,
             data: post,
+            action: "follow",
+            actionType: post.postType,
         });
     }
     catch (error) {

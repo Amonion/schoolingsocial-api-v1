@@ -13,7 +13,6 @@ import {
 import { IPost } from "../../utils/userInterface";
 import { Bookmark, Like, View } from "../../models/users/statModel";
 import { postScore } from "../../utils/computation";
-import { UserInfo } from "../../models/users/userInfoModel";
 import { io } from "../../app";
 
 export const createAccount = async (
@@ -109,6 +108,7 @@ export const createPost = async (data: IPost) => {
       username: sender.username,
       displayName: sender.displayName,
       polls: data.polls,
+      users: data.users,
       userId: sender._id,
       postId: data.postId,
       postType: data.postType,
@@ -127,51 +127,40 @@ export const createPost = async (data: IPost) => {
           $inc: { comments: 1 },
         }
       );
-      await Post.updateOne(
-        { _id: data.postId },
-        {
-          $inc: { replies: 1 },
-          $push: { users: sender.username },
-        }
-      );
+      await Post.updateOne({ _id: post._id }, {});
     } else {
-      await View.create({
-        postId: post._id,
-        userId: sender._id,
-      });
-
       await User.updateOne(
         { _id: sender._id },
         {
           $inc: { posts: 1 },
         }
       );
-
-      const score = postScore(
-        post.likes,
-        post.replies,
-        post.shares,
-        post.bookmarks,
-        post.views
-      );
-
-      await Post.updateOne(
-        { _id: post._id },
-        {
-          $inc: { score: score },
-          $push: { users: sender.username },
-        }
-      );
     }
+
+    const score = postScore(
+      post.likes,
+      post.replies,
+      post.shares,
+      post.bookmarks,
+      post.views
+    );
+
+    await Post.updateOne(
+      { _id: data.postId },
+      {
+        $inc: { score: score, replies: 1 },
+      }
+    );
+
+    await View.create({
+      postId: post._id,
+      userId: sender._id,
+    });
+
     io.emit(`post${sender._id}`, {
       message: "Your post was created successfully",
       data: post,
     });
-
-    // return {
-    //   message: "Your post was created successfully",
-    //   data: post,
-    // };
   } catch (error) {
     console.log(error);
   }
@@ -377,6 +366,21 @@ export const updatePostStat = async (req: Request, res: Response) => {
       }
     }
 
+    const score = postScore(
+      post.likes,
+      post.replies,
+      post.shares,
+      post.bookmarks,
+      post.views
+    );
+
+    await Post.updateOne(
+      { _id: post._id },
+      {
+        $inc: { score: score },
+      }
+    );
+
     if (Object.keys(updateQuery).length > 0) {
       await Post.findByIdAndUpdate(id, updateQuery, {
         new: true,
@@ -411,12 +415,14 @@ export const followUser = async (req: Request, res: Response) => {
   try {
     const { follow, message } = await followAccount(req, res);
     const post = req.body.post;
-    post.isFollowed = follow ? false : true;
+    post.followed = follow ? false : true;
     post.isActive = false;
 
     res.status(200).json({
       message: message,
       data: post,
+      action: "follow",
+      actionType: post.postType,
     });
   } catch (error) {
     handleError(res, undefined, undefined, error);
