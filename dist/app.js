@@ -50,6 +50,7 @@ app.use((0, cors_1.default)({
         "http://localhost:3000",
         "https://schoolingsocial.netlify.app",
         "https://schoolingsocial.com",
+        "https://schooling-client-v1.onrender.com",
     ],
     methods: ["GET", "POST", "PATCH", "PUT", "DELETE"],
     credentials: true,
