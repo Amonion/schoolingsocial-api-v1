@@ -16,6 +16,9 @@ import {
   updatePostStat,
   getPostStat,
   followUser,
+  getFollowingPosts,
+  getBookMarkedPosts,
+  searchPosts,
 } from "../../controllers/users/postController";
 
 import {
@@ -34,6 +37,9 @@ router.route("/accounts").get(getAccounts).post(upload.any(), createAccount);
 router.route("/stats").get(getPostStat).patch(updatePostStat);
 router.route("/general").get(multiSearch);
 router.route("/").get(getPosts).post(upload.any(), createPost);
+router.route("/following").get(getFollowingPosts);
+router.route("/bookmarks").get(getBookMarkedPosts);
+router.route("/search").get(searchPosts);
 router
   .route("/uploads/:id")
   .get(getUploadById)

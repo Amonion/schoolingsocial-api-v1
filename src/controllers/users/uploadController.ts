@@ -12,11 +12,11 @@ import {
 import { handleError } from "../../utils/errorHandler";
 import { Model } from "mongoose";
 import { User } from "../../models/users/userModel";
-import { Post } from "../../models/users/postModel";
+import { Follower, Post } from "../../models/users/postModel";
 import { School } from "../../models/team/schoolModel";
 import { Exam } from "../../models/team/competitionModel";
 import { IGeneral } from "../../utils/userInterface";
-import { UserInfo } from "../../models/users/userInfoModel";
+import { UserInfo, UserSchoolInfo } from "../../models/users/userInfoModel";
 
 //--------------------UPLOADS-----------------------//
 export const createUpload = async (
@@ -67,9 +67,12 @@ export const multiSearch = async (
       type: string;
       source: string;
     }
+
     const setType = (model: string) => {
       if (model === "User") {
         return "User";
+      } else if (model === "UserSchoolInfo") {
+        return "People";
       } else if (model === "Post") {
         return "Post";
       } else if (model === "School") {
@@ -92,8 +95,11 @@ export const multiSearch = async (
       }
     };
 
-    const models: Model<any>[] = [User, Post, School, Exam];
-    const { filter, page, page_size } = generalSearchQuery(req);
+    const models: Model<any>[] = [UserSchoolInfo, User, Post, School, Exam];
+    const { filter, page, page_size, userId } = generalSearchQuery(req);
+    const followers = await Follower.find({ followerId: userId });
+    const followersUserIds = followers.map((user) => user.userId);
+
     const searchPromises = models.map((model) =>
       model
         .find(filter)
@@ -125,6 +131,13 @@ export const multiSearch = async (
       description: item.description,
       nature: item.type,
       subject: item.subjects,
+      currentSchoolName: item.currentSchoolName,
+      isVerified: item.isVerified,
+      currentSchoolCountry: item.currentSchoolCountry,
+      countrySymbol: item.countrySymbol,
+      createdAt: item.createdAt,
+      followers: item.followers,
+      isFollowed: followersUserIds.includes(String(item._id)),
     }));
 
     res.json(formattedResults);

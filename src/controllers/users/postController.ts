@@ -9,6 +9,7 @@ import {
   getItems,
   queryData,
   followAccount,
+  search,
 } from "../../utils/query";
 import { IPost } from "../../utils/userInterface";
 import { Bookmark, Like, View } from "../../models/users/statModel";
@@ -119,7 +120,13 @@ export const createPost = async (data: IPost) => {
     };
 
     const post = await Post.create(form);
-
+    const score = postScore(
+      post.likes,
+      post.replies,
+      post.shares,
+      post.bookmarks,
+      post.views
+    );
     if (data.postType === "comment") {
       await User.updateOne(
         { _id: sender._id },
@@ -127,7 +134,12 @@ export const createPost = async (data: IPost) => {
           $inc: { comments: 1 },
         }
       );
-      await Post.updateOne({ _id: post._id }, {});
+      await Post.updateOne(
+        { _id: data.postId },
+        {
+          $inc: { score: score, replies: 1 },
+        }
+      );
     } else {
       await User.updateOne(
         { _id: sender._id },
@@ -136,22 +148,6 @@ export const createPost = async (data: IPost) => {
         }
       );
     }
-
-    const score = postScore(
-      post.likes,
-      post.replies,
-      post.shares,
-      post.bookmarks,
-      post.views
-    );
-
-    await Post.updateOne(
-      { _id: data.postId },
-      {
-        $inc: { score: score, replies: 1 },
-      }
-    );
-
     await View.create({
       postId: post._id,
       userId: sender._id,
@@ -176,78 +172,127 @@ export const getPostById = async (
 export const getPosts = async (req: Request, res: Response) => {
   try {
     const followerId = String(req.query.myId);
-    req.query.myId = undefined;
-    const response = await queryData(Post, req);
-    const posts = response.results;
-    const postIds = posts.map((post) => post._id);
+    delete req.query.myId;
+    delete req.query.following;
+    const processedPosts = await processFetchedPosts(req, followerId);
 
-    const userIds = [...new Set(posts.map((post) => post.userId))];
-    const userObjects = userIds.map((userId) => ({ userId, followerId }));
+    res.status(200).json(processedPosts);
+  } catch (error) {
+    handleError(res, undefined, undefined, error);
+  }
+};
 
-    const queryConditions = userObjects.map(({ userId, followerId }) => ({
-      userId,
-      followerId,
-    }));
+export const getFollowingPosts = async (req: Request, res: Response) => {
+  try {
+    const followerId = String(req.query.myId);
+    const followers = await Follower.find({ followerId: followerId });
+    const followersUserIds = followers.map((user) => user.userId);
+    delete req.query.myId;
 
-    const follows = await Follower.find(
-      { $or: queryConditions },
-      { userId: 1, _id: 0 }
-    );
-    const followedUserIds = new Set(follows.map((user) => user.userId));
+    const mongoQuery = {
+      ...req.query,
+      userId: { in: followersUserIds },
+    };
+    req.query = mongoQuery;
+    delete req.query.myId;
 
-    posts.map((post) => {
-      if (followedUserIds.has(post.userId)) {
-        post.followed = true;
-      }
-      return post;
-    });
+    const processedPosts = await processFetchedPosts(req, followerId);
 
-    const likedPosts = await Like.find({
-      userId: followerId,
-      postId: { $in: postIds },
-    }).select("postId");
+    res.status(200).json(processedPosts);
+  } catch (error) {
+    handleError(res, undefined, undefined, error);
+  }
+};
 
-    const bookmarkedPosts = await Bookmark.find({
-      userId: followerId,
-      postId: { $in: postIds },
-    }).select("postId");
+export const getBookMarkedPosts = async (req: Request, res: Response) => {
+  try {
+    const bookmarkUserId = String(req.query.myId);
+    const bookmarks = await Bookmark.find({ bookmarkUserId: bookmarkUserId });
 
-    const viewedPosts = await View.find({
-      userId: followerId,
-      postId: { $in: postIds },
-    }).select("postId");
+    // const followers = await Follower.find({ followerId: followerId });
+    const bookmarksPostIds = bookmarks.map((post) => post.postId);
+    // delete req.query.myId;
 
-    const likedPostIds = likedPosts.map((like) => like.postId.toString());
+    const mongoQuery = {
+      ...req.query,
+      _id: { in: bookmarksPostIds },
+    };
+    req.query = mongoQuery;
+    delete req.query.myId;
 
-    const bookmarkedPostIds = bookmarkedPosts.map((bookmark) =>
-      bookmark.postId.toString()
-    );
+    const processedPosts = await processFetchedPosts(req, bookmarkUserId);
+    res.status(200).json(processedPosts);
 
-    const viewedPostIds = viewedPosts.map((view) => view.postId.toString());
+    // const posts = response.results;
+    // const postIds = posts.map((post) => post._id);
 
-    const updatedPosts = [];
+    // const userIds = [...new Set(posts.map((post) => post.userId))];
+    // const userObjects = userIds.map((userId) => ({ userId, followerId }));
 
-    for (let i = 0; i < posts.length; i++) {
-      const el = posts[i];
-      if (likedPostIds.includes(el._id.toString())) {
-        el.liked = true;
-      }
-      if (bookmarkedPostIds.includes(el._id.toString())) {
-        el.bookmarked = true;
-      }
-      if (viewedPostIds.includes(el._id.toString())) {
-        el.viewed = true;
-      }
+    // const queryConditions = userObjects.map(({ userId, followerId }) => ({
+    //   userId,
+    //   followerId,
+    // }));
 
-      updatedPosts.push(el);
-    }
+    // const follows = await Follower.find(
+    //   { $or: queryConditions },
+    //   { userId: 1, _id: 0 }
+    // );
+    // const followedUserIds = new Set(follows.map((user) => user.userId));
 
-    res.status(200).json({
-      count: response.count,
-      page: response.page,
-      page_size: response.page_size,
-      results: updatedPosts,
-    });
+    // posts.map((post) => {
+    //   if (followedUserIds.has(post.userId)) {
+    //     post.followed = true;
+    //   }
+    //   return post;
+    // });
+
+    // const likedPosts = await Like.find({
+    //   userId: followerId,
+    //   postId: { $in: postIds },
+    // }).select("postId");
+
+    // const bookmarkedPosts = await Bookmark.find({
+    //   userId: followerId,
+    //   postId: { $in: postIds },
+    // }).select("postId");
+
+    // const viewedPosts = await View.find({
+    //   userId: followerId,
+    //   postId: { $in: postIds },
+    // }).select("postId");
+
+    // const likedPostIds = likedPosts.map((like) => like.postId.toString());
+
+    // const bookmarkedPostIds = bookmarkedPosts.map((bookmark) =>
+    //   bookmark.postId.toString()
+    // );
+
+    // const viewedPostIds = viewedPosts.map((view) => view.postId.toString());
+
+    // const updatedPosts = [];
+
+    // for (let i = 0; i < posts.length; i++) {
+    //   const el = posts[i];
+    //   if (likedPostIds.includes(el._id.toString())) {
+    //     el.liked = true;
+    //   }
+    //   if (bookmarkedPostIds.includes(el._id.toString())) {
+    //     el.bookmarked = true;
+    //   }
+    //   if (viewedPostIds.includes(el._id.toString())) {
+    //     el.viewed = true;
+    //   }
+
+    //   updatedPosts.push(el);
+    // }
+
+    // res.status(200).json({
+    //   count: response.count,
+    //   page: response.page,
+    //   page_size: response.page_size,
+    //   results: updatedPosts,
+    // });
   } catch (error) {
     handleError(res, undefined, undefined, error);
   }
@@ -348,13 +393,20 @@ export const updatePostStat = async (req: Request, res: Response) => {
       if (!req.body.bookmarks && post.bookmarks <= 0) {
         return res.status(200).json({ message: null });
       }
-      const bookmark = await Bookmark.findOne({ postId: id, userId });
+      const bookmark = await Bookmark.findOne({
+        postId: id,
+        bookmarkUserId: userId,
+      });
       if (bookmark) {
         updateQuery.$inc = { bookmarks: -1 };
-        await Bookmark.deleteOne({ postId: id, userId });
+        await Bookmark.deleteOne({ postId: id, bookmarkUserId: userId });
       } else {
         updateQuery.$inc = { bookmarks: 1 };
-        await Bookmark.create({ postId: id, userId });
+        await Bookmark.create({
+          postId: id,
+          userId: post.userId,
+          bookmarkUserId: userId,
+        });
       }
     }
 
@@ -410,6 +462,9 @@ export const getPostStat = async (req: Request, res: Response) => {
   }
 };
 
+export const searchPosts = (req: Request, res: Response) => {
+  return search(Post, req, res);
+};
 //-----------------FOLLOW USER--------------------//
 export const followUser = async (req: Request, res: Response) => {
   try {
@@ -427,4 +482,79 @@ export const followUser = async (req: Request, res: Response) => {
   } catch (error) {
     handleError(res, undefined, undefined, error);
   }
+};
+
+const processFetchedPosts = async (req: Request, followerId: string) => {
+  const response = await queryData(Post, req);
+
+  const posts = response.results;
+  const postIds = posts.map((post) => post._id);
+
+  const userIds = [...new Set(posts.map((post) => post.userId))];
+  const userObjects = userIds.map((userId) => ({ userId, followerId }));
+
+  const queryConditions = userObjects.map(({ userId, followerId }) => ({
+    userId,
+    followerId,
+  }));
+
+  const follows = await Follower.find(
+    { $or: queryConditions },
+    { userId: 1, _id: 0 }
+  );
+  const followedUserIds = new Set(follows.map((user) => user.userId));
+
+  posts.map((post) => {
+    if (followedUserIds.has(post.userId)) {
+      post.followed = true;
+    }
+    return post;
+  });
+
+  const likedPosts = await Like.find({
+    userId: followerId,
+    postId: { $in: postIds },
+  }).select("postId");
+
+  const bookmarkedPosts = await Bookmark.find({
+    bookmarkUserId: followerId,
+    postId: { $in: postIds },
+  }).select("postId");
+
+  const viewedPosts = await View.find({
+    userId: followerId,
+    postId: { $in: postIds },
+  }).select("postId");
+
+  const likedPostIds = likedPosts.map((like) => like.postId.toString());
+
+  const bookmarkedPostIds = bookmarkedPosts.map((bookmark) =>
+    bookmark.postId.toString()
+  );
+
+  const viewedPostIds = viewedPosts.map((view) => view.postId.toString());
+
+  const updatedPosts = [];
+
+  for (let i = 0; i < posts.length; i++) {
+    const el = posts[i];
+    if (likedPostIds.includes(el._id.toString())) {
+      el.liked = true;
+    }
+    if (bookmarkedPostIds.includes(el._id.toString())) {
+      el.bookmarked = true;
+    }
+    if (viewedPostIds.includes(el._id.toString())) {
+      el.viewed = true;
+    }
+
+    updatedPosts.push(el);
+  }
+
+  return {
+    count: response.count,
+    page: response.page,
+    page_size: response.page_size,
+    results: updatedPosts,
+  };
 };

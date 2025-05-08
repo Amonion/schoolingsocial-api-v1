@@ -89,7 +89,10 @@ export interface IGeneral {
   description: string;
   type: string;
   subject: string;
-  id: string;
+  isVerified: boolean;
+  currentSchoolCountry: string;
+  currentSchoolName: string;
+  countrySymbol: string;
 }
 
 interface Media {
@@ -177,6 +180,7 @@ export interface IRepliedChatContent extends Document {
 export interface IStat extends Document {
   userId: string;
   postId: string;
+  bookmarkUserId: string;
 }
 
 interface ISocialSetObj {

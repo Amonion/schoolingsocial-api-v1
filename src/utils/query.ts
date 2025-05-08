@@ -146,7 +146,19 @@ export const queryData = async <T>(
 
 export const generalSearchQuery = <T>(
   req: any
-): { filter: FilterQuery<T>; page: number; page_size: number } => {
+): {
+  filter: FilterQuery<T>;
+  page: number;
+  page_size: number;
+  userId: string;
+} => {
+  const rawIds = req.query.myIds;
+  const userId = req.query.myId;
+
+  const userIds =
+    typeof rawIds === "string" ? rawIds.split(",").map((id) => id.trim()) : [];
+  delete req.query.myIds;
+  delete req.query.myId;
   const cleanedQuery = req.query;
 
   let searchQuery: FilterQuery<T> = {} as FilterQuery<T>;
@@ -170,15 +182,23 @@ export const generalSearchQuery = <T>(
       [field]: { $regex: cleanedQuery[field], $options: "i" },
     })) as FilterQuery<T>[];
 
-  const filter = {
+  let filter: FilterQuery<T> = {
     ...searchQuery,
     ...(regexConditions.length ? { $or: regexConditions } : {}),
   };
 
-  const page = Math.max(1, parseInt(cleanedQuery.page) || 1); // Default to page 1
-  const page_size = Math.max(1, parseInt(cleanedQuery.page_size) || 3); // Default to 10 items per page
+  if (userIds) {
+    filter = {
+      ...filter,
+      _id: { $nin: userIds },
+      userId: { $nin: userIds },
+    };
+  }
 
-  return { filter, page, page_size };
+  const page = Math.max(1, parseInt(cleanedQuery.page) || 1);
+  const page_size = Math.max(1, parseInt(cleanedQuery.page_size) || 3);
+
+  return { filter, page, page_size, userId };
 };
 
 // function buildSearchQuery<T>(req: any): FilterQuery<T> {
@@ -280,6 +300,7 @@ function buildSearchQuery<T>(req: any): FilterQuery<T> {
   applyInFilter("examCountries");
   applyInFilter("examStates");
   applyInFilter("isVerified");
+  applyInFilter("postType");
 
   if (cleanedQuery.publishedAt) {
     let [startDate, endDate] = cleanedQuery.publishedAt.split(",");

@@ -17,6 +17,7 @@ const BookmarkSchema: Schema = new Schema(
   {
     userId: { type: String },
     postId: { type: String },
+    bookmarkUserId: { type: String },
     createdAt: { type: Date, default: Date.now },
   },
   {
