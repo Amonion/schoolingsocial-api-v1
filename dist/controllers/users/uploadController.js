@@ -17,6 +17,7 @@ const userModel_1 = require("../../models/users/userModel");
 const postModel_1 = require("../../models/users/postModel");
 const schoolModel_1 = require("../../models/team/schoolModel");
 const competitionModel_1 = require("../../models/team/competitionModel");
+const userInfoModel_1 = require("../../models/users/userInfoModel");
 //--------------------UPLOADS-----------------------//
 const createUpload = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     (0, query_1.createItem)(req, res, uploadModel_1.Upload, "Uploads was created successfully");
@@ -48,6 +49,9 @@ const multiSearch = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
             if (model === "User") {
                 return "User";
             }
+            else if (model === "UserSchoolInfo") {
+                return "People";
+            }
             else if (model === "Post") {
                 return "Post";
             }
@@ -73,8 +77,10 @@ const multiSearch = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
                 return media;
             }
         };
-        const models = [userModel_1.User, postModel_1.Post, schoolModel_1.School, competitionModel_1.Exam];
-        const { filter, page, page_size } = (0, query_1.generalSearchQuery)(req);
+        const models = [userInfoModel_1.UserSchoolInfo, userModel_1.User, postModel_1.Post, schoolModel_1.School, competitionModel_1.Exam];
+        const { filter, page, page_size, userId } = (0, query_1.generalSearchQuery)(req);
+        const followers = yield postModel_1.Follower.find({ followerId: userId });
+        const followersUserIds = followers.map((user) => user.userId);
         const searchPromises = models.map((model) => model
             .find(filter)
             .skip((page - 1) * page_size)
@@ -100,6 +106,13 @@ const multiSearch = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
             description: item.description,
             nature: item.type,
             subject: item.subjects,
+            currentSchoolName: item.currentSchoolName,
+            isVerified: item.isVerified,
+            currentSchoolCountry: item.currentSchoolCountry,
+            countrySymbol: item.countrySymbol,
+            createdAt: item.createdAt,
+            followers: item.followers,
+            isFollowed: followersUserIds.includes(String(item._id)),
         }));
         res.json(formattedResults);
     }

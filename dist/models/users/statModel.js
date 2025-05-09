@@ -46,6 +46,7 @@ exports.Like = mongoose_1.default.model("Like", LikeSchema);
 const BookmarkSchema = new mongoose_1.Schema({
     userId: { type: String },
     postId: { type: String },
+    bookmarkUserId: { type: String },
     createdAt: { type: Date, default: Date.now },
 }, {
     timestamps: true,

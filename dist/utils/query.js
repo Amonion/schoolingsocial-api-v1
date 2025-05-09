@@ -137,6 +137,11 @@ const queryData = (model, req) => __awaiter(void 0, void 0, void 0, function* ()
 });
 exports.queryData = queryData;
 const generalSearchQuery = (req) => {
+    const rawIds = req.query.myIds;
+    const userId = req.query.myId;
+    const userIds = typeof rawIds === "string" ? rawIds.split(",").map((id) => id.trim()) : [];
+    delete req.query.myIds;
+    delete req.query.myId;
     const cleanedQuery = req.query;
     let searchQuery = {};
     const textFields = [
@@ -156,10 +161,13 @@ const generalSearchQuery = (req) => {
         .map((field) => ({
         [field]: { $regex: cleanedQuery[field], $options: "i" },
     }));
-    const filter = Object.assign(Object.assign({}, searchQuery), (regexConditions.length ? { $or: regexConditions } : {}));
-    const page = Math.max(1, parseInt(cleanedQuery.page) || 1); // Default to page 1
-    const page_size = Math.max(1, parseInt(cleanedQuery.page_size) || 3); // Default to 10 items per page
-    return { filter, page, page_size };
+    let filter = Object.assign(Object.assign({}, searchQuery), (regexConditions.length ? { $or: regexConditions } : {}));
+    if (userIds) {
+        filter = Object.assign(Object.assign({}, filter), { _id: { $nin: userIds }, userId: { $nin: userIds } });
+    }
+    const page = Math.max(1, parseInt(cleanedQuery.page) || 1);
+    const page_size = Math.max(1, parseInt(cleanedQuery.page_size) || 3);
+    return { filter, page, page_size, userId };
 };
 exports.generalSearchQuery = generalSearchQuery;
 // function buildSearchQuery<T>(req: any): FilterQuery<T> {
@@ -248,6 +256,7 @@ function buildSearchQuery(req) {
     applyInFilter("examCountries");
     applyInFilter("examStates");
     applyInFilter("isVerified");
+    applyInFilter("postType");
     if (cleanedQuery.publishedAt) {
         let [startDate, endDate] = cleanedQuery.publishedAt.split(",");
         if (!startDate || startDate === "undefined")

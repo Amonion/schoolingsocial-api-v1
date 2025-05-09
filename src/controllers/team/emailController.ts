@@ -8,6 +8,8 @@ import {
   updateItem,
   createItem,
 } from "../../utils/query";
+import { User } from "../../models/users/userModel";
+import { sendEmail } from "../../utils/sendEmail";
 
 export const createEmail = async (
   req: Request,
@@ -35,6 +37,45 @@ export const getEmails = async (req: Request, res: Response) => {
   try {
     const result = await queryData<IEmail>(Email, req);
     res.status(200).json(result);
+  } catch (error) {
+    handleError(res, undefined, undefined, error);
+  }
+};
+
+export const sendEmailToUsers = async (req: Request, res: Response) => {
+  try {
+    const usersIds = JSON.parse(req.body.usersIds);
+    const email = await Email.findById(req.params.id);
+    if (!email) {
+      return res.status(404).json({ message: "Email not found" });
+    }
+    const users = await User.find({ _id: { $in: usersIds } });
+
+    let isSuccessful = true;
+
+    for (let i = 0; i < users.length; i++) {
+      const el = users[i];
+      const isEmailSent = await sendEmail(
+        String(el.username),
+        el.email,
+        email.name
+      );
+      if (isEmailSent !== true) {
+        isSuccessful = false;
+        break;
+      }
+    }
+
+    if (isSuccessful) {
+      res.status(200).json({
+        message: "Email was sent successfully",
+        users,
+      });
+    } else {
+      res.status(500).json({
+        message: "Error, email was not sent successfully",
+      });
+    }
   } catch (error) {
     handleError(res, undefined, undefined, error);
   }

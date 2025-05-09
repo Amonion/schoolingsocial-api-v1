@@ -9,10 +9,12 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.deleteSms = exports.updateSms = exports.getSms = exports.getSmsById = exports.createSms = exports.deleteNotification = exports.updateNotification = exports.getNotifications = exports.getNotificationById = exports.createNotification = exports.deleteEmail = exports.updateEmail = exports.getEmails = exports.getEmailById = exports.createEmail = void 0;
+exports.deleteSms = exports.updateSms = exports.getSms = exports.getSmsById = exports.createSms = exports.deleteNotification = exports.updateNotification = exports.getNotifications = exports.getNotificationById = exports.createNotification = exports.deleteEmail = exports.updateEmail = exports.sendEmailToUsers = exports.getEmails = exports.getEmailById = exports.createEmail = void 0;
 const emailModel_1 = require("../../models/team/emailModel");
 const errorHandler_1 = require("../../utils/errorHandler");
 const query_1 = require("../../utils/query");
+const userModel_1 = require("../../models/users/userModel");
+const sendEmail_1 = require("../../utils/sendEmail");
 const createEmail = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     (0, query_1.createItem)(req, res, emailModel_1.Email, "Email was created successfully");
 });
@@ -40,6 +42,40 @@ const getEmails = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     }
 });
 exports.getEmails = getEmails;
+const sendEmailToUsers = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const usersIds = JSON.parse(req.body.usersIds);
+        const email = yield emailModel_1.Email.findById(req.params.id);
+        if (!email) {
+            return res.status(404).json({ message: "Email not found" });
+        }
+        const users = yield userModel_1.User.find({ _id: { $in: usersIds } });
+        let isSuccessful = true;
+        for (let i = 0; i < users.length; i++) {
+            const el = users[i];
+            const isEmailSent = yield (0, sendEmail_1.sendEmail)(String(el.username), el.email, email.name);
+            if (isEmailSent !== true) {
+                isSuccessful = false;
+                break;
+            }
+        }
+        if (isSuccessful) {
+            res.status(200).json({
+                message: "Email was sent successfully",
+                users,
+            });
+        }
+        else {
+            res.status(500).json({
+                message: "Error, email was not sent successfully",
+            });
+        }
+    }
+    catch (error) {
+        (0, errorHandler_1.handleError)(res, undefined, undefined, error);
+    }
+});
+exports.sendEmailToUsers = sendEmailToUsers;
 const updateEmail = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const email = yield emailModel_1.Email.findByIdAndUpdate(req.params.id, req.body, {

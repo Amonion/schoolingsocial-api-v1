@@ -16,6 +16,7 @@ const query_1 = require("../../utils/query");
 const fileUpload_1 = require("../../utils/fileUpload");
 const app_1 = require("../../app");
 const sendEmail_1 = require("../../utils/sendEmail");
+const userInfoModel_1 = require("../../models/users/userInfoModel");
 const setConnectionKey = (id1, id2) => {
     const participants = [id1, id2].sort();
     return participants.join("");
@@ -227,7 +228,10 @@ const friendsChats = (req, res) => __awaiter(void 0, void 0, void 0, function* (
         const totalUnread = yield chatModel_1.Chat.countDocuments({
             isRead: false,
             isFriends: true,
-            receiverUsername: username,
+            $or: [
+                { receiverUsername: username },
+                { receiverUsername: accountUsername },
+            ],
         });
         res.status(200).json({ results: result, totalUnread: totalUnread });
     }
@@ -261,41 +265,33 @@ exports.getUserChats = getUserChats;
 const readChats = (data) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const connection = setConnectionKey(data.username, data.receiverUsername);
+        const receiverUsername = data.receiverUsername;
         yield chatModel_1.Chat.updateMany({ _id: { $in: data.ids } }, { $set: { isRead: true } });
+        const mainUser = yield userInfoModel_1.UserInfo.findById(data.receiverMainId);
         const updatedChats = yield chatModel_1.Chat.find({ _id: { $in: data.ids } });
         const unreadCount = yield chatModel_1.Chat.countDocuments({
             connection: connection,
             isRead: false,
             isFriends: true,
-            receiverUsername: data.username,
-        });
-        const unreadCount1 = yield chatModel_1.Chat.countDocuments({
-            connection: connection,
-            isRead: false,
-            isFriends: true,
-            receiverUsername: data.receiverUsername,
+            receiverUsername: receiverUsername,
         });
         const totalUnread = yield chatModel_1.Chat.countDocuments({
             isRead: false,
             isFriends: true,
-            receiverUsername: data.username,
+            $or: [
+                { receiverUsername: receiverUsername },
+                { receiverUsername: mainUser === null || mainUser === void 0 ? void 0 : mainUser.username },
+            ],
         });
-        const totalUnread1 = yield chatModel_1.Chat.countDocuments({
-            isRead: false,
-            isFriends: true,
-            receiverUsername: data.receiverUsername,
+        app_1.io.emit(`myChatsRead${data.username}`, {
+            chats: updatedChats,
+            username: data.username,
         });
-        app_1.io.emit(`readChat${data.username}`, {
+        app_1.io.emit(`iReadChats${data.receiverUsername}`, {
             chats: updatedChats,
             totalUnread: totalUnread,
-            username: data.username,
-            unreadCount: unreadCount,
-        });
-        app_1.io.emit(`readChat${data.receiverUsername}`, {
-            chats: updatedChats,
-            totalUnread: totalUnread1,
             receiverUsername: data.receiverUsername,
-            unreadCount: unreadCount1,
+            unreadCount: unreadCount,
         });
     }
     catch (error) {

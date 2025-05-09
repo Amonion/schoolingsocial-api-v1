@@ -1,12 +1,12 @@
 import nodemailer from "nodemailer";
 import { promises as fs } from "fs";
+import path from "path";
 import {
   Email,
   Notification,
   UserNotification,
 } from "../models/team/emailModel";
 import { Company } from "../models/team/companyModel";
-import { IChat } from "./userInterface";
 
 interface NotificationData {
   username: string;
@@ -20,34 +20,31 @@ export async function sendEmail(
   userEmail: string,
   emailName: string,
   data?: Record<string, any>
-): Promise<void> {
+): Promise<boolean> {
   try {
-    const templatePath = "emailTemplate.html";
+    const templatePath = path.join(__dirname, "emailTemplate.html");
 
-    if (!(await fs.stat(templatePath).catch(() => false))) {
-      throw new Error(`Template file "${templatePath}" not found`);
-    }
+    // Check if the template file exists
+    await fs.access(templatePath);
 
     let templateContent = await fs.readFile(templatePath, "utf-8");
     const email = await Email.findOne({ name: emailName });
-    const results = await Company.find();
-    const company = results[0];
+    const [company] = await Company.find();
 
-    templateContent = templateContent.replace("{{username}}", username);
-    templateContent = templateContent.replace(
-      "{{greetings}}",
-      String(email?.greetings)
-    );
-    templateContent = templateContent.replace(
-      "{{logo}}",
-      `${company?.domain}/images/logos/SchoolingLogo.png`
-    );
-    templateContent = templateContent.replace(
-      "{{whiteLogo}}",
-      `${company?.domain}/images/logos/WhiteSchoolingLogo.png`
-    );
+    if (!email || !company) {
+      throw new Error("Missing email or company data.");
+    }
 
-    // Create a nodemailer transporter
+    // Replace template variables
+    templateContent = templateContent
+      .replace("{{username}}", username)
+      .replace("{{greetings}}", String(email.greetings))
+      .replace("{{logo}}", `${company.domain}/images/logos/SchoolingLogo.png`)
+      .replace(
+        "{{whiteLogo}}",
+        `${company.domain}/images/logos/WhiteSchoolingLogo.png`
+      );
+
     const transporter = nodemailer.createTransport({
       host: process.env.SMTP_HOST,
       port: parseInt(process.env.SMTP_PORT || "465"),
@@ -59,15 +56,14 @@ export async function sendEmail(
     });
 
     const mailOptions = {
-      from: `"Your App Name" <${process.env.EMAIL_USERNAME}>`,
+      from: process.env.EMAIL_USERNAME,
       to: userEmail,
-      subject: "Your Subject Here",
+      subject: email.title,
       html: templateContent,
     };
 
     await transporter.sendMail(mailOptions);
-
-    console.log(`Email sent to ${email}`);
+    return true;
   } catch (error) {
     if (error instanceof Error) {
       console.error("Error sending email:", {
@@ -76,9 +72,9 @@ export async function sendEmail(
         user: userEmail,
       });
     } else {
-      console.error("Unknown error occurred:", error);
+      console.error("Unknown error:", error);
     }
-    throw error;
+    return false;
   }
 }
 
@@ -86,29 +82,34 @@ export const sendNotification = async (
   templateName: string,
   data: NotificationData
 ) => {
-  const notificationTemp = await Notification.findOne({
-    name: templateName,
-  });
+  const notificationTemp = await Notification.findOne({ name: templateName });
+
+  if (!notificationTemp) {
+    throw new Error(`Notification template '${templateName}' not found.`);
+  }
 
   const click_here =
     templateName === "friend_request"
       ? `<a href="/home/chat/${data.from}/${data.username}" class="text-[var(--custom)]">click here</a>`
       : "";
 
-  const notification = {
-    greetings: notificationTemp?.greetings,
-    name: notificationTemp?.name,
-    title: notificationTemp?.title,
+  const content = notificationTemp.content
+    .replace("{{sender_username}}", data.username)
+    .replace("{{click_here}}", click_here);
+
+  const newNotification = await UserNotification.create({
+    greetings: notificationTemp.greetings,
+    name: notificationTemp.name,
+    title: notificationTemp.title,
     username: data.receiverUsername,
     userId: data.userId,
-    content: notificationTemp?.content
-      .replace("{{sender_username}}", data.username)
-      .replace("{{click_here}}", click_here),
-  };
-  const newNotification = await UserNotification.create(notification);
+    content,
+  });
+
   const count = await UserNotification.countDocuments({
     username: data.receiverUsername,
     unread: true,
   });
-  return { data: newNotification, count: count };
+
+  return { data: newNotification, count };
 };

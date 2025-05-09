@@ -9,7 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.followUser = exports.getPostStat = exports.updatePostStat = exports.deletePost = exports.updatePost = exports.getPosts = exports.getPostById = exports.createPost = exports.deleteAccount = exports.updateAccount = exports.getAccounts = exports.getAccountById = exports.createAccount = void 0;
+exports.followUser = exports.searchPosts = exports.getPostStat = exports.updatePostStat = exports.deletePost = exports.updatePost = exports.getBookMarkedPosts = exports.getFollowingPosts = exports.getPosts = exports.getPostById = exports.createPost = exports.deleteAccount = exports.updateAccount = exports.getAccounts = exports.getAccountById = exports.createAccount = void 0;
 const postModel_1 = require("../../models/users/postModel");
 const fileUpload_1 = require("../../utils/fileUpload");
 const errorHandler_1 = require("../../utils/errorHandler");
@@ -94,21 +94,20 @@ const createPost = (data) => __awaiter(void 0, void 0, void 0, function* () {
             isVerified: sender.isVerified,
         };
         const post = yield postModel_1.Post.create(form);
+        const score = (0, computation_1.postScore)(post.likes, post.replies, post.shares, post.bookmarks, post.views);
         if (data.postType === "comment") {
             yield userModel_1.User.updateOne({ _id: sender._id }, {
                 $inc: { comments: 1 },
             });
-            yield postModel_1.Post.updateOne({ _id: post._id }, {});
+            yield postModel_1.Post.updateOne({ _id: data.postId }, {
+                $inc: { score: score, replies: 1 },
+            });
         }
         else {
             yield userModel_1.User.updateOne({ _id: sender._id }, {
                 $inc: { posts: 1 },
             });
         }
-        const score = (0, computation_1.postScore)(post.likes, post.replies, post.shares, post.bookmarks, post.views);
-        yield postModel_1.Post.updateOne({ _id: data.postId }, {
-            $inc: { score: score, replies: 1 },
-        });
         yield statModel_1.View.create({
             postId: post._id,
             userId: sender._id,
@@ -130,65 +129,107 @@ exports.getPostById = getPostById;
 const getPosts = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const followerId = String(req.query.myId);
-        req.query.myId = undefined;
-        const response = yield (0, query_1.queryData)(postModel_1.Post, req);
-        const posts = response.results;
-        const postIds = posts.map((post) => post._id);
-        const userIds = [...new Set(posts.map((post) => post.userId))];
-        const userObjects = userIds.map((userId) => ({ userId, followerId }));
-        const queryConditions = userObjects.map(({ userId, followerId }) => ({
-            userId,
-            followerId,
-        }));
-        const follows = yield postModel_1.Follower.find({ $or: queryConditions }, { userId: 1, _id: 0 });
-        const followedUserIds = new Set(follows.map((user) => user.userId));
-        posts.map((post) => {
-            if (followedUserIds.has(post.userId)) {
-                post.followed = true;
-            }
-            return post;
-        });
-        const likedPosts = yield statModel_1.Like.find({
-            userId: followerId,
-            postId: { $in: postIds },
-        }).select("postId");
-        const bookmarkedPosts = yield statModel_1.Bookmark.find({
-            userId: followerId,
-            postId: { $in: postIds },
-        }).select("postId");
-        const viewedPosts = yield statModel_1.View.find({
-            userId: followerId,
-            postId: { $in: postIds },
-        }).select("postId");
-        const likedPostIds = likedPosts.map((like) => like.postId.toString());
-        const bookmarkedPostIds = bookmarkedPosts.map((bookmark) => bookmark.postId.toString());
-        const viewedPostIds = viewedPosts.map((view) => view.postId.toString());
-        const updatedPosts = [];
-        for (let i = 0; i < posts.length; i++) {
-            const el = posts[i];
-            if (likedPostIds.includes(el._id.toString())) {
-                el.liked = true;
-            }
-            if (bookmarkedPostIds.includes(el._id.toString())) {
-                el.bookmarked = true;
-            }
-            if (viewedPostIds.includes(el._id.toString())) {
-                el.viewed = true;
-            }
-            updatedPosts.push(el);
-        }
-        res.status(200).json({
-            count: response.count,
-            page: response.page,
-            page_size: response.page_size,
-            results: updatedPosts,
-        });
+        delete req.query.myId;
+        delete req.query.following;
+        const processedPosts = yield processFetchedPosts(req, followerId);
+        res.status(200).json(processedPosts);
     }
     catch (error) {
         (0, errorHandler_1.handleError)(res, undefined, undefined, error);
     }
 });
 exports.getPosts = getPosts;
+const getFollowingPosts = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const followerId = String(req.query.myId);
+        const followers = yield postModel_1.Follower.find({ followerId: followerId });
+        const followersUserIds = followers.map((user) => user.userId);
+        delete req.query.myId;
+        const mongoQuery = Object.assign(Object.assign({}, req.query), { userId: { in: followersUserIds } });
+        req.query = mongoQuery;
+        delete req.query.myId;
+        const processedPosts = yield processFetchedPosts(req, followerId);
+        res.status(200).json(processedPosts);
+    }
+    catch (error) {
+        (0, errorHandler_1.handleError)(res, undefined, undefined, error);
+    }
+});
+exports.getFollowingPosts = getFollowingPosts;
+const getBookMarkedPosts = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const bookmarkUserId = String(req.query.myId);
+        const bookmarks = yield statModel_1.Bookmark.find({ bookmarkUserId: bookmarkUserId });
+        // const followers = await Follower.find({ followerId: followerId });
+        const bookmarksPostIds = bookmarks.map((post) => post.postId);
+        // delete req.query.myId;
+        const mongoQuery = Object.assign(Object.assign({}, req.query), { _id: { in: bookmarksPostIds } });
+        req.query = mongoQuery;
+        delete req.query.myId;
+        const processedPosts = yield processFetchedPosts(req, bookmarkUserId);
+        res.status(200).json(processedPosts);
+        // const posts = response.results;
+        // const postIds = posts.map((post) => post._id);
+        // const userIds = [...new Set(posts.map((post) => post.userId))];
+        // const userObjects = userIds.map((userId) => ({ userId, followerId }));
+        // const queryConditions = userObjects.map(({ userId, followerId }) => ({
+        //   userId,
+        //   followerId,
+        // }));
+        // const follows = await Follower.find(
+        //   { $or: queryConditions },
+        //   { userId: 1, _id: 0 }
+        // );
+        // const followedUserIds = new Set(follows.map((user) => user.userId));
+        // posts.map((post) => {
+        //   if (followedUserIds.has(post.userId)) {
+        //     post.followed = true;
+        //   }
+        //   return post;
+        // });
+        // const likedPosts = await Like.find({
+        //   userId: followerId,
+        //   postId: { $in: postIds },
+        // }).select("postId");
+        // const bookmarkedPosts = await Bookmark.find({
+        //   userId: followerId,
+        //   postId: { $in: postIds },
+        // }).select("postId");
+        // const viewedPosts = await View.find({
+        //   userId: followerId,
+        //   postId: { $in: postIds },
+        // }).select("postId");
+        // const likedPostIds = likedPosts.map((like) => like.postId.toString());
+        // const bookmarkedPostIds = bookmarkedPosts.map((bookmark) =>
+        //   bookmark.postId.toString()
+        // );
+        // const viewedPostIds = viewedPosts.map((view) => view.postId.toString());
+        // const updatedPosts = [];
+        // for (let i = 0; i < posts.length; i++) {
+        //   const el = posts[i];
+        //   if (likedPostIds.includes(el._id.toString())) {
+        //     el.liked = true;
+        //   }
+        //   if (bookmarkedPostIds.includes(el._id.toString())) {
+        //     el.bookmarked = true;
+        //   }
+        //   if (viewedPostIds.includes(el._id.toString())) {
+        //     el.viewed = true;
+        //   }
+        //   updatedPosts.push(el);
+        // }
+        // res.status(200).json({
+        //   count: response.count,
+        //   page: response.page,
+        //   page_size: response.page_size,
+        //   results: updatedPosts,
+        // });
+    }
+    catch (error) {
+        (0, errorHandler_1.handleError)(res, undefined, undefined, error);
+    }
+});
+exports.getBookMarkedPosts = getBookMarkedPosts;
 const updatePost = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const uploadedFiles = yield (0, fileUpload_1.uploadFilesToS3)(req);
@@ -267,14 +308,21 @@ const updatePostStat = (req, res) => __awaiter(void 0, void 0, void 0, function*
             if (!req.body.bookmarks && post.bookmarks <= 0) {
                 return res.status(200).json({ message: null });
             }
-            const bookmark = yield statModel_1.Bookmark.findOne({ postId: id, userId });
+            const bookmark = yield statModel_1.Bookmark.findOne({
+                postId: id,
+                bookmarkUserId: userId,
+            });
             if (bookmark) {
                 updateQuery.$inc = { bookmarks: -1 };
-                yield statModel_1.Bookmark.deleteOne({ postId: id, userId });
+                yield statModel_1.Bookmark.deleteOne({ postId: id, bookmarkUserId: userId });
             }
             else {
                 updateQuery.$inc = { bookmarks: 1 };
-                yield statModel_1.Bookmark.create({ postId: id, userId });
+                yield statModel_1.Bookmark.create({
+                    postId: id,
+                    userId: post.userId,
+                    bookmarkUserId: userId,
+                });
             }
         }
         if (req.body.views !== undefined) {
@@ -318,6 +366,10 @@ const getPostStat = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
     }
 });
 exports.getPostStat = getPostStat;
+const searchPosts = (req, res) => {
+    return (0, query_1.search)(postModel_1.Post, req, res);
+};
+exports.searchPosts = searchPosts;
 //-----------------FOLLOW USER--------------------//
 const followUser = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
@@ -337,3 +389,57 @@ const followUser = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
     }
 });
 exports.followUser = followUser;
+const processFetchedPosts = (req, followerId) => __awaiter(void 0, void 0, void 0, function* () {
+    const response = yield (0, query_1.queryData)(postModel_1.Post, req);
+    const posts = response.results;
+    const postIds = posts.map((post) => post._id);
+    const userIds = [...new Set(posts.map((post) => post.userId))];
+    const userObjects = userIds.map((userId) => ({ userId, followerId }));
+    const queryConditions = userObjects.map(({ userId, followerId }) => ({
+        userId,
+        followerId,
+    }));
+    const follows = yield postModel_1.Follower.find({ $or: queryConditions }, { userId: 1, _id: 0 });
+    const followedUserIds = new Set(follows.map((user) => user.userId));
+    posts.map((post) => {
+        if (followedUserIds.has(post.userId)) {
+            post.followed = true;
+        }
+        return post;
+    });
+    const likedPosts = yield statModel_1.Like.find({
+        userId: followerId,
+        postId: { $in: postIds },
+    }).select("postId");
+    const bookmarkedPosts = yield statModel_1.Bookmark.find({
+        bookmarkUserId: followerId,
+        postId: { $in: postIds },
+    }).select("postId");
+    const viewedPosts = yield statModel_1.View.find({
+        userId: followerId,
+        postId: { $in: postIds },
+    }).select("postId");
+    const likedPostIds = likedPosts.map((like) => like.postId.toString());
+    const bookmarkedPostIds = bookmarkedPosts.map((bookmark) => bookmark.postId.toString());
+    const viewedPostIds = viewedPosts.map((view) => view.postId.toString());
+    const updatedPosts = [];
+    for (let i = 0; i < posts.length; i++) {
+        const el = posts[i];
+        if (likedPostIds.includes(el._id.toString())) {
+            el.liked = true;
+        }
+        if (bookmarkedPostIds.includes(el._id.toString())) {
+            el.bookmarked = true;
+        }
+        if (viewedPostIds.includes(el._id.toString())) {
+            el.viewed = true;
+        }
+        updatedPosts.push(el);
+    }
+    return {
+        count: response.count,
+        page: response.page,
+        page_size: response.page_size,
+        results: updatedPosts,
+    };
+});

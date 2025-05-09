@@ -6,6 +6,7 @@ import { queryData } from "../../utils/query";
 import { deleteFileFromS3 } from "../../utils/fileUpload";
 import { io } from "../../app";
 import { sendNotification } from "../../utils/sendEmail";
+import { UserInfo } from "../../models/users/userInfoModel";
 
 const setConnectionKey = (id1: string, id2: string) => {
   const participants = [id1, id2].sort();
@@ -15,6 +16,7 @@ const setConnectionKey = (id1: string, id2: string) => {
 interface Receive {
   ids: string[];
   receiverId: string;
+  receiverMainId: string;
   userId: string;
   username: string;
   receiverUsername: string;
@@ -246,7 +248,10 @@ export const friendsChats = async (req: Request, res: Response) => {
     const totalUnread = await Chat.countDocuments({
       isRead: false,
       isFriends: true,
-      receiverUsername: username,
+      $or: [
+        { receiverUsername: username },
+        { receiverUsername: accountUsername },
+      ],
     });
     res.status(200).json({ results: result, totalUnread: totalUnread });
   } catch (error) {
@@ -278,48 +283,40 @@ export const getUserChats = async (req: Request, res: Response) => {
 export const readChats = async (data: Receive) => {
   try {
     const connection = setConnectionKey(data.username, data.receiverUsername);
-
+    const receiverUsername = data.receiverUsername;
     await Chat.updateMany(
       { _id: { $in: data.ids } },
       { $set: { isRead: true } }
     );
 
+    const mainUser = await UserInfo.findById(data.receiverMainId);
     const updatedChats = await Chat.find({ _id: { $in: data.ids } });
+
     const unreadCount = await Chat.countDocuments({
       connection: connection,
       isRead: false,
       isFriends: true,
-      receiverUsername: data.username,
+      receiverUsername: receiverUsername,
     });
-    const unreadCount1 = await Chat.countDocuments({
-      connection: connection,
-      isRead: false,
-      isFriends: true,
-      receiverUsername: data.receiverUsername,
-    });
-
     const totalUnread = await Chat.countDocuments({
       isRead: false,
       isFriends: true,
-      receiverUsername: data.username,
-    });
-    const totalUnread1 = await Chat.countDocuments({
-      isRead: false,
-      isFriends: true,
-      receiverUsername: data.receiverUsername,
+      $or: [
+        { receiverUsername: receiverUsername },
+        { receiverUsername: mainUser?.username },
+      ],
     });
 
-    io.emit(`readChat${data.username}`, {
+    io.emit(`myChatsRead${data.username}`, {
+      chats: updatedChats,
+      username: data.username,
+    });
+
+    io.emit(`iReadChats${data.receiverUsername}`, {
       chats: updatedChats,
       totalUnread: totalUnread,
-      username: data.username,
-      unreadCount: unreadCount,
-    });
-    io.emit(`readChat${data.receiverUsername}`, {
-      chats: updatedChats,
-      totalUnread: totalUnread1,
       receiverUsername: data.receiverUsername,
-      unreadCount: unreadCount1,
+      unreadCount: unreadCount,
     });
   } catch (error) {
     console.log(error);

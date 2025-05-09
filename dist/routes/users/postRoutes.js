@@ -15,6 +15,9 @@ router.route("/accounts").get(postController_1.getAccounts).post(upload.any(), p
 router.route("/stats").get(postController_1.getPostStat).patch(postController_1.updatePostStat);
 router.route("/general").get(uploadController_1.multiSearch);
 router.route("/").get(postController_1.getPosts).post(upload.any(), postController_1.createPost);
+router.route("/following").get(postController_1.getFollowingPosts);
+router.route("/bookmarks").get(postController_1.getBookMarkedPosts);
+router.route("/search").get(postController_1.searchPosts);
 router
     .route("/uploads/:id")
     .get(uploadController_1.getUploadById)

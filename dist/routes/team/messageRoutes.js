@@ -10,6 +10,7 @@ const emailController_1 = require("../../controllers/team/emailController");
 const router = express_1.default.Router();
 router.route("/").get(emailController_1.getEmails).post(upload.any(), emailController_1.createEmail);
 router.route("/sms").get(emailController_1.getSms).post(upload.any(), emailController_1.createSms);
+router.route("/send/:id").post(upload.any(), emailController_1.sendEmailToUsers);
 router
     .route("/notifications")
     .get(emailController_1.getNotifications)

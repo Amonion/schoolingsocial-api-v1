@@ -18,12 +18,14 @@ import {
   updateSms,
   deleteSms,
   createSms,
+  sendEmailToUsers,
 } from "../../controllers/team/emailController";
 
 const router = express.Router();
 
 router.route("/").get(getEmails).post(upload.any(), createEmail);
 router.route("/sms").get(getSms).post(upload.any(), createSms);
+router.route("/send/:id").post(upload.any(), sendEmailToUsers);
 router
   .route("/notifications")
   .get(getNotifications)
