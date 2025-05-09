@@ -22,7 +22,8 @@ const companyModel_1 = require("../models/team/companyModel");
 function sendEmail(username, userEmail, emailName, data) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
-            const templatePath = path_1.default.join(__dirname, "emailTemplate.html");
+            // const templatePath = path.join(__dirname, "emailTemplate.html");
+            const templatePath = path_1.default.resolve(__dirname, "emailTemplate.html");
             yield fs_1.promises.access(templatePath); // throws if not found
             let templateContent = yield fs_1.promises.readFile(templatePath, "utf-8");
             const email = yield emailModel_1.Email.findOne({ name: emailName });
