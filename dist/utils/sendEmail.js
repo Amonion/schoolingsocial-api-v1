@@ -30,11 +30,19 @@ function sendEmail(username, userEmail, emailName, data) {
                 throw new Error(`Email template '${emailName}' not found`);
             if (!company)
                 throw new Error("Company information is missing");
-            templateContent = templateContent
+            let content = email.content;
+            content = String(content)
                 .replace("{{username}}", username)
+                .replace("{{greetings}}", String(email.greetings));
+            templateContent = templateContent
+                .replace("{{title}}", email.title)
+                .replace("{{content}}", content)
+                .replace("{{username}}", username)
+                .replace("{{domain}}", company.domain)
+                .replace("{{companyName}}", company.name)
                 .replace("{{greetings}}", String(email.greetings))
-                .replace("{{logo}}", `${company.domain}/images/logos/SchoolingLogo.png`)
-                .replace("{{whiteLogo}}", `${company.domain}/images/logos/WhiteSchoolingLogo.png`);
+                .replace("{{logo}}", `${company.domain}/images/NewLogo.png`)
+                .replace("{{whiteLogo}}", `${company.domain}/images/NewLogoWhite.png`);
             const transporter = nodemailer_1.default.createTransport({
                 host: process.env.SMTP_HOST,
                 port: parseInt(process.env.SMTP_PORT || "465"),
@@ -51,7 +59,6 @@ function sendEmail(username, userEmail, emailName, data) {
                 html: templateContent,
             };
             yield transporter.sendMail(mailOptions);
-            console.log(`Email successfully sent to ${userEmail}`);
             return true;
         }
         catch (error) {
