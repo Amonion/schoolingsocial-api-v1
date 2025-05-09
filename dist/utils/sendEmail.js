@@ -23,15 +23,14 @@ function sendEmail(username, userEmail, emailName, data) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
             const templatePath = path_1.default.join(__dirname, "emailTemplate.html");
-            // Check if the template file exists
-            yield fs_1.promises.access(templatePath);
+            yield fs_1.promises.access(templatePath); // throws if not found
             let templateContent = yield fs_1.promises.readFile(templatePath, "utf-8");
             const email = yield emailModel_1.Email.findOne({ name: emailName });
             const [company] = yield companyModel_1.Company.find();
-            if (!email || !company) {
-                throw new Error("Missing email or company data.");
-            }
-            // Replace template variables
+            if (!email)
+                throw new Error(`Email template '${emailName}' not found`);
+            if (!company)
+                throw new Error("Company information is missing");
             templateContent = templateContent
                 .replace("{{username}}", username)
                 .replace("{{greetings}}", String(email.greetings))
@@ -53,18 +52,18 @@ function sendEmail(username, userEmail, emailName, data) {
                 html: templateContent,
             };
             yield transporter.sendMail(mailOptions);
+            console.log(`Email successfully sent to ${userEmail}`);
             return true;
         }
         catch (error) {
             if (error instanceof Error) {
                 console.error("Error sending email:", {
                     message: error.message,
-                    stack: error.stack,
                     user: userEmail,
                 });
             }
             else {
-                console.error("Unknown error:", error);
+                console.error("Unexpected error:", error);
             }
             return false;
         }

@@ -24,18 +24,15 @@ export async function sendEmail(
   try {
     const templatePath = path.join(__dirname, "emailTemplate.html");
 
-    // Check if the template file exists
-    await fs.access(templatePath);
-
+    await fs.access(templatePath); // throws if not found
     let templateContent = await fs.readFile(templatePath, "utf-8");
+
     const email = await Email.findOne({ name: emailName });
     const [company] = await Company.find();
 
-    if (!email || !company) {
-      throw new Error("Missing email or company data.");
-    }
+    if (!email) throw new Error(`Email template '${emailName}' not found`);
+    if (!company) throw new Error("Company information is missing");
 
-    // Replace template variables
     templateContent = templateContent
       .replace("{{username}}", username)
       .replace("{{greetings}}", String(email.greetings))
@@ -63,16 +60,16 @@ export async function sendEmail(
     };
 
     await transporter.sendMail(mailOptions);
+    console.log(`Email successfully sent to ${userEmail}`);
     return true;
   } catch (error) {
     if (error instanceof Error) {
       console.error("Error sending email:", {
         message: error.message,
-        stack: error.stack,
         user: userEmail,
       });
     } else {
-      console.error("Unknown error:", error);
+      console.error("Unexpected error:", error);
     }
     return false;
   }

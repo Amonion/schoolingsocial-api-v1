@@ -47,27 +47,41 @@ const sendEmailToUsers = (req, res) => __awaiter(void 0, void 0, void 0, functio
         const usersIds = JSON.parse(req.body.usersIds);
         const email = yield emailModel_1.Email.findById(req.params.id);
         if (!email) {
-            return res.status(404).json({ message: "Email not found" });
+            return res.status(404).json({ message: "Email template not found." });
         }
         const users = yield userModel_1.User.find({ _id: { $in: usersIds } });
-        let isSuccessful = true;
-        for (let i = 0; i < users.length; i++) {
-            const el = users[i];
-            const isEmailSent = yield (0, sendEmail_1.sendEmail)(String(el.username), el.email, email.name);
-            if (isEmailSent !== true) {
-                isSuccessful = false;
-                break;
+        const failedUsers = [];
+        for (const user of users) {
+            try {
+                const isEmailSent = yield (0, sendEmail_1.sendEmail)(String(user.username), user.email, email.name);
+                if (!isEmailSent) {
+                    failedUsers.push({
+                        username: String(user.username),
+                        email: user.email,
+                        error: "sendEmail returned false",
+                    });
+                }
+            }
+            catch (err) {
+                failedUsers.push({
+                    username: String(user.username),
+                    email: user.email,
+                    error: err.message || "Unknown error",
+                });
             }
         }
-        if (isSuccessful) {
-            res.status(200).json({
-                message: "Email was sent successfully",
-                users,
+        if (failedUsers.length === 0) {
+            return res.status(200).json({
+                message: "All emails sent successfully.",
+                totalUsers: users.length,
             });
         }
         else {
-            res.status(500).json({
-                message: "Error, email was not sent successfully",
+            return res.status(207).json({
+                message: "Some emails failed to send.",
+                failed: failedUsers,
+                totalSuccess: users.length - failedUsers.length,
+                totalFailed: failedUsers.length,
             });
         }
     }
