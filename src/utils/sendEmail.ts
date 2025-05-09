@@ -22,9 +22,13 @@ export async function sendEmail(
   data?: Record<string, any>
 ): Promise<boolean> {
   try {
-    const templatePath = path.join(__dirname, "emailTemplate.html");
+    const templatePath = path.join(
+      process.cwd(),
+      "public",
+      "templates",
+      "emailTemplate.html"
+    );
 
-    await fs.access(templatePath); // throws if not found
     let templateContent = await fs.readFile(templatePath, "utf-8");
 
     const email = await Email.findOne({ name: emailName });

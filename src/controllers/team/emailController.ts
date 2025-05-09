@@ -53,6 +53,8 @@ export const sendEmailToUsers = async (req: Request, res: Response) => {
 
     const users = await User.find({ _id: { $in: usersIds } });
 
+    console.log(users, usersIds);
+
     const failedUsers: { username: string; email: string; error: string }[] =
       [];
 

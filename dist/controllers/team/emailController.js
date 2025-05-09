@@ -50,6 +50,7 @@ const sendEmailToUsers = (req, res) => __awaiter(void 0, void 0, void 0, functio
             return res.status(404).json({ message: "Email template not found." });
         }
         const users = yield userModel_1.User.find({ _id: { $in: usersIds } });
+        console.log(users, usersIds);
         const failedUsers = [];
         for (const user of users) {
             try {
