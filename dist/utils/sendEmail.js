@@ -35,14 +35,14 @@ function sendEmail(username, userEmail, emailName, data) {
                 .replace("{{username}}", username)
                 .replace("{{greetings}}", String(email.greetings));
             templateContent = templateContent
-                .replace("{{title}}", email.title)
-                .replace("{{content}}", content)
-                .replace("{{username}}", username)
-                .replace("{{domain}}", company.domain)
-                .replace("{{companyName}}", company.name)
-                .replace("{{greetings}}", String(email.greetings))
-                .replace("{{logo}}", `${company.domain}/images/NewLogo.png`)
-                .replace("{{whiteLogo}}", `${company.domain}/images/NewLogoWhite.png`);
+                .replace(/{{title}}/g, email.title)
+                .replace(/{{content}}/g, content)
+                .replace(/{{username}}/g, username)
+                .replace(/{{domain}}/g, company.domain)
+                .replace(/{{companyName}}/g, company.name)
+                .replace(/{{greetings}}/g, String(email.greetings))
+                .replace(/{{logo}}/g, `${company.domain}/images/NewLogo.png`)
+                .replace(/{{whiteLogo}}/g, `${company.domain}/images/NewLogoWhite.png`);
             const transporter = nodemailer_1.default.createTransport({
                 host: process.env.SMTP_HOST,
                 port: parseInt(process.env.SMTP_PORT || "465"),
