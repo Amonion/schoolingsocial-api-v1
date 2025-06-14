@@ -1,32 +1,33 @@
-import mongoose, { Schema } from "mongoose";
-import { IUser } from "../../utils/userInterface";
+import mongoose, { Schema } from 'mongoose'
+import { IUser, IUserSettings } from '../../utils/userInterface'
 
 const UserSchema: Schema = new Schema(
   {
     email: {
       type: String,
-      required: [true, "Email is required"],
-      unique: [true, "A user with this email already exists"],
-      match: [/\S+@\S+\.\S+/, "Please use a valid email address"],
+      required: [true, 'Email is required'],
+      unique: [true, 'A user with this email already exists'],
+      match: [/\S+@\S+\.\S+/, 'Please use a valid email address'],
+      lowercase: true,
     },
     username: {
       type: String,
     },
-    phone: { type: String, default: "" },
-    media: { type: String, default: "" },
-    picture: { type: String, default: "" },
-    displayName: { type: String, default: "" },
-    intro: { type: String, default: "" },
-    userId: { type: String, default: "" },
+    phone: { type: String, default: '' },
+    media: { type: String, default: '' },
+    picture: { type: String, default: '' },
+    displayName: { type: String, default: '' },
+    intro: { type: String, default: '' },
+    userId: { type: String, default: '' },
     role: { type: String, default: null },
-    signupIp: { type: String, default: "" },
+    signupIp: { type: String, default: '' },
     interests: { type: Array, default: [] },
-    userStatus: { type: String, default: "User" },
-    staffPositions: { type: String, default: "" },
+    userStatus: { type: String, default: 'User' },
+    staffPositions: { type: String, default: '' },
 
-    homeCountry: { type: String, default: "" },
-    country: { type: String, default: "" },
-    signupCountry: { type: String, default: "" },
+    homeCountry: { type: String, default: '' },
+    country: { type: String, default: '' },
+    signupCountry: { type: String, default: '' },
     level: { type: Number, default: 1 },
     followers: { type: Number, default: 0 },
     following: { type: Number, default: 0 },
@@ -61,8 +62,8 @@ const UserSchema: Schema = new Schema(
     passwordResetToken: { type: String, default: null },
     password: {
       type: String,
-      required: [true, "Password is required"],
-      minlength: [6, "Password must be at least 6 characters long"],
+      required: [true, 'Password is required'],
+      minlength: [6, 'Password must be at least 6 characters long'],
       select: false,
     },
     passwordExpiresAt: { type: Date, default: null },
@@ -70,6 +71,62 @@ const UserSchema: Schema = new Schema(
   {
     timestamps: true,
   }
-);
+)
 
-export const User = mongoose.model<IUser>("User", UserSchema);
+export const User = mongoose.model<IUser>('User', UserSchema)
+
+const UserSettingsSchema: Schema = new Schema(
+  {
+    username: {
+      type: String,
+    },
+    userId: { type: String, default: '' },
+    bioInfo: {
+      government: { type: Boolean, default: true },
+      institution: { type: Boolean, default: true },
+      single: { type: Boolean, default: false },
+      company: { type: Boolean, default: false },
+    },
+    originInfo: {
+      government: { type: Boolean, default: true },
+      institution: { type: Boolean, default: true },
+      single: { type: Boolean, default: false },
+      company: { type: Boolean, default: false },
+    },
+    residentialInfo: {
+      government: { type: Boolean, default: true },
+      institution: { type: Boolean, default: true },
+      single: { type: Boolean, default: false },
+      company: { type: Boolean, default: false },
+    },
+    relatedInfo: {
+      government: { type: Boolean, default: true },
+      institution: { type: Boolean, default: true },
+      single: { type: Boolean, default: false },
+      company: { type: Boolean, default: false },
+    },
+    documentInfo: {
+      government: { type: Boolean, default: true },
+      institution: { type: Boolean, default: true },
+      single: { type: Boolean, default: false },
+      company: { type: Boolean, default: false },
+    },
+    notification: {
+      jobPosting: { type: Boolean, default: true },
+      friendRequest: { type: Boolean, default: true },
+      newMessage: { type: Boolean, default: false },
+      newFollower: { type: Boolean, default: false },
+      postReply: { type: Boolean, default: false },
+      sound: { type: Boolean, default: false },
+    },
+    createdAt: { type: Date, default: Date.now },
+  },
+  {
+    timestamps: true,
+  }
+)
+
+export const UserSettings = mongoose.model<IUserSettings>(
+  'UserSettings',
+  UserSettingsSchema
+)
