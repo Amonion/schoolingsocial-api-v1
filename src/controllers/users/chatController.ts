@@ -107,6 +107,100 @@ export const createChat = async (data: IChat) => {
   }
 };
 
+export const createChatMobile = async (req: Request, res: Response) => {
+  try {
+    const data = req.body;
+    const connection = req.params.connection;
+
+    const prev = await Chat.findOne({
+      connection: connection,
+    }).sort({ createdAt: -1 });
+    data.connection = connection;
+
+    const received = await Chat.findOne({
+      receiverUsername: data.username,
+      connection: connection,
+    });
+
+    data.isFriends = received ? true : false;
+    if (data.isFriends) {
+      await Chat.updateMany(
+        { connection: connection },
+        { $set: { isFriends: true } }
+      );
+    }
+
+    const unreadReceiver = await Chat.countDocuments({
+      connection: connection,
+      receiverUsername: data.receiverUsername,
+      isRead: false,
+    });
+
+    const unreadUser = await Chat.countDocuments({
+      connection: connection,
+      username: data.username,
+      isRead: false,
+    });
+
+    data.unreadReceiver = unreadReceiver + 1;
+    data.unreadUser = unreadUser;
+    data.isSent = true;
+
+    const sendCreatedChat = (
+      post: IChat,
+      isFriends: boolean,
+      totalUnread?: number
+    ) => {
+      io.emit(`createdChat${connection}`, {
+        key: connection,
+        data: post,
+      });
+      io.emit(`createdChat${data.username}`, {
+        key: connection,
+        data: post,
+        message: data.action === "online" ? "online" : "",
+        totalUnread: totalUnread,
+      });
+
+      if (isFriends) {
+        io.emit(`createdChat${data.receiverUsername}`, {
+          key: connection,
+          data: post,
+          message: data.action === "online" ? "online" : "",
+          totalUnread: totalUnread,
+        });
+      }
+    };
+
+    let post;
+
+    if (prev) {
+      const lastTime = new Date(prev.createdAt).getTime();
+      const lastReceiverTime = new Date(prev.receiverTime).getTime();
+      const currentTime = new Date().getTime();
+      const receiverTime = new Date(currentTime - lastTime + lastReceiverTime);
+      data.receiverTime = receiverTime;
+
+      post = await Chat.create(data);
+      const totalUread = await Chat.countDocuments({
+        isRead: false,
+        isFriends: true,
+        receiverUsername: data.receiverUsername,
+      });
+      sendCreatedChat(post, data.isFriends, totalUread);
+    } else {
+      post = await Chat.create(data);
+      sendCreatedChat(post, false);
+      const newNotification = await sendNotification("friend_request", data);
+      io.emit(data.receiverUsername, newNotification);
+    }
+
+    res.status(200).json(post);
+  } catch (error) {
+    console.log(error);
+  }
+};
+
 export const searchChats = async (req: Request, res: Response) => {
   try {
     const searchTerm = String(req.query.word || "").trim();
@@ -170,8 +264,10 @@ export const searchFavChats = async (req: Request, res: Response) => {
 
 export const friendsChats = async (req: Request, res: Response) => {
   try {
-    const username = String(req.query.username || "").trim();
-    const accountUsername = String(req.query.accountUsername || "").trim();
+    const username = String(req.query.username || req.query.id).trim();
+    const accountUsername = String(
+      req.query.accountUsername || req.query.id
+    ).trim();
 
     const result = await Chat.aggregate([
       {
@@ -400,7 +496,10 @@ export const addSearchedChats = async (req: Request, res: Response) => {
     const item = await Chat.findById(id);
 
     if (!item) {
-      return res.status(400).json({ message: "Item not found in database." });
+      console.log("not found");
+      return res
+        .status(400)
+        .json({ message: "Sorry this chat has been deleted." });
     }
 
     const minDate = item.time;
