@@ -44,6 +44,7 @@ const UserInfoSchema: Schema = new Schema(
     area: { type: String, default: '' },
     address: { type: String, default: '' },
     placeId: { type: String, default: '' },
+    examAttempts: { type: Number, default: 0 },
 
     bioInfo: {
       type: Array,

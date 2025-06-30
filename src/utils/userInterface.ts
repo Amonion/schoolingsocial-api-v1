@@ -235,6 +235,7 @@ export interface IUser extends Document {
   signupCountry?: string
   signupCountryFlag?: string
   level: number
+  totalAttempts: number
   isDocument: boolean
   isOrigin: boolean
   isContact: boolean
@@ -281,6 +282,7 @@ export interface IUserInfo extends Document {
   intro: string
   dob: string
   gender: string
+  attempts: number
   maritalStatus: string
   documents: IDDocs[]
   residentCountry: string

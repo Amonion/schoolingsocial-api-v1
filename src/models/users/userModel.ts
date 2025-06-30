@@ -24,7 +24,6 @@ const UserSchema: Schema = new Schema(
     interests: { type: Array, default: [] },
     userStatus: { type: String, default: 'User' },
     staffPositions: { type: String, default: '' },
-
     homeCountry: { type: String, default: '' },
     country: { type: String, default: '' },
     signupCountry: { type: String, default: '' },
@@ -35,7 +34,7 @@ const UserSchema: Schema = new Schema(
     comments: { type: Number, default: 0 },
     uploads: { type: Number, default: 0 },
     exams: { type: Number, default: 0 },
-
+    totalAttempts: { type: Number, default: 0 },
     isOnVerification: { type: Boolean, default: false },
     isVerified: { type: Boolean, default: false },
     isPublic: { type: Boolean, default: false },
