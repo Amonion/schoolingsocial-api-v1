@@ -139,6 +139,7 @@ export interface IPost extends Document {
   users: string[]
   picture: string
   country: string
+  status: boolean
   followed: boolean
   muted: boolean
   liked: boolean
@@ -282,7 +283,7 @@ export interface IUserInfo extends Document {
   intro: string
   dob: string
   gender: string
-  attempts: number
+  examAttempts: number
   maritalStatus: string
   documents: IDDocs[]
   residentCountry: string
@@ -422,7 +423,7 @@ export interface IUserTestExam extends Document {
   userId: string
   picture: string
   paperId: string
-  name: string
+  displayName: string
   title: string
   type: string
   instruction: string
@@ -432,6 +433,7 @@ export interface IUserTestExam extends Document {
   accuracy: number
   metric: number
   attempts: number
+  isFirstTime: boolean
   totalAnswered: number
   totalCorrectAnswer: number
 }

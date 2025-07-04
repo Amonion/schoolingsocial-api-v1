@@ -68,7 +68,6 @@ export const updateWeekend = async (req: Request, res: Response) => {
     handleError(res, undefined, undefined, error)
   }
 }
-
 //-----------------Exam--------------------//
 export const createExam = async (
   req: Request,
@@ -79,6 +78,7 @@ export const createExam = async (
     const userId = req.body.userId
     const username = req.body.username
     const picture = req.body.picture
+    const displayName = req.body.displayName
     const started = Number(req.body.started)
     const ended = Number(req.body.ended)
     // const attempts = Number(req.body.attempts);
@@ -87,13 +87,13 @@ export const createExam = async (
 
     const rate = (1000 * questions.length) / (ended - started)
     let mainObjective = await Objective.find({ paperId: paperId })
-    let participant = await UserTestExam.find({
+
+    const paper = await UserTestExam.findOne({
       paperId: paperId,
       userId: userId,
     })
+    const attempts = paper?.isFirstTime ? 1 : Number(paper?.attempts) + 1
 
-    const paper = await UserTestExam.findOne({ paperId: paperId })
-    const attempts = paper ? Number(paper?.attempts) + 1 : 1
     let correctAnswer = 0
     for (let i = 0; i < questions.length; i++) {
       const el = questions[i]
@@ -149,6 +149,7 @@ export const createExam = async (
           paperId,
           userId,
           username,
+          displayName,
           picture,
           started,
           ended,
@@ -157,6 +158,7 @@ export const createExam = async (
           accuracy,
           metric,
           instruction,
+          isFirstTime: false,
           questions: mainObjective.length,
           attemptedQuestions: questions.length,
           totalCorrectAnswer: correctAnswer,
@@ -167,16 +169,19 @@ export const createExam = async (
         upsert: true,
       }
     )
+
     const user = await UserInfo.findByIdAndUpdate(
       userId,
-      { $inc: { attempts: 1 } },
-      { new: true }
+      { $inc: { examAttempts: paper?.isFirstTime ? 0 : 1 } },
+      { new: true, upsert: true }
     )
-    await User.updateMany({ userId: userId }, { $inc: { totalAttempts: 1 } })
+    await User.updateMany(
+      { userId: userId },
+      { $inc: { totalAttempts: paper?.isFirstTime ? 0 : 1 } }
+    )
     await UserTest.deleteMany({ userId: userId, paperId: paperId })
     await UserTest.insertMany(updatedQuestions)
-    const attempt = await Attempt.findOne({ userId: userId, paperId: paperId })
-    if (participant.length === 0) {
+    if (!paper) {
       await Exam.updateOne(
         { _id: paperId },
         {
@@ -186,31 +191,84 @@ export const createExam = async (
         }
       )
     }
-    if (attempt) {
-      await Attempt.findByIdAndUpdate(attempt._id, {
-        $inc: {
-          attempts: 1,
-        },
-      })
-    } else {
-      await Attempt.create({ paperId: paperId, userId: userId, attempts: 1 })
-    }
 
     const result = await queryData<IUserTest>(UserTest, req)
-    const newAttempt = await Attempt.findOne({
-      userId: userId,
-      paperId: paperId,
-    })
 
     const data = {
       exam,
-      attempt: Number(newAttempt?.attempts),
+      attempt: Number(exam?.attempts),
       results: result.results,
-      totalAttempts: user?.attempts,
+      totalAttempts: user?.examAttempts,
       message: 'Exam submitted successfull',
     }
 
     res.status(200).json(data)
+  } catch (error) {
+    console.log(error)
+    handleError(res, undefined, undefined, error)
+  }
+}
+
+export const initExam = async (
+  req: Request,
+  res: Response
+): Promise<Response | void> => {
+  try {
+    const paperId = req.body.paperId
+    const userId = req.body.userId
+    const username = req.body.username
+    const picture = req.body.picture
+    const displayName = req.body.displayName
+    const started = Number(req.body.started)
+    const instruction = req.body.instruction
+
+    let questions = await Objective.countDocuments({ paperId: paperId })
+    await UserTestExam.findOneAndUpdate(
+      {
+        paperId,
+        userId,
+      },
+      {
+        $set: {
+          paperId,
+          userId,
+          username,
+          displayName,
+          picture,
+          started,
+          attempts: 1,
+          isFirstTime: true,
+          rate: 0,
+          accuracy: 0,
+          instruction,
+          questions: questions,
+          attemptedQuestions: 0,
+          totalCorrectAnswer: 0,
+        },
+      },
+      {
+        new: true,
+        upsert: true,
+      }
+    )
+
+    await Exam.updateOne(
+      { _id: paperId },
+      {
+        $inc: {
+          participants: 1,
+        },
+      }
+    )
+    await UserInfo.findByIdAndUpdate(
+      userId,
+      { $inc: { examAttempts: 1 } },
+      { new: true, upsert: true }
+    )
+
+    await User.updateMany({ userId: userId }, { $inc: { totalAttempts: 1 } })
+
+    res.status(200).json({ message: 'Exam is initialized' })
   } catch (error) {
     console.log(error)
     handleError(res, undefined, undefined, error)
@@ -272,7 +330,6 @@ export const updateExam = async (req: Request, res: Response) => {
     handleError(res, undefined, undefined, error)
   }
 }
-
 //-------------------LEAGUE--------------------//
 export const createLeague = async (
   req: Request,
