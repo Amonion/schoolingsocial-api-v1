@@ -83,6 +83,7 @@ export const multiSearch = async (
         return model;
       }
     };
+
     const setMedia = (media: media) => {
       if (media) {
         const item = {
@@ -109,40 +110,49 @@ export const multiSearch = async (
           docs.map((doc) => ({ ...doc.toObject(), model: model.modelName }))
         )
     );
+
     const results = await Promise.all(searchPromises);
 
     const combinedResults = results.flat();
 
-    const formattedResults: IGeneral[] = combinedResults.map((item) => ({
-      picture: item.picture || "",
-      name: item.name || item.displayName || "",
-      title: item.title || "",
-      subtitle: item.subtitle || "",
-      displayName: item.displayName || "",
-      content: item.content || "",
-      intro: item.intro || "",
-      username: item.username || "",
-      media: item.media ? setMedia(item.media[0]) : "",
-      type: setType(item.model) || "",
-      id: item._id.toString(),
-      country: item.country,
-      state: item.state,
-      area: item.area,
-      description: item.description,
-      nature: item.type,
-      subject: item.subjects,
-      currentSchoolName: item.currentSchoolName,
-      isVerified: item.isVerified,
-      currentSchoolCountry: item.currentSchoolCountry,
-      currentSchoolCountrySymbol: item.currentSchoolCountrySymbol,
-      currentSchoolState: item.currentSchoolState,
-      currentSchoolCountryFlag: item.currentSchoolCountryFlag,
-      logo: item.logo,
-      countrySymbol: item.countrySymbol,
-      createdAt: item.createdAt,
-      followers: item.followers,
-      isFollowed: followersUserIds.includes(String(item._id)),
-    }));
+    const formattedResults: IGeneral[] = combinedResults
+      .filter((item) => {
+        // Skip if it's UserSchoolInfo and not verified
+        if (item.model === "UserSchoolInfo" && item.isVerified === false) {
+          return false;
+        }
+        return true;
+      })
+      .map((item) => ({
+        picture: item.picture || "",
+        name: item.name || item.displayName || "",
+        title: item.title || "",
+        subtitle: item.subtitle || "",
+        displayName: item.displayName || "",
+        content: item.content || "",
+        intro: item.intro || "",
+        username: item.username || "",
+        media: item.media ? setMedia(item.media[0]) : "",
+        type: setType(item.model) || "",
+        id: item._id.toString(),
+        country: item.country,
+        state: item.state,
+        area: item.area,
+        description: item.description,
+        nature: item.type,
+        subject: item.subjects,
+        currentSchoolName: item.currentSchoolName,
+        isVerified: item.isVerified,
+        currentSchoolCountry: item.currentSchoolCountry,
+        currentSchoolCountrySymbol: item.currentSchoolCountrySymbol,
+        currentSchoolState: item.currentSchoolState,
+        currentSchoolCountryFlag: item.currentSchoolCountryFlag,
+        logo: item.logo,
+        countrySymbol: item.countrySymbol,
+        createdAt: item.createdAt,
+        followers: item.followers,
+        isFollowed: followersUserIds.includes(String(item._id)),
+      }));
 
     res.json(formattedResults);
   } catch (error) {

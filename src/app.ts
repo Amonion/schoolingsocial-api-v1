@@ -7,7 +7,6 @@ import dotenv from "dotenv";
 import { handleError } from "./utils/errorHandler";
 import competitionRoutes from "./routes/team/competitionRoutes";
 import companyRoutes from "./routes/team/companyRoutes";
-import faceRoutes from "./routes/faceRoutes";
 import messageRoutes from "./routes/team/messageRoutes";
 import newsRoutes from "./routes/team/newsRoutes";
 import placeRoutes from "./routes/team/placeRoutes";
