@@ -7,49 +7,71 @@ import { Chat } from "../../models/users/chatModel";
 import { handleError } from "../../utils/errorHandler";
 import { startOfMonth, subMonths } from "date-fns";
 import { School } from "../../models/team/schoolModel";
+import { Model } from "mongoose";
+import { UserInfo } from "../../models/users/userInfoModel";
 
 //-----------------USERS--------------------//
 export const updateVisit = async (data: IUserData) => {
-  await UserStat.findOneAndUpdate(
-    {
-      $or: [{ ip: data.ip }, { username: data.username }],
-    },
-    {
-      $set: {
-        visitedAt: new Date(),
-        online: true,
-        ip: data.ip,
-        country: data.country,
-        countryCode: data.countryCode,
-        username: data.username,
-        bioId: data.bioId,
-        userId: data.userId,
-      },
-    },
-    {
-      new: true,
-      upsert: true,
-      setDefaultsOnInsert: true,
-    }
-  );
-  if (data.userId) {
-    await User.findOneAndUpdate(
-      { _id: data.userId, online: false },
+  // if (!data.ip || !data.username) {
+  //   return;
+  // }
+  if (data.username) {
+    await UserStat.findOneAndUpdate(
+      { username: data.username },
       {
-        visitedAt: data.visitedAt,
-        online: true,
+        $set: {
+          visitedAt: data.visitedAt,
+          online: data.online,
+          country: data.country,
+          countryCode: data.countryCode,
+          username: data.username,
+          bioId: data.bioId,
+          userId: data.userId,
+        },
+        $addToSet: {
+          ips: data.ip,
+        },
+      },
+      {
+        new: true,
+        upsert: true,
+        setDefaultsOnInsert: true,
       }
     );
-    const chats = await Chat.find({
-      connection: { $regex: data.userId },
-    });
-
-    for (let i = 0; i < chats.length; i++) {
-      const el = chats[i];
-      io.emit(el.connection, { action: "visit" });
-    }
+  } else {
+    await UserStat.findOneAndUpdate(
+      {
+        ips: { $in: [data.ip] },
+      },
+      {
+        $set: {
+          visitedAt: new Date(),
+          online: true,
+          country: data.country,
+          countryCode: data.countryCode,
+          username: data.username,
+          bioId: data.bioId,
+          userId: data.userId,
+        },
+        $addToSet: {
+          ips: data.ip,
+        },
+      },
+      {
+        new: true,
+        upsert: true,
+        setDefaultsOnInsert: true,
+      }
+    );
   }
+  // Update the User model to set online status
+  updateOnlineStatus(data.userId, data.visitedAt, User);
+
+  // Update the UserInfo model to set online status
+  updateOnlineStatus(data.bioId, data.visitedAt, UserInfo);
+
   const visitors = await UserStat.countDocuments({ online: true });
+  console.log("Current online visitors:", visitors);
   io.emit("team", { action: "visit", type: "stat", visitors });
 };
 
@@ -80,6 +102,28 @@ export const visitorLeft = async (data: IUserData) => {
 
   const visitors = await UserStat.countDocuments({ online: true });
   io.emit("team", { action: "visit", type: "stat", visitors });
+};
+
+const updateOnlineStatus = async <T extends Document>(
+  userId: string,
+  visitedAt: Date,
+  model: Model<T>
+) => {
+  await model.findOneAndUpdate(
+    { _id: userId, online: false },
+    {
+      visitedAt: visitedAt,
+      online: true,
+    }
+  );
+  const chats = await Chat.find({
+    connection: { $regex: userId },
+  });
+
+  for (let i = 0; i < chats.length; i++) {
+    const el = chats[i];
+    io.emit(el.connection, { action: "visit" });
+  }
 };
 
 export const getUsersStat = async (

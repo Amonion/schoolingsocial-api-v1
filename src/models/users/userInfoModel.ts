@@ -35,6 +35,7 @@ const UserInfoSchema: Schema = new Schema(
     homeAddress: { type: String, default: "" },
     homeId: { type: String, default: "" },
     userStatus: { type: String, default: "User" },
+    notificationToken: { type: String, default: "" },
 
     phone: { type: String, default: "" },
     continent: { type: String, default: "" },
@@ -45,82 +46,6 @@ const UserInfoSchema: Schema = new Schema(
     address: { type: String, default: "" },
     placeId: { type: String, default: "" },
     examAttempts: { type: Number, default: 0 },
-
-    bioInfo: {
-      type: Array,
-      default: [
-        {
-          title: "Your Government",
-          name: "government",
-          allowed: true,
-        },
-        {
-          title: "Your School",
-          name: "school",
-          allowed: true,
-        },
-        {
-          title: "Applied Institution",
-          name: "apply",
-          allowed: true,
-        },
-        {
-          title: "Authorized Friends",
-          name: "authorized",
-          allowed: true,
-        },
-      ],
-    },
-    eduInfo: {
-      type: Array,
-      default: [
-        {
-          title: "Your Government",
-          name: "government",
-          allowed: true,
-        },
-        {
-          title: "Your School",
-          name: "school",
-          allowed: true,
-        },
-        {
-          title: "Applied Institution",
-          name: "apply",
-          allowed: true,
-        },
-        {
-          title: "Authorized Friends",
-          name: "authorized",
-          allowed: true,
-        },
-      ],
-    },
-    result: {
-      type: Array,
-      default: [
-        {
-          title: "Your Government",
-          name: "government",
-          allowed: true,
-        },
-        {
-          title: "Your School",
-          name: "school",
-          allowed: true,
-        },
-        {
-          title: "Applied Institution",
-          name: "apply",
-          allowed: true,
-        },
-        {
-          title: "Authorized Friends",
-          name: "authorized",
-          allowed: true,
-        },
-      ],
-    },
     motherName: { type: String, default: "" },
     occupation: { type: String, default: "" },
     nextKin: { type: String, default: "" },

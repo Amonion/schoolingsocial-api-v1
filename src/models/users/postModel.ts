@@ -1,24 +1,25 @@
-import mongoose, { Schema } from 'mongoose'
+import mongoose, { Schema } from "mongoose";
 import {
   IAccount,
   IPost,
   IUserInterest,
   IFollower,
-} from '../../utils/userInterface'
+} from "../../utils/userInterface";
 
 const PostSchema: Schema = new Schema(
   {
     displayName: { type: String },
     username: { type: String },
     userId: { type: String },
-    picture: { type: String, default: '' },
+    picture: { type: String, default: "" },
     media: { type: Array, default: [] },
     polls: { type: Array, default: [] },
     users: { type: Array, default: [] },
-    content: { type: String, default: '' },
-    postCountry: { type: String, default: '' },
-    postType: { type: String, default: 'main' },
-    postId: { type: String, default: '' },
+    content: { type: String, default: "" },
+    postCountry: { type: String, default: "" },
+    postType: { type: String, default: "main" },
+    repostedUsername: { type: String, default: "" },
+    postId: { type: String, default: "" },
     isVerified: { type: Boolean, default: false },
     replies: { type: Number, default: 0 },
     bookmarks: { type: Number, default: 0 },
@@ -31,6 +32,7 @@ const PostSchema: Schema = new Schema(
     liked: { type: Boolean, default: false },
     bookmarked: { type: Boolean, default: false },
     viewed: { type: Boolean, default: false },
+    reposted: { type: Boolean, default: false },
     views: { type: Number, default: 1 },
     reposts: { type: Number, default: 0 },
     score: { type: Number, default: 0 },
@@ -41,18 +43,18 @@ const PostSchema: Schema = new Schema(
   {
     timestamps: true,
   }
-)
-export const Post = mongoose.model<IPost>('Post', PostSchema)
+);
+export const Post = mongoose.model<IPost>("Post", PostSchema);
 
 const AccountSchema: Schema = new Schema(
   {
     displayName: { type: String },
     username: { type: String },
     userId: { type: String },
-    picture: { type: String, default: '' },
+    picture: { type: String, default: "" },
     media: { type: String, default: null },
-    description: { type: String, default: '' },
-    type: { type: String, default: 'Original' },
+    description: { type: String, default: "" },
+    type: { type: String, default: "Original" },
     isVerified: { type: Boolean, default: false },
     verificationLevel: { type: Number, default: 0 },
     posts: { type: Number, default: 0 },
@@ -64,8 +66,8 @@ const AccountSchema: Schema = new Schema(
   {
     timestamps: true,
   }
-)
-export const Account = mongoose.model<IAccount>('Account', AccountSchema)
+);
+export const Account = mongoose.model<IAccount>("Account", AccountSchema);
 
 const UserInterestSchema: Schema = new Schema(
   {
@@ -76,11 +78,11 @@ const UserInterestSchema: Schema = new Schema(
   {
     timestamps: true,
   }
-)
+);
 export const UserInterest = mongoose.model<IUserInterest>(
-  'UserInterest',
+  "UserInterest",
   UserInterestSchema
-)
+);
 
 const FollowerSchema: Schema = new Schema(
   {
@@ -96,5 +98,5 @@ const FollowerSchema: Schema = new Schema(
   {
     timestamps: true,
   }
-)
-export const Follower = mongoose.model<IFollower>('Follower', FollowerSchema)
+);
+export const Follower = mongoose.model<IFollower>("Follower", FollowerSchema);

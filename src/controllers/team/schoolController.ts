@@ -84,7 +84,10 @@ export const updateSchool = async (req: Request, res: Response) => {
 
 export const recordAll = async (req: Request, res: Response) => {
   try {
-    const response = await School.updateMany({ isRecorded: true });
+    const response = await School.updateMany(
+      {}, // No filter — update all documents
+      { $set: { isRecorded: true } }
+    );
     res.status(200).json({ response });
   } catch (error) {
     handleError(res, undefined, undefined, error);

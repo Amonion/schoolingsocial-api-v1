@@ -5,6 +5,9 @@ import { IUserNotification } from "../../utils/userInterface";
 import { handleError } from "../../utils/errorHandler";
 import { queryData, deleteItem, updateItem } from "../../utils/query";
 import { IUser } from "../../utils/userInterface";
+import { Expo } from "expo-server-sdk";
+import { UserInfo } from "../../models/users/userInfoModel";
+const expo = new Expo();
 
 interface Body {
   user: IUser;
@@ -110,6 +113,53 @@ export const updateNotification = async (req: Request, res: Response) => {
       [],
       ["Notification not found", "Notification was updated successfully"]
     );
+  } catch (error) {
+    handleError(res, undefined, undefined, error);
+  }
+};
+
+export const setPushNotificationToken = async (req: Request, res: Response) => {
+  const { token, id } = req.body;
+  if (!Expo.isExpoPushToken(token)) {
+    return res.status(400).send({ error: "Invalid Expo push token" });
+  }
+
+  try {
+    await UserInfo.findByIdAndUpdate(
+      id,
+      { notificationToken: token },
+      { new: true }
+    );
+    res.send({ success: true });
+  } catch (error) {
+    handleError(res, undefined, undefined, error);
+  }
+};
+
+export const sendPushNotification = async (req: Request, res: Response) => {
+  const { token, title, body, id } = req.body;
+  if (!Expo.isExpoPushToken(token)) {
+    return res.status(400).send({ error: "Invalid Expo push token" });
+  }
+
+  const messages = [
+    {
+      to: token,
+      sound: "default",
+      title,
+      body,
+      data: { withSome: "data" },
+    },
+  ];
+
+  try {
+    await UserInfo.findByIdAndUpdate(
+      id,
+      { notificationToken: token },
+      { new: true }
+    );
+    const ticketChunk = await expo.sendPushNotificationsAsync(messages);
+    res.send({ success: true });
   } catch (error) {
     handleError(res, undefined, undefined, error);
   }

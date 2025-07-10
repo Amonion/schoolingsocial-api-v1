@@ -9,9 +9,6 @@ export const TeamSocket = async (data: ISocketData) => {
     case "visit":
       updateVisit(data.data);
       break;
-    case "left":
-      visitorLeft(data.data);
-      break;
     default:
       break;
   }

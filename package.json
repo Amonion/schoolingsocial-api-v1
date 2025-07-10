@@ -25,6 +25,7 @@
     "csv-parser": "^3.2.0",
     "date-fns": "^4.1.0",
     "dotenv": "^16.4.7",
+    "expo-server-sdk": "^3.15.0",
     "express": "^4.21.2",
     "face-api.js": "^0.20.0",
     "file-type": "^20.4.1",

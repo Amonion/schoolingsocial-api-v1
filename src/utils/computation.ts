@@ -3,9 +3,17 @@ export const postScore = (
   comments: number,
   shares: number,
   bookmarks: number,
+  reposts: number,
   views: number
 ) => {
-  return likes * 2 + comments * 3 + shares * 4 + bookmarks * 5 + views * 0.5;
+  return (
+    likes * 2 +
+    comments * 3 +
+    shares * 4 +
+    bookmarks * 5 +
+    reposts * 6 +
+    views * 0.5
+  );
 };
 
 export const calculateTrendingScore = (post: {
