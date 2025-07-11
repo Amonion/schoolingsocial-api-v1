@@ -4,6 +4,7 @@ import {
   IPost,
   IUserInterest,
   IFollower,
+  IPin,
 } from "../../utils/userInterface";
 
 const PostSchema: Schema = new Schema(
@@ -32,12 +33,14 @@ const PostSchema: Schema = new Schema(
     liked: { type: Boolean, default: false },
     bookmarked: { type: Boolean, default: false },
     viewed: { type: Boolean, default: false },
+    isPinned: { type: Boolean, default: false },
     reposted: { type: Boolean, default: false },
     views: { type: Number, default: 1 },
     reposts: { type: Number, default: 0 },
     score: { type: Number, default: 0 },
     status: { type: Boolean, default: false },
     trendSscore: { type: Number, default: 0 },
+    pinnedAt: { type: Date, default: null },
     createdAt: { type: Date, default: Date.now },
   },
   {
@@ -68,6 +71,18 @@ const AccountSchema: Schema = new Schema(
   }
 );
 export const Account = mongoose.model<IAccount>("Account", AccountSchema);
+
+const PinSchema: Schema = new Schema(
+  {
+    userId: { type: String },
+    postId: { type: String },
+    createdAt: { type: Date, default: Date.now },
+  },
+  {
+    timestamps: true,
+  }
+);
+export const Pin = mongoose.model<IPin>("Pin", PinSchema);
 
 const UserInterestSchema: Schema = new Schema(
   {

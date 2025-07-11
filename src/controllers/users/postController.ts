@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import { Account, Follower, Post } from "../../models/users/postModel";
+import { Account, Follower, Pin, Post } from "../../models/users/postModel";
 import { deleteFileFromS3, uploadFilesToS3 } from "../../utils/fileUpload";
 import { handleError } from "../../utils/errorHandler";
 import { User } from "../../models/users/userModel";
@@ -15,6 +15,7 @@ import { IPost } from "../../utils/userInterface";
 import { Bookmark, Like, View } from "../../models/users/statModel";
 import { postScore } from "../../utils/computation";
 import { io } from "../../app";
+import { data } from "@tensorflow/tfjs";
 
 export const createAccount = async (
   req: Request,
@@ -225,6 +226,52 @@ export const createPost = async (data: IPost) => {
     });
   } catch (error) {
     console.log(error);
+  }
+};
+
+export const pinPost = async (req: Request, res: Response) => {
+  try {
+    const { userId, pinnedAt } = req.body;
+
+    const pinnedPost = await Pin.findOne({
+      postId: req.params.id,
+      userId: userId,
+    });
+
+    if (pinnedPost) {
+      await Pin.findByIdAndDelete(pinnedPost._id);
+    } else {
+      await Pin.create({
+        userId: userId,
+        postId: req.params.id,
+        createdAt: pinnedAt,
+      });
+    }
+
+    const post = await Post.findById(req.params.id);
+    if (!post) {
+      return res.status(404).json({ message: "Post not found." });
+    }
+
+    if (!pinnedPost) {
+      const postObj = post.toObject();
+      postObj.isPinned = true;
+      postObj.pinnedAt = pinnedAt;
+
+      res.status(201).json({
+        data: postObj,
+        message: "The post has been pinned successfully.",
+      });
+    } else {
+      const postObj = post.toObject();
+      postObj.isPinned = false;
+      return res.status(200).json({
+        data: postObj,
+        message: "The post has been unpinned successfully.",
+      });
+    }
+  } catch (error: any) {
+    handleError(res, undefined, undefined, error);
   }
 };
 
@@ -658,6 +705,8 @@ export const followUser = async (req: Request, res: Response) => {
 };
 
 const processFetchedPosts = async (req: Request, followerId: string) => {
+  const source = req.query.source;
+  delete req.query.source;
   const response = await queryData(Post, req);
 
   const posts = response.results;
@@ -684,6 +733,11 @@ const processFetchedPosts = async (req: Request, followerId: string) => {
     return post;
   });
 
+  const pinnedPosts = await Pin.find({
+    userId: followerId,
+    postId: { $in: postIds },
+  }).select("postId createdAt");
+
   const likedPosts = await Like.find({
     userId: followerId,
     postId: { $in: postIds },
@@ -709,8 +763,20 @@ const processFetchedPosts = async (req: Request, followerId: string) => {
 
   const updatedPosts = [];
 
+  const pinnedMap = new Map(
+    pinnedPosts.map((pin) => [pin.postId.toString(), pin.createdAt])
+  );
   for (let i = 0; i < posts.length; i++) {
     const el = posts[i];
+    const postIdStr = el._id.toString();
+
+    // Set isPinned and pinnedAt
+    const pinnedAtValue = pinnedMap.get(postIdStr);
+    if (pinnedAtValue !== undefined) {
+      el.isPinned = true;
+      el.pinnedAt = pinnedAtValue;
+    }
+
     if (likedPostIds.includes(el._id.toString())) {
       el.liked = true;
     }
@@ -720,14 +786,23 @@ const processFetchedPosts = async (req: Request, followerId: string) => {
     if (viewedPostIds.includes(el._id.toString())) {
       el.viewed = true;
     }
-
     updatedPosts.push(el);
   }
 
+  const pinned = updatedPosts.filter((post) => post.isPinned);
+  const unpinned = updatedPosts.filter((post) => !post.isPinned);
+
+  // Sort pinned posts by pinnedAt descending
+  pinned.sort(
+    (a, b) => new Date(b.pinnedAt).getTime() - new Date(a.pinnedAt).getTime()
+  );
+
+  // Merge sorted pinned posts at the top
+  const finalPosts = [...pinned, ...unpinned];
   return {
     count: response.count,
     page: response.page,
     page_size: response.page_size,
-    results: updatedPosts,
+    results: source === "user" ? finalPosts : updatedPosts,
   };
 };

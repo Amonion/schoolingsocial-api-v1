@@ -5,7 +5,7 @@ const UserStatSchema: Schema = new Schema(
   {
     country: { type: String },
     countryCode: { type: String },
-    ips: [{ type: String }],
+    ips: { type: Array, default: [] },
     username: { type: String },
     bioId: { type: String },
     online: { type: Boolean, default: false },

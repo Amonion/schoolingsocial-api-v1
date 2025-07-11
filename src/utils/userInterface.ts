@@ -123,10 +123,17 @@ export interface IParticipant extends Document {
   options: Option[];
 }
 
+export interface IPin extends Document {
+  userId: string;
+  postId: string;
+  createdAt: Date;
+}
+
 export interface IPost extends Document {
   _id: string;
   postId: string;
   createdAt: Date;
+  pinnedAt: Date;
   username: string;
   repostedUsername: string;
   userId: string;
@@ -145,6 +152,7 @@ export interface IPost extends Document {
   muted: boolean;
   liked: boolean;
   bookmarked: boolean;
+  isPinned: boolean;
   viewed: boolean;
   reposted: boolean;
   isVerified: boolean;
