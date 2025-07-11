@@ -23,6 +23,8 @@ import {
   updatePostViews,
   repostPost,
   pinPost,
+  muteUser,
+  blockUser,
 } from "../../controllers/users/postController";
 
 import {
@@ -41,6 +43,8 @@ router.route("/accounts").get(getAccounts).post(upload.any(), createAccount);
 router.route("/stats").get(getPostStat).patch(upload.any(), updatePostStat);
 router.route("/repost/:id").post(upload.any(), repostPost);
 router.route("/pin/:id").post(upload.any(), pinPost);
+router.route("/block/:id").post(upload.any(), blockUser);
+router.route("/mute/:id").post(upload.any(), muteUser);
 router.route("/view").patch(updatePostViews);
 router.route("/general").get(multiSearch);
 router.route("/").get(getPosts).post(upload.any(), createPost);

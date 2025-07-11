@@ -5,6 +5,7 @@ import {
   IUserInterest,
   IFollower,
   IPin,
+  IMute,
 } from "../../utils/userInterface";
 
 const PostSchema: Schema = new Schema(
@@ -37,8 +38,9 @@ const PostSchema: Schema = new Schema(
     reposted: { type: Boolean, default: false },
     views: { type: Number, default: 1 },
     reposts: { type: Number, default: 0 },
+    mutes: { type: Number, default: 0 },
     score: { type: Number, default: 0 },
-    status: { type: Boolean, default: false },
+    status: { type: Boolean, default: true },
     trendSscore: { type: Number, default: 0 },
     pinnedAt: { type: Date, default: null },
     createdAt: { type: Date, default: Date.now },
@@ -83,6 +85,20 @@ const PinSchema: Schema = new Schema(
   }
 );
 export const Pin = mongoose.model<IPin>("Pin", PinSchema);
+
+const MuteSchema: Schema = new Schema(
+  {
+    userId: { type: String },
+    postId: { type: String },
+    accountUsername: { type: String },
+    accountUserId: { type: String },
+    createdAt: { type: Date, default: Date.now },
+  },
+  {
+    timestamps: true,
+  }
+);
+export const Mute = mongoose.model<IMute>("Mute", MuteSchema);
 
 const UserInterestSchema: Schema = new Schema(
   {

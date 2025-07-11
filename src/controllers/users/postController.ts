@@ -1,5 +1,11 @@
 import { Request, Response } from "express";
-import { Account, Follower, Pin, Post } from "../../models/users/postModel";
+import {
+  Account,
+  Follower,
+  Mute,
+  Pin,
+  Post,
+} from "../../models/users/postModel";
 import { deleteFileFromS3, uploadFilesToS3 } from "../../utils/fileUpload";
 import { handleError } from "../../utils/errorHandler";
 import { User } from "../../models/users/userModel";
@@ -275,12 +281,87 @@ export const pinPost = async (req: Request, res: Response) => {
   }
 };
 
+export const blockUser = async (req: Request, res: Response) => {
+  try {
+    const { userId, accountUsername, accountUserId } = req.body;
+
+    const mutedUser = await Mute.findOne({
+      accountUsername: accountUsername,
+      userId: userId,
+    });
+
+    if (mutedUser) {
+      await Mute.findByIdAndDelete(mutedUser._id);
+      await User.findByIdAndUpdate(accountUserId, { $inc: { mutes: -1 } });
+    } else {
+      await Mute.create({
+        userId: userId,
+        accountUsername: accountUsername,
+      });
+      await User.findByIdAndUpdate(accountUserId, { $inc: { mutes: 1 } });
+      await Post.findByIdAndUpdate(req.params.id, { $inc: { mutes: 1 } });
+    }
+
+    const post = await Post.findById(req.params.id);
+    if (!post) {
+      return res.status(404).json({ message: "Post not found." });
+    }
+
+    res.status(201).json({
+      data: req.params.id,
+      message: !mutedUser
+        ? "The user has been muted successfully"
+        : "The user has successfully been unmuted.",
+    });
+  } catch (error: any) {
+    handleError(res, undefined, undefined, error);
+  }
+};
+
+export const muteUser = async (req: Request, res: Response) => {
+  try {
+    const { userId, accountUsername, accountUserId } = req.body;
+
+    const mutedUser = await Mute.findOne({
+      accountUsername: accountUsername,
+      userId: userId,
+    });
+
+    if (mutedUser) {
+      await Mute.findByIdAndDelete(mutedUser._id);
+      await User.findByIdAndUpdate(accountUserId, { $inc: { mutes: -1 } });
+    } else {
+      await Mute.create({
+        userId: userId,
+        accountUsername: accountUsername,
+        accountUserId: accountUserId,
+      });
+      await User.findByIdAndUpdate(accountUserId, { $inc: { mutes: 1 } });
+      await Post.findByIdAndUpdate(req.params.id, { $inc: { mutes: 1 } });
+    }
+
+    const post = await Post.findById(req.params.id);
+    if (!post) {
+      return res.status(404).json({ message: "Post not found." });
+    }
+
+    res.status(201).json({
+      userId: accountUserId,
+      message: !mutedUser
+        ? "The user has been muted successfully"
+        : "The user has successfully been unmuted.",
+    });
+  } catch (error: any) {
+    handleError(res, undefined, undefined, error);
+  }
+};
+
 export const repostPost = async (req: Request, res: Response) => {
   try {
     const post = await Post.findByIdAndUpdate(
       req.params.id,
-      { $inc: { reposts: 1 } }, // Replace `views` with the field you want to increment
-      { new: true } // Return the updated document
+      { $inc: { reposts: 1 } },
+      { new: true }
     );
     if (!post) {
       return res.status(404).json({ message: "Post not found" });
@@ -303,22 +384,43 @@ export const repostPost = async (req: Request, res: Response) => {
     rest.picture = req.body.picture;
     rest.isVerified = req.body.isVerified;
     rest.userId = req.body.userId;
-    rest.createdAt = req.body.createdAt;
+    rest.replies = 0;
+    rest.repostedUsername = post.username;
+    rest.bookmarks = 0;
+    rest.followers = 0;
+    rest.unfollowers = 0;
+    rest.shares = 0;
+    rest.views = 0;
+    rest.likes = 0;
+    rest.reposts = 0;
+    rest.score = 0;
+    rest.trendScore = 0;
+    rest.status = true;
+    rest.reposted = true;
+    rest.isPinned = false;
+    rest.createdAt = new Date();
 
     const newPost = await Post.create(rest);
+
+    await User.updateOne(
+      { _id: req.body.userId },
+      {
+        $inc: { posts: 1 },
+      }
+    );
 
     await View.create({
       postId: newPost._id,
       userId: req.body.userId,
     });
 
-    io.emit(`post${req.body.userId}`, {
-      message: "Your post was created successfully",
-      data: post,
-    });
+    // io.emit(`post${req.body.userId}`, {
+    //   message: "The post was reposted successfully",
+    //   data: post,
+    // });
 
-    const followers = await Follower.find({ userId: req.body.userId });
-    res.status(201).json(newPost);
+    // const followers = await Follower.find({ userId: req.body.userId });
+    res.status(201).json({ message: "The post was reposted successfully" });
   } catch (error) {
     console.log(error);
   }
@@ -711,6 +813,7 @@ const processFetchedPosts = async (req: Request, followerId: string) => {
 
   const posts = response.results;
   const postIds = posts.map((post) => post._id);
+  const postUserIds = posts.map((post) => post.userId);
 
   const userIds = [...new Set(posts.map((post) => post.userId))];
   const userObjects = userIds.map((userId) => ({ userId, followerId }));
@@ -733,6 +836,11 @@ const processFetchedPosts = async (req: Request, followerId: string) => {
     return post;
   });
 
+  const mutedUsers = await Mute.find({
+    userId: followerId,
+    accountUserId: { $in: postUserIds },
+  }).select("accountUserId");
+
   const pinnedPosts = await Pin.find({
     userId: followerId,
     postId: { $in: postIds },
@@ -753,6 +861,8 @@ const processFetchedPosts = async (req: Request, followerId: string) => {
     postId: { $in: postIds },
   }).select("postId");
 
+  const mutedUserIds = mutedUsers.map((mute) => mute.accountUserId.toString());
+
   const likedPostIds = likedPosts.map((like) => like.postId.toString());
 
   const bookmarkedPostIds = bookmarkedPosts.map((bookmark) =>
@@ -769,9 +879,13 @@ const processFetchedPosts = async (req: Request, followerId: string) => {
   for (let i = 0; i < posts.length; i++) {
     const el = posts[i];
     const postIdStr = el._id.toString();
-
-    // Set isPinned and pinnedAt
     const pinnedAtValue = pinnedMap.get(postIdStr);
+    const userIdStr = el.userId?.toString();
+
+    if (mutedUsers.length > 0 && mutedUserIds.includes(userIdStr)) {
+      continue;
+    }
+
     if (pinnedAtValue !== undefined) {
       el.isPinned = true;
       el.pinnedAt = pinnedAtValue;
@@ -780,9 +894,11 @@ const processFetchedPosts = async (req: Request, followerId: string) => {
     if (likedPostIds.includes(el._id.toString())) {
       el.liked = true;
     }
+
     if (bookmarkedPostIds.includes(el._id.toString())) {
       el.bookmarked = true;
     }
+
     if (viewedPostIds.includes(el._id.toString())) {
       el.viewed = true;
     }
@@ -792,12 +908,10 @@ const processFetchedPosts = async (req: Request, followerId: string) => {
   const pinned = updatedPosts.filter((post) => post.isPinned);
   const unpinned = updatedPosts.filter((post) => !post.isPinned);
 
-  // Sort pinned posts by pinnedAt descending
   pinned.sort(
     (a, b) => new Date(b.pinnedAt).getTime() - new Date(a.pinnedAt).getTime()
   );
 
-  // Merge sorted pinned posts at the top
   const finalPosts = [...pinned, ...unpinned];
   return {
     count: response.count,

@@ -95,6 +95,13 @@ export interface IGeneral {
   countrySymbol: string;
 }
 
+export interface IMute extends Document {
+  userId: string;
+  postId: string;
+  accountUsername: string;
+  accountUserId: string;
+}
+
 interface Media {
   source: string;
   type: string;
@@ -142,6 +149,7 @@ export interface IPost extends Document {
   displayName: string;
   content: string;
   postCountry: string;
+  mutes: number;
   media: Media[];
   polls: Poll[];
   users: string[];
@@ -158,6 +166,7 @@ export interface IPost extends Document {
   isVerified: boolean;
   shares: number;
   followers: number;
+  unfollowers: number;
   replies: number;
   score: number;
   trendScore: number;
@@ -247,6 +256,7 @@ export interface IUser extends Document {
   signupCountryFlag?: string;
   level: number;
   totalAttempts: number;
+  mutes: number;
   isDocument: boolean;
   isOrigin: boolean;
   isContact: boolean;
