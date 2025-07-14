@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import {
   Account,
+  Block,
   Follower,
   Mute,
   Pin,
@@ -285,21 +286,21 @@ export const blockUser = async (req: Request, res: Response) => {
   try {
     const { userId, accountUsername, accountUserId } = req.body;
 
-    const mutedUser = await Mute.findOne({
+    const blockedUser = await Block.findOne({
       accountUsername: accountUsername,
       userId: userId,
     });
 
-    if (mutedUser) {
-      await Mute.findByIdAndDelete(mutedUser._id);
-      await User.findByIdAndUpdate(accountUserId, { $inc: { mutes: -1 } });
+    if (blockedUser) {
+      await Block.findByIdAndDelete(blockedUser._id);
+      await User.findByIdAndUpdate(accountUserId, { $inc: { blocks: -1 } });
     } else {
-      await Mute.create({
+      await Block.create({
         userId: userId,
         accountUsername: accountUsername,
       });
-      await User.findByIdAndUpdate(accountUserId, { $inc: { mutes: 1 } });
-      await Post.findByIdAndUpdate(req.params.id, { $inc: { mutes: 1 } });
+      await User.findByIdAndUpdate(accountUserId, { $inc: { blocks: 1 } });
+      await Post.findByIdAndUpdate(req.params.id, { $inc: { blocks: 1 } });
     }
 
     const post = await Post.findById(req.params.id);
@@ -309,9 +310,9 @@ export const blockUser = async (req: Request, res: Response) => {
 
     res.status(201).json({
       data: req.params.id,
-      message: !mutedUser
-        ? "The user has been muted successfully"
-        : "The user has successfully been unmuted.",
+      message: !blockedUser
+        ? "The user has been blocked successfully"
+        : "The user has successfully been unblocked.",
     });
   } catch (error: any) {
     handleError(res, undefined, undefined, error);

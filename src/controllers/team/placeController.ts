@@ -292,25 +292,32 @@ export const getPlaces = async (req: Request, res: Response) => {
 
 export const getAllPlaces = async (req: Request, res: Response) => {
   try {
+    const searchTerm = req.query.place as string;
+
+    const limit = Math.min(Number(req.query.page_size) || 50, 100); // max 100 results
+    const skip = Math.max(Number(req.query.page) || 0, 0); // min 0
+
     const result = await Place.aggregate([
       {
         $match: {
           $or: [
-            { area: { $regex: req.query.place, $options: "i" } },
-            { state: { $regex: req.query.place, $options: "i" } },
-            { country: { $regex: req.query.place, $options: "i" } },
+            { country: { $regex: `^${searchTerm}`, $options: "i" } },
+            { state: { $regex: `^${searchTerm}`, $options: "i" } },
+            { area: { $regex: `^${searchTerm}`, $options: "i" } },
           ],
         },
       },
       {
         $group: {
           _id: "$area", // Group by area
-          doc: { $first: "$$ROOT" }, // Keep first document per area
+          doc: { $first: "$$ROOT" }, // Keep the first doc in each group
         },
       },
       {
-        $replaceRoot: { newRoot: "$doc" }, // Flatten result
+        $replaceRoot: { newRoot: "$doc" },
       },
+      { $skip: skip },
+      { $limit: limit },
     ]);
 
     res.status(200).json({ results: result });

@@ -20,6 +20,13 @@ export interface IAttempt extends Document {
   attempts: number;
 }
 
+export interface IBlock extends Document {
+  userId: string;
+  postId: string;
+  accountUsername: string;
+  accountUserId: string;
+}
+
 export interface IChat extends Document {
   _id: string;
   from: string;
@@ -150,6 +157,7 @@ export interface IPost extends Document {
   content: string;
   postCountry: string;
   mutes: number;
+  blocks: number;
   media: Media[];
   polls: Poll[];
   users: string[];

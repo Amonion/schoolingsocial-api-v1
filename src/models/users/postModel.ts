@@ -6,6 +6,7 @@ import {
   IFollower,
   IPin,
   IMute,
+  IBlock,
 } from "../../utils/userInterface";
 
 const PostSchema: Schema = new Schema(
@@ -37,6 +38,7 @@ const PostSchema: Schema = new Schema(
     isPinned: { type: Boolean, default: false },
     reposted: { type: Boolean, default: false },
     views: { type: Number, default: 1 },
+    blocks: { type: Number, default: 1 },
     reposts: { type: Number, default: 0 },
     mutes: { type: Number, default: 0 },
     score: { type: Number, default: 0 },
@@ -85,6 +87,20 @@ const PinSchema: Schema = new Schema(
   }
 );
 export const Pin = mongoose.model<IPin>("Pin", PinSchema);
+
+const BlockSchema: Schema = new Schema(
+  {
+    userId: { type: String },
+    postId: { type: String },
+    accountUsername: { type: String },
+    accountUserId: { type: String },
+    createdAt: { type: Date, default: Date.now },
+  },
+  {
+    timestamps: true,
+  }
+);
+export const Block = mongoose.model<IBlock>("Block", BlockSchema);
 
 const MuteSchema: Schema = new Schema(
   {

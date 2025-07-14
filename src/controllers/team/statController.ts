@@ -15,93 +15,90 @@ export const updateVisit = async (data: IUserData) => {
   // if (!data.ip || !data.username) {
   //   return;
   // }
-  if (data.username) {
-    await UserStat.findOneAndUpdate(
-      { username: data.username },
-      {
-        $set: {
-          visitedAt: data.visitedAt,
-          online: data.online,
-          country: data.country,
-          countryCode: data.countryCode,
-          username: data.username,
-          bioId: data.bioId,
-          userId: data.userId,
-        },
-        $addToSet: {
-          ips: data.ip,
-        },
-      },
-      {
-        new: true,
-        upsert: true,
-        setDefaultsOnInsert: true,
-      }
-    );
-  } else {
-    await UserStat.findOneAndUpdate(
-      {
-        ips: { $in: [data.ip] },
-      },
-      {
-        $set: {
-          visitedAt: new Date(),
-          online: true,
-          country: data.country,
-          countryCode: data.countryCode,
-          username: data.username,
-          bioId: data.bioId,
-          userId: data.userId,
-        },
-        $addToSet: {
-          ips: data.ip,
-        },
-      },
-      {
-        new: true,
-        upsert: true,
-        setDefaultsOnInsert: true,
-      }
-    );
-  }
-  // Update the User model to set online status
-  updateOnlineStatus(data.userId, data.visitedAt, User);
-
-  // Update the UserInfo model to set online status
-  updateOnlineStatus(data.bioId, data.visitedAt, UserInfo);
-
-  const visitors = await UserStat.countDocuments({ online: true });
-  console.log("Current online visitors:", visitors);
-  io.emit("team", { action: "visit", type: "stat", visitors });
+  // if (data.username) {
+  //   await UserStat.findOneAndUpdate(
+  //     { username: data.username },
+  //     {
+  //       $set: {
+  //         visitedAt: data.visitedAt,
+  //         online: data.online,
+  //         country: data.country,
+  //         countryCode: data.countryCode,
+  //         username: data.username,
+  //         bioId: data.bioId,
+  //         userId: data.userId,
+  //       },
+  //       $addToSet: {
+  //         ips: data.ip,
+  //       },
+  //     },
+  //     {
+  //       new: true,
+  //       upsert: true,
+  //       setDefaultsOnInsert: true,
+  //     }
+  //   );
+  // } else {
+  //   await UserStat.findOneAndUpdate(
+  //     {
+  //       ips: { $in: [data.ip] },
+  //     },
+  //     {
+  //       $set: {
+  //         visitedAt: new Date(),
+  //         online: true,
+  //         country: data.country,
+  //         countryCode: data.countryCode,
+  //         username: data.username,
+  //         bioId: data.bioId,
+  //         userId: data.userId,
+  //       },
+  //       $addToSet: {
+  //         ips: data.ip,
+  //       },
+  //     },
+  //     {
+  //       new: true,
+  //       upsert: true,
+  //       setDefaultsOnInsert: true,
+  //     }
+  //   );
+  // }
+  // // Update the User model to set online status
+  // updateOnlineStatus(data.userId, data.visitedAt, User);
+  // // Update the UserInfo model to set online status
+  // updateOnlineStatus(data.bioId, data.visitedAt, UserInfo);
+  // const visitors = await UserStat.countDocuments({ online: true });
+  // console.log("Current online visitors:", visitors);
+  // io.emit("team", { action: "visit", type: "stat", visitors });
 };
 
 export const visitorLeft = async (data: IUserData) => {
-  if (data.username) {
-    await UserStat.findOneAndUpdate(
-      { username: data.username, online: true },
-      {
-        $set: {
-          leftAt: data.leftAt,
-          online: false,
-          ip: data.ip,
-        },
-      }
-    );
-  } else {
-    await UserStat.findOneAndUpdate(
-      { ip: data.ip, online: true },
-      {
-        $set: {
-          leftAt: data.leftAt,
-          online: false,
-          ip: data.ip,
-        },
-      }
-    );
-  }
-
-  const visitors = await UserStat.countDocuments({ online: true });
-  io.emit("team", { action: "visit", type: "stat", visitors });
+  // if (data.username) {
+  //   await UserStat.findOneAndUpdate(
+  //     { username: data.username, online: true },
+  //     {
+  //       $set: {
+  //         leftAt: data.leftAt,
+  //         online: false,
+  //         ip: data.ip,
+  //       },
+  //     }
+  //   );
+  // } else {
+  //   await UserStat.findOneAndUpdate(
+  //     { ip: data.ip, online: true },
+  //     {
+  //       $set: {
+  //         leftAt: data.leftAt,
+  //         online: false,
+  //         ip: data.ip,
+  //       },
+  //     }
+  //   );
+  // }
+  // const visitors = await UserStat.countDocuments({ online: true });
+  // io.emit("team", { action: "visit", type: "stat", visitors });
 };
 
 const updateOnlineStatus = async <T extends Document>(

@@ -116,13 +116,12 @@ export const multiSearch = async (
     const combinedResults = results.flat();
 
     const formattedResults: IGeneral[] = combinedResults
-      .filter((item) => {
-        // Skip if it's UserSchoolInfo and not verified
-        if (item.model === "UserSchoolInfo" && item.isVerified === false) {
-          return false;
-        }
-        return true;
-      })
+      // .filter((item) => {
+      //   if (item.model === "UserSchoolInfo" && item.isVerified === false) {
+      //     return false;
+      //   }
+      //   return true;
+      // })
       .map((item) => ({
         picture: item.picture || "",
         name: item.name || item.displayName || "",
