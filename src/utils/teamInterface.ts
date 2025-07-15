@@ -77,6 +77,7 @@ export interface IDepartment extends Document {
   period: number;
   facultyId: number;
   schoolId: number;
+  school: string;
   faculty: string;
   name: string;
   username: string;

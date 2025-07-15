@@ -88,6 +88,7 @@ const DepartmentSchema: Schema = new Schema(
   {
     period: { type: Number },
     schoolId: { type: String },
+    school: { type: String },
     facultyId: { type: String },
     faculty: { type: String },
     facultyUsername: { type: String },

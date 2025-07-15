@@ -22,9 +22,18 @@ export interface IAttempt extends Document {
 
 export interface IBlock extends Document {
   userId: string;
+  username: string;
+  picture: string;
+  displayName: string;
+  bioId: string;
+  isVerified: string;
   postId: string;
   accountUsername: string;
   accountUserId: string;
+  accountDisplayName: string;
+  accountPicture: string;
+  accountBioId: string;
+  accountIsVerified: boolean;
 }
 
 export interface IChat extends Document {
@@ -75,11 +84,16 @@ export interface IChatData extends Document {
 
 export interface IFollower extends Document {
   userId: string;
+  bioId: string;
+  displayName: string;
+  isVerified: boolean;
+  followerDisplayName: string;
   username: string;
   picture: string;
   followerId: string;
   followerUsername: string;
   followerPicture: string;
+  followerIsVerified: boolean;
   postId: string;
 }
 
@@ -171,6 +185,7 @@ export interface IPost extends Document {
   isPinned: boolean;
   viewed: boolean;
   reposted: boolean;
+  blocked: boolean;
   isVerified: boolean;
   shares: number;
   followers: number;

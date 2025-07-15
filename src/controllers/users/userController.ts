@@ -16,7 +16,6 @@ import { io } from "../../app";
 import { sendEmail, sendNotification } from "../../utils/sendEmail";
 import { AcademicLevel } from "../../models/team/academicLevelModel";
 import { Department, Faculty, School } from "../../models/team/schoolModel";
-import { console } from "inspector";
 import { UserTestExam } from "../../models/users/competitionModel";
 
 export const createUser = async (
@@ -473,10 +472,13 @@ export const updateUserSchoolInfo = async (
         }
       }
       req.body.currentAcademicLevel = JSON.parse(req.body.currentAcademicLevel);
-      req.body.inSchool = req.body.inSchool === "Yes" ? true : false;
+      req.body.inSchool =
+        req.body.inSchool === "Yes" || req.body.inSchool === true
+          ? true
+          : false;
     } else if (req.body.action === "EducationHistory") {
       req.body.pastSchools = JSON.parse(req.body.pastSchools);
-      if (!req.body.inSchool) {
+      if (req.body.inSchool === "true" || req.body.inSchool) {
         const currentSchoolInfo =
           req.body.pastSchools[req.body.pastSchools.length - 1];
         req.body.currentSchoolArea = currentSchoolInfo.schoolArea;
@@ -982,7 +984,6 @@ export const followUserAccount = async (req: Request, res: Response) => {
     let followers = await Follower.countDocuments({ userId: req.params.id });
 
     isFollowed = follow ? false : true;
-
     res.status(200).json({
       isFollowed: isFollowed,
       followers: followers,

@@ -25,6 +25,8 @@ import {
   pinPost,
   muteUser,
   blockUser,
+  getFollowings,
+  getBlockedUsers,
 } from "../../controllers/users/postController";
 
 import {
@@ -38,12 +40,14 @@ import {
 
 const router = express.Router();
 router.route("/follow/:id").patch(upload.any(), followUser);
+router.route("/followers").get(getFollowings);
 router.route("/uploads").get(getUploads).post(upload.any(), createUpload);
 router.route("/accounts").get(getAccounts).post(upload.any(), createAccount);
 router.route("/stats").get(getPostStat).patch(upload.any(), updatePostStat);
 router.route("/repost/:id").post(upload.any(), repostPost);
 router.route("/pin/:id").post(upload.any(), pinPost);
 router.route("/block/:id").post(upload.any(), blockUser);
+router.route("/blocks").get(getBlockedUsers);
 router.route("/mute/:id").post(upload.any(), muteUser);
 router.route("/view").patch(updatePostViews);
 router.route("/general").get(multiSearch);

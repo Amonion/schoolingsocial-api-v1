@@ -18,11 +18,10 @@ import {
   followAccount,
   search,
 } from "../../utils/query";
-import { IPost } from "../../utils/userInterface";
+import { IBlock, IFollower, IPost } from "../../utils/userInterface";
 import { Bookmark, Like, View } from "../../models/users/statModel";
 import { postScore } from "../../utils/computation";
 import { io } from "../../app";
-import { data } from "@tensorflow/tfjs";
 
 export const createAccount = async (
   req: Request,
@@ -284,7 +283,19 @@ export const pinPost = async (req: Request, res: Response) => {
 
 export const blockUser = async (req: Request, res: Response) => {
   try {
-    const { userId, accountUsername, accountUserId } = req.body;
+    const {
+      userId,
+      username,
+      displayName,
+      picture,
+      bioId,
+      isVerified,
+      accountUsername,
+      accountUserId,
+      accountDisplayName,
+      accountPicture,
+      accountIsVerified,
+    } = req.body;
 
     const blockedUser = await Block.findOne({
       accountUsername: accountUsername,
@@ -296,8 +307,19 @@ export const blockUser = async (req: Request, res: Response) => {
       await User.findByIdAndUpdate(accountUserId, { $inc: { blocks: -1 } });
     } else {
       await Block.create({
-        userId: userId,
-        accountUsername: accountUsername,
+        userId,
+        username,
+        displayName,
+        picture,
+        bioId,
+        isVerified,
+        accountUsername,
+        accountUserId,
+        accountDisplayName,
+        accountPicture,
+        accountBioId: accountUserId,
+        accountIsVerified,
+        postId: req.params.id,
       });
       await User.findByIdAndUpdate(accountUserId, { $inc: { blocks: 1 } });
       await Post.findByIdAndUpdate(req.params.id, { $inc: { blocks: 1 } });
@@ -309,7 +331,9 @@ export const blockUser = async (req: Request, res: Response) => {
     }
 
     res.status(201).json({
-      data: req.params.id,
+      id: req.params.id,
+      accountUserId,
+      blocked: blockedUser ? false : true,
       message: !blockedUser
         ? "The user has been blocked successfully"
         : "The user has successfully been unblocked.",
@@ -464,6 +488,25 @@ export const getFollowingPosts = async (req: Request, res: Response) => {
     const processedPosts = await processFetchedPosts(req, followerId);
 
     res.status(200).json(processedPosts);
+  } catch (error) {
+    handleError(res, undefined, undefined, error);
+  }
+};
+
+export const getFollowings = async (req: Request, res: Response) => {
+  try {
+    const result = await queryData<IFollower>(Follower, req);
+
+    res.status(200).json(result);
+  } catch (error) {
+    handleError(res, undefined, undefined, error);
+  }
+};
+
+export const getBlockedUsers = async (req: Request, res: Response) => {
+  try {
+    const result = await queryData<IBlock>(Block, req);
+    res.status(200).json(result);
   } catch (error) {
     handleError(res, undefined, undefined, error);
   }
@@ -837,6 +880,11 @@ const processFetchedPosts = async (req: Request, followerId: string) => {
     return post;
   });
 
+  const blockedUsers = await Block.find({
+    userId: followerId,
+    accountUserId: { $in: postUserIds },
+  }).select("accountUserId");
+
   const mutedUsers = await Mute.find({
     userId: followerId,
     accountUserId: { $in: postUserIds },
@@ -862,6 +910,10 @@ const processFetchedPosts = async (req: Request, followerId: string) => {
     postId: { $in: postIds },
   }).select("postId");
 
+  const blockedPostIds = mutedUsers.map((mute) =>
+    mute.accountUserId.toString()
+  );
+
   const mutedUserIds = mutedUsers.map((mute) => mute.accountUserId.toString());
 
   const likedPostIds = likedPosts.map((like) => like.postId.toString());
@@ -877,6 +929,7 @@ const processFetchedPosts = async (req: Request, followerId: string) => {
   const pinnedMap = new Map(
     pinnedPosts.map((pin) => [pin.postId.toString(), pin.createdAt])
   );
+
   for (let i = 0; i < posts.length; i++) {
     const el = posts[i];
     const postIdStr = el._id.toString();
@@ -890,6 +943,10 @@ const processFetchedPosts = async (req: Request, followerId: string) => {
     if (pinnedAtValue !== undefined) {
       el.isPinned = true;
       el.pinnedAt = pinnedAtValue;
+    }
+
+    if (blockedPostIds.includes(el._id.toString())) {
+      el.blocked = true;
     }
 
     if (likedPostIds.includes(el._id.toString())) {
