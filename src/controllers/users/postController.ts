@@ -18,7 +18,7 @@ import {
   followAccount,
   search,
 } from "../../utils/query";
-import { IBlock, IFollower, IPost } from "../../utils/userInterface";
+import { IBlock, IFollower, IMute, IPost } from "../../utils/userInterface";
 import { Bookmark, Like, View } from "../../models/users/statModel";
 import { postScore } from "../../utils/computation";
 import { io } from "../../app";
@@ -345,33 +345,54 @@ export const blockUser = async (req: Request, res: Response) => {
 
 export const muteUser = async (req: Request, res: Response) => {
   try {
-    const { userId, accountUsername, accountUserId } = req.body;
+    const {
+      userId,
+      username,
+      displayName,
+      picture,
+      bioId,
+      isVerified,
+      accountUsername,
+      accountUserId,
+      accountDisplayName,
+      accountPicture,
+      accountIsVerified,
+    } = req.body;
 
     const mutedUser = await Mute.findOne({
       accountUsername: accountUsername,
       userId: userId,
     });
 
+    console.log(req.body);
+
     if (mutedUser) {
       await Mute.findByIdAndDelete(mutedUser._id);
       await User.findByIdAndUpdate(accountUserId, { $inc: { mutes: -1 } });
     } else {
       await Mute.create({
-        userId: userId,
-        accountUsername: accountUsername,
-        accountUserId: accountUserId,
+        userId,
+        username,
+        displayName,
+        picture,
+        bioId,
+        isVerified,
+        accountUsername,
+        accountUserId,
+        accountDisplayName,
+        accountPicture,
+        accountBioId: accountUserId,
+        accountIsVerified,
+        postId: req.params.id,
       });
       await User.findByIdAndUpdate(accountUserId, { $inc: { mutes: 1 } });
       await Post.findByIdAndUpdate(req.params.id, { $inc: { mutes: 1 } });
     }
 
-    const post = await Post.findById(req.params.id);
-    if (!post) {
-      return res.status(404).json({ message: "Post not found." });
-    }
-
     res.status(201).json({
-      userId: accountUserId,
+      id: req.params.id,
+      accountUserId,
+      muted: mutedUser ? false : true,
       message: !mutedUser
         ? "The user has been muted successfully"
         : "The user has successfully been unmuted.",
@@ -380,6 +401,44 @@ export const muteUser = async (req: Request, res: Response) => {
     handleError(res, undefined, undefined, error);
   }
 };
+
+// export const muteUser = async (req: Request, res: Response) => {
+//   try {
+//     const { userId, accountUsername, accountUserId } = req.body;
+
+//     const mutedUser = await Mute.findOne({
+//       accountUsername: accountUsername,
+//       userId: userId,
+//     });
+
+//     if (mutedUser) {
+//       await Mute.findByIdAndDelete(mutedUser._id);
+//       await User.findByIdAndUpdate(accountUserId, { $inc: { mutes: -1 } });
+//     } else {
+//       await Mute.create({
+//         userId: userId,
+//         accountUsername: accountUsername,
+//         accountUserId: accountUserId,
+//       });
+//       await User.findByIdAndUpdate(accountUserId, { $inc: { mutes: 1 } });
+//       await Post.findByIdAndUpdate(req.params.id, { $inc: { mutes: 1 } });
+//     }
+
+//     const post = await Post.findById(req.params.id);
+//     if (!post) {
+//       return res.status(404).json({ message: "Post not found." });
+//     }
+
+//     res.status(201).json({
+//       userId: accountUserId,
+//       message: !mutedUser
+//         ? "The user has been muted successfully"
+//         : "The user has successfully been unmuted.",
+//     });
+//   } catch (error: any) {
+//     handleError(res, undefined, undefined, error);
+//   }
+// };
 
 export const repostPost = async (req: Request, res: Response) => {
   try {
@@ -506,6 +565,15 @@ export const getFollowings = async (req: Request, res: Response) => {
 export const getBlockedUsers = async (req: Request, res: Response) => {
   try {
     const result = await queryData<IBlock>(Block, req);
+    res.status(200).json(result);
+  } catch (error) {
+    handleError(res, undefined, undefined, error);
+  }
+};
+
+export const getMutedUsers = async (req: Request, res: Response) => {
+  try {
+    const result = await queryData<IMute>(Mute, req);
     res.status(200).json(result);
   } catch (error) {
     handleError(res, undefined, undefined, error);
@@ -910,8 +978,8 @@ const processFetchedPosts = async (req: Request, followerId: string) => {
     postId: { $in: postIds },
   }).select("postId");
 
-  const blockedPostIds = mutedUsers.map((mute) =>
-    mute.accountUserId.toString()
+  const blockedPostIds = blockedUsers.map((block) =>
+    block.accountUserId.toString()
   );
 
   const mutedUserIds = mutedUsers.map((mute) => mute.accountUserId.toString());
@@ -945,7 +1013,7 @@ const processFetchedPosts = async (req: Request, followerId: string) => {
       el.pinnedAt = pinnedAtValue;
     }
 
-    if (blockedPostIds.includes(el._id.toString())) {
+    if (blockedPostIds.includes(el.userId.toString())) {
       el.blocked = true;
     }
 

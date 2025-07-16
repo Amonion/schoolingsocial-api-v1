@@ -27,6 +27,7 @@ import {
   blockUser,
   getFollowings,
   getBlockedUsers,
+  getMutedUsers,
 } from "../../controllers/users/postController";
 
 import {
@@ -48,7 +49,8 @@ router.route("/repost/:id").post(upload.any(), repostPost);
 router.route("/pin/:id").post(upload.any(), pinPost);
 router.route("/block/:id").post(upload.any(), blockUser);
 router.route("/blocks").get(getBlockedUsers);
-router.route("/mute/:id").post(upload.any(), muteUser);
+router.route("/mutes").get(getMutedUsers);
+router.route("/mute/:id").patch(upload.any(), muteUser);
 router.route("/view").patch(updatePostViews);
 router.route("/general").get(multiSearch);
 router.route("/").get(getPosts).post(upload.any(), createPost);
