@@ -190,7 +190,10 @@ export const deleteSchoolPayment = async (req: Request, res: Response) => {
 
 export const searchSchools = async (req: Request, res: Response) => {
   try {
-    const name = req.query.name;
+    const name = req.query.name as string;
+    const skip = parseInt(req.query.page as string) || 1;
+    const limit = parseInt(req.query.page_size as string) || 10;
+
     const schools = await School.aggregate([
       {
         $group: {
@@ -202,7 +205,10 @@ export const searchSchools = async (req: Request, res: Response) => {
         $sort: { _id: 1 },
       },
       {
-        $limit: 10,
+        $skip: skip,
+      },
+      {
+        $limit: limit,
       },
       {
         $replaceRoot: { newRoot: "$place" },
@@ -214,7 +220,7 @@ export const searchSchools = async (req: Request, res: Response) => {
     });
   } catch (error) {
     console.error("Error fetching unique places:", error);
-    throw error;
+    res.status(500).json({ error: "Internal server error" });
   }
 };
 
