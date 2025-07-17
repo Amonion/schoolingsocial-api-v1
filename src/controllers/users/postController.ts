@@ -907,6 +907,8 @@ export const followUser = async (req: Request, res: Response) => {
     post.followed = follow ? false : true;
     post.isActive = false;
 
+    console.log(post.followed);
+
     res.status(200).json({
       message: message,
       data: post,
