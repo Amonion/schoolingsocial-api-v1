@@ -1,40 +1,39 @@
-import { Request, Response } from "express";
-import { Notification, UserNotification } from "../../models/team/emailModel";
-import { INotification } from "../../utils/teamInterface";
-import { IUserNotification } from "../../utils/userInterface";
-import { handleError } from "../../utils/errorHandler";
-import { queryData, deleteItem, updateItem } from "../../utils/query";
-import { IUser } from "../../utils/userInterface";
-import { Expo } from "expo-server-sdk";
-import { UserInfo } from "../../models/users/userInfoModel";
-const expo = new Expo();
+import { Request, Response } from 'express'
+import { Notification, UserNotification } from '../../models/team/emailModel'
+import { INotification } from '../../utils/teamInterface'
+import { IUserNotification } from '../../utils/userInterface'
+import { handleError } from '../../utils/errorHandler'
+import { queryData, deleteItem, updateItem } from '../../utils/query'
+import { IUser } from '../../utils/userInterface'
+import { Expo } from 'expo-server-sdk'
+import { UserInfo } from '../../models/users/userInfoModel'
+const expo = new Expo()
 
 interface Body {
-  user: IUser;
-  to: string;
-  action: string;
-  data: IUserNotification[];
-  time: Date;
+  user: IUser
+  to: string
+  action: string
+  data: IUserNotification[]
+  time: Date
 }
 
 export const routeNotification = async (data: Body) => {
   switch (data.action) {
-    case "verification":
-      return createVerificationNotification(data);
-    case "get-notifications":
-      return getNotificationCounts(data);
-    case "read-notifications":
-      return ReadNotification(data);
-      break;
+    case 'verification':
+      return createVerificationNotification(data)
+    case 'get-notifications':
+      return getNotificationCounts(data)
+    case 'read-notifications':
+      return ReadNotification(data)
     default:
-      break;
+      break
   }
   //   createItem(req, res, Email, "Email was created successfully");
-};
+}
 
 //-----------------NOTIFICATION--------------------//
 export const createVerificationNotification = async (item: Body) => {
-  const user = item.user;
+  const user = item.user
   if (
     user &&
     user.isBio &&
@@ -47,7 +46,7 @@ export const createVerificationNotification = async (item: Body) => {
     user.isEducationDocument &&
     user.isEducationHistory
   ) {
-    const noteTemp = await Notification.findOne({ name: item.action });
+    const noteTemp = await Notification.findOne({ name: item.action })
     await UserNotification.create({
       userId: item.user._id,
       username: item.user.username,
@@ -56,53 +55,53 @@ export const createVerificationNotification = async (item: Body) => {
       greetings: noteTemp?.greetings,
       title: noteTemp?.title,
       createdAt: item.time,
-    });
+    })
   }
 
-  return getNotificationCounts(item);
-};
+  return getNotificationCounts(item)
+}
 
 export const getNotificationCounts = async (item: Body) => {
   const count = await UserNotification.countDocuments({
     username: item.user.username,
     unread: true,
-  });
+  })
 
-  return { count };
-};
+  return { count }
+}
 
 export const ReadNotification = async (item: Body) => {
   await UserNotification.updateMany(
     { _id: { $in: item.data.map((el) => el._id) } },
     { $set: { unread: false } }
-  );
+  )
 
-  return getNotificationCounts(item);
-};
+  return getNotificationCounts(item)
+}
 
 export const getNotificationById = async (
   req: Request,
   res: Response
 ): Promise<Response | void> => {
   try {
-    const item = await Notification.findById(req.params.id);
+    const item = await Notification.findById(req.params.id)
     if (!item) {
-      return res.status(404).json({ message: "Notification not found" });
+      return res.status(404).json({ message: 'Notification not found' })
     }
-    res.status(200).json(item);
+    res.status(200).json(item)
   } catch (error) {
-    handleError(res, undefined, undefined, error);
+    handleError(res, undefined, undefined, error)
   }
-};
+}
 
 export const getNotifications = async (req: Request, res: Response) => {
   try {
-    const result = await queryData<INotification>(Notification, req);
-    res.status(200).json(result);
+    const result = await queryData<INotification>(Notification, req)
+    res.status(200).json(result)
   } catch (error) {
-    handleError(res, undefined, undefined, error);
+    handleError(res, undefined, undefined, error)
   }
-};
+}
 
 export const updateNotification = async (req: Request, res: Response) => {
   try {
@@ -111,17 +110,17 @@ export const updateNotification = async (req: Request, res: Response) => {
       res,
       Notification,
       [],
-      ["Notification not found", "Notification was updated successfully"]
-    );
+      ['Notification not found', 'Notification was updated successfully']
+    )
   } catch (error) {
-    handleError(res, undefined, undefined, error);
+    handleError(res, undefined, undefined, error)
   }
-};
+}
 
 export const setPushNotificationToken = async (req: Request, res: Response) => {
-  const { token, id } = req.body;
+  const { token, id } = req.body
   if (!Expo.isExpoPushToken(token)) {
-    return res.status(400).send({ error: "Invalid Expo push token" });
+    return res.status(400).send({ error: 'Invalid Expo push token' })
   }
 
   try {
@@ -129,42 +128,37 @@ export const setPushNotificationToken = async (req: Request, res: Response) => {
       id,
       { notificationToken: token },
       { new: true }
-    );
-    res.send({ success: true });
+    )
+    res.send({ success: true })
   } catch (error) {
-    handleError(res, undefined, undefined, error);
+    handleError(res, undefined, undefined, error)
   }
-};
+}
 
 export const sendPushNotification = async (req: Request, res: Response) => {
-  const { token, title, body, id } = req.body;
-  if (!Expo.isExpoPushToken(token)) {
-    return res.status(400).send({ error: "Invalid Expo push token" });
-  }
+  const { notificationId, token } = req.body
 
+  // const user = await UserInfo.findById(userId)
+  const item = await Notification.findById(notificationId)
+  const cleanContent = item?.content?.replace(/<[^>]*>?/gm, '').trim()
   const messages = [
     {
       to: token,
-      sound: "default",
-      title,
-      body,
-      data: { withSome: "data" },
+      sound: 'default',
+      title: item?.title,
+      body: cleanContent,
+      data: { type: 'notifications', screen: '/home/notifications' },
     },
-  ];
+  ]
 
   try {
-    await UserInfo.findByIdAndUpdate(
-      id,
-      { notificationToken: token },
-      { new: true }
-    );
-    const ticketChunk = await expo.sendPushNotificationsAsync(messages);
-    res.send({ success: true });
+    await expo.sendPushNotificationsAsync(messages)
+    res.send({ success: true })
   } catch (error) {
-    handleError(res, undefined, undefined, error);
+    handleError(res, undefined, undefined, error)
   }
-};
+}
 
 export const deleteNotification = async (req: Request, res: Response) => {
-  await deleteItem(req, res, Notification, [], "Notification not found");
-};
+  await deleteItem(req, res, Notification, [], 'Notification not found')
+}

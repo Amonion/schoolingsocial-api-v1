@@ -1,77 +1,75 @@
-import { Request, Response } from "express";
-import { UserStat } from "../../models/users/usersStatMode";
-import { io } from "../../app";
-import { IUserData } from "../../utils/teamInterface";
-import { User } from "../../models/users/userModel";
-import { Chat } from "../../models/users/chatModel";
-import { handleError } from "../../utils/errorHandler";
-import { startOfMonth, subMonths } from "date-fns";
-import { School } from "../../models/team/schoolModel";
-import { Model } from "mongoose";
-import { UserInfo } from "../../models/users/userInfoModel";
+import { Request, Response } from 'express'
+import { UserStatus } from '../../models/users/usersStatMode'
+import { io } from '../../app'
+import { IUserData } from '../../utils/teamInterface'
+import { User } from '../../models/users/userModel'
+import { Chat } from '../../models/users/chatModel'
+import { handleError } from '../../utils/errorHandler'
+import { startOfMonth, subMonths } from 'date-fns'
+import { School } from '../../models/team/schoolModel'
+import { Model } from 'mongoose'
+import { UserInfo } from '../../models/users/userInfoModel'
 
 //-----------------USERS--------------------//
 export const updateVisit = async (data: IUserData) => {
-  // if (!data.ip || !data.username) {
-  //   return;
-  // }
-  // if (data.username) {
-  //   await UserStat.findOneAndUpdate(
-  //     { username: data.username },
-  //     {
-  //       $set: {
-  //         visitedAt: data.visitedAt,
-  //         online: data.online,
-  //         country: data.country,
-  //         countryCode: data.countryCode,
-  //         username: data.username,
-  //         bioId: data.bioId,
-  //         userId: data.userId,
-  //       },
-  //       $addToSet: {
-  //         ips: data.ip,
-  //       },
-  //     },
-  //     {
-  //       new: true,
-  //       upsert: true,
-  //       setDefaultsOnInsert: true,
-  //     }
-  //   );
-  // } else {
-  //   await UserStat.findOneAndUpdate(
-  //     {
-  //       ips: { $in: [data.ip] },
-  //     },
-  //     {
-  //       $set: {
-  //         visitedAt: new Date(),
-  //         online: true,
-  //         country: data.country,
-  //         countryCode: data.countryCode,
-  //         username: data.username,
-  //         bioId: data.bioId,
-  //         userId: data.userId,
-  //       },
-  //       $addToSet: {
-  //         ips: data.ip,
-  //       },
-  //     },
-  //     {
-  //       new: true,
-  //       upsert: true,
-  //       setDefaultsOnInsert: true,
-  //     }
-  //   );
-  // }
-  // // Update the User model to set online status
-  // updateOnlineStatus(data.userId, data.visitedAt, User);
-  // // Update the UserInfo model to set online status
-  // updateOnlineStatus(data.bioId, data.visitedAt, UserInfo);
-  // const visitors = await UserStat.countDocuments({ online: true });
-  // console.log("Current online visitors:", visitors);
-  // io.emit("team", { action: "visit", type: "stat", visitors });
-};
+  if (!data.ip || !data.username) {
+    return
+  }
+
+  if (data.username) {
+    await UserStatus.findOneAndUpdate(
+      { username: data.username },
+      {
+        $set: {
+          visitedAt: data.visitedAt,
+          online: data.online,
+          country: data.country,
+          countryCode: data.countryCode,
+          username: data.username,
+          bioId: data.bioId,
+          userId: data.userId,
+        },
+        $addToSet: {
+          ips: data.ip,
+        },
+      },
+      {
+        new: true,
+        upsert: true,
+        setDefaultsOnInsert: true,
+      }
+    )
+  } else {
+    await UserStatus.findOneAndUpdate(
+      {
+        ips: { $in: [data.ip] },
+      },
+      {
+        $set: {
+          visitedAt: new Date(),
+          online: true,
+          country: data.country,
+          countryCode: data.countryCode,
+          username: data.username,
+          bioId: data.bioId,
+          userId: data.userId,
+        },
+        $addToSet: {
+          ips: data.ip,
+        },
+      },
+      {
+        new: true,
+        upsert: true,
+        setDefaultsOnInsert: true,
+      }
+    )
+  }
+  updateOnlineStatus(data.userId, data.visitedAt, User)
+  updateOnlineStatus(data.bioId, data.visitedAt, UserInfo)
+  const visitors = await UserStatus.countDocuments({ online: true })
+  io.emit('team', { action: 'visit', type: 'stat', visitors })
+}
 
 export const visitorLeft = async (data: IUserData) => {
   // if (data.username) {
@@ -99,7 +97,7 @@ export const visitorLeft = async (data: IUserData) => {
   // }
   // const visitors = await UserStat.countDocuments({ online: true });
   // io.emit("team", { action: "visit", type: "stat", visitors });
-};
+}
 
 const updateOnlineStatus = async <T extends Document>(
   userId: string,
@@ -112,100 +110,100 @@ const updateOnlineStatus = async <T extends Document>(
       visitedAt: visitedAt,
       online: true,
     }
-  );
+  )
   const chats = await Chat.find({
     connection: { $regex: userId },
-  });
+  })
 
   for (let i = 0; i < chats.length; i++) {
-    const el = chats[i];
-    io.emit(el.connection, { action: "visit" });
+    const el = chats[i]
+    io.emit(el.connection, { action: 'visit' })
   }
-};
+}
 
 export const getUsersStat = async (
   req: Request,
   res: Response
 ): Promise<Response | void> => {
   try {
-    const now = new Date();
-    const currentMonthStart = startOfMonth(now);
-    const lastMonthStart = startOfMonth(subMonths(now, 1));
+    const now = new Date()
+    const currentMonthStart = startOfMonth(now)
+    const lastMonthStart = startOfMonth(subMonths(now, 1))
 
-    const onlineUsers = await UserStat.countDocuments({ online: true });
+    const onlineUsers = await UserStatus.countDocuments({ online: true })
     const verifyingUsers = await User.countDocuments({
       isOnVerification: true,
-    });
+    })
     const verifiedUsers = await User.countDocuments({
       isVerified: true,
-    });
-    const totalUsers = await User.countDocuments();
-    const thisMonthOnline = await UserStat.countDocuments({
+    })
+    const totalUsers = await User.countDocuments()
+    const thisMonthOnline = await UserStatus.countDocuments({
       online: true,
       createdAt: { $gte: currentMonthStart },
-    });
+    })
     const thisMonthOnVerification = await User.countDocuments({
       isOnVerification: true,
       verifyingAt: { $gte: currentMonthStart },
-    });
+    })
     const thisMonthUsers = await User.countDocuments({
       createdAt: { $gte: currentMonthStart },
-    });
+    })
     const thisMonthVerifiedUsers = await User.countDocuments({
       isVerified: true,
       createdAt: { $gte: currentMonthStart },
-    });
+    })
 
-    const lastMonthOnline = await UserStat.countDocuments({
+    const lastMonthOnline = await UserStatus.countDocuments({
       online: true,
       createdAt: { $gte: lastMonthStart, $lt: currentMonthStart },
-    });
+    })
     const lastMonthOnVerification = await User.countDocuments({
       isOnVerification: true,
       verifyingAt: { $gte: lastMonthStart, $lt: currentMonthStart },
-    });
+    })
     const lastMonthUsers = await User.countDocuments({
       createdAt: { $gte: lastMonthStart, $lt: currentMonthStart },
-    });
+    })
     const lastMonthVerifiedUsers = await User.countDocuments({
       isVerified: true,
       createdAt: { $gte: lastMonthStart, $lt: currentMonthStart },
-    });
+    })
 
-    let onlineIncrease = 0;
+    let onlineIncrease = 0
     if (lastMonthOnline > 0) {
       onlineIncrease =
-        ((thisMonthOnline - lastMonthOnline) / lastMonthOnline) * 100;
+        ((thisMonthOnline - lastMonthOnline) / lastMonthOnline) * 100
     } else if (thisMonthOnline > 0) {
-      onlineIncrease = 100;
+      onlineIncrease = 100
     }
 
-    let verificationIncrease = 0;
+    let verificationIncrease = 0
     if (lastMonthOnVerification > 0) {
       verificationIncrease =
         ((thisMonthOnVerification - lastMonthOnVerification) /
           lastMonthOnVerification) *
-        100;
+        100
     } else if (thisMonthOnVerification > 0) {
-      verificationIncrease = 100;
+      verificationIncrease = 100
     }
 
-    let totalUsersIncrease = 0;
+    let totalUsersIncrease = 0
     if (lastMonthUsers > 0) {
       totalUsersIncrease =
-        ((thisMonthUsers - lastMonthUsers) / lastMonthUsers) * 100;
+        ((thisMonthUsers - lastMonthUsers) / lastMonthUsers) * 100
     } else if (thisMonthUsers > 0) {
-      totalUsersIncrease = 100;
+      totalUsersIncrease = 100
     }
 
-    let verifiedUsersIncrease = 0;
+    let verifiedUsersIncrease = 0
     if (lastMonthVerifiedUsers > 0) {
       verifiedUsersIncrease =
         ((thisMonthVerifiedUsers - lastMonthVerifiedUsers) /
           lastMonthVerifiedUsers) *
-        100;
+        100
     } else if (thisMonthVerifiedUsers > 0) {
-      verifiedUsersIncrease = 100;
+      verifiedUsersIncrease = 100
     }
 
     res.status(200).json({
@@ -217,11 +215,11 @@ export const getUsersStat = async (
       verificationIncrease,
       totalUsers,
       totalUsersIncrease,
-    });
+    })
   } catch (error) {
-    handleError(res, undefined, undefined, error);
+    handleError(res, undefined, undefined, error)
   }
-};
+}
 
 //-----------------Schools--------------------//
 export const getSchoolStat = async (
@@ -229,87 +227,87 @@ export const getSchoolStat = async (
   res: Response
 ): Promise<Response | void> => {
   try {
-    const now = new Date();
-    const currentMonthStart = startOfMonth(now);
-    const lastMonthStart = startOfMonth(subMonths(now, 1));
+    const now = new Date()
+    const currentMonthStart = startOfMonth(now)
+    const lastMonthStart = startOfMonth(subMonths(now, 1))
 
-    const totalSchools = await School.countDocuments();
+    const totalSchools = await School.countDocuments()
     const thisMonthTotalSchools = await School.countDocuments({
       createdAt: { $gte: currentMonthStart },
-    });
+    })
     const lastMonthTotalSchools = await School.countDocuments({
       createdAt: { $gte: lastMonthStart, $lt: currentMonthStart },
-    });
+    })
 
     const verifiedSchools = await School.countDocuments({
       isVerified: true,
-    });
+    })
     const thisMonthVerifiedSchools = await School.countDocuments({
       isVerified: true,
       createdAt: { $gte: currentMonthStart },
-    });
+    })
     const lastMonthVerifiedSchools = await School.countDocuments({
       isVerified: true,
       createdAt: { $gte: lastMonthStart, $lt: currentMonthStart },
-    });
+    })
 
-    const newSchools = await School.countDocuments({ isNew: true });
+    const newSchools = await School.countDocuments({ isNew: true })
     const thisMonthNewSchools = await School.countDocuments({
       isNew: true,
       createdAt: { $gte: currentMonthStart },
-    });
+    })
     const lastMonthNewSchools = await School.countDocuments({
       isNew: true,
       createdAt: { $gte: lastMonthStart, $lt: currentMonthStart },
-    });
+    })
 
-    const recordedSchools = await School.countDocuments({ isRecorded: true });
+    const recordedSchools = await School.countDocuments({ isRecorded: true })
     const thisMonthRecordedSchools = await School.countDocuments({
       isRecorded: true,
       createdAt: { $gte: currentMonthStart },
-    });
+    })
     const lastMonthRecordedSchools = await School.countDocuments({
       isRecorded: true,
       createdAt: { $gte: lastMonthStart, $lt: currentMonthStart },
-    });
+    })
 
-    let totalSchoolIncrease = 0;
+    let totalSchoolIncrease = 0
     if (lastMonthTotalSchools > 0) {
       totalSchoolIncrease =
         ((thisMonthTotalSchools - lastMonthTotalSchools) /
           lastMonthTotalSchools) *
-        100;
+        100
     } else if (thisMonthTotalSchools > 0) {
-      totalSchoolIncrease = 100;
+      totalSchoolIncrease = 100
     }
 
-    let verifiedSchoolIncrease = 0;
+    let verifiedSchoolIncrease = 0
     if (lastMonthVerifiedSchools > 0) {
       verifiedSchoolIncrease =
         ((thisMonthVerifiedSchools - lastMonthVerifiedSchools) /
           lastMonthVerifiedSchools) *
-        100;
+        100
     } else if (thisMonthVerifiedSchools > 0) {
-      verifiedSchoolIncrease = 100;
+      verifiedSchoolIncrease = 100
     }
 
-    let newSchoolIncrease = 0;
+    let newSchoolIncrease = 0
     if (lastMonthNewSchools > 0) {
       newSchoolIncrease =
         ((thisMonthNewSchools - lastMonthNewSchools) / lastMonthNewSchools) *
-        100;
+        100
     } else if (thisMonthNewSchools > 0) {
-      newSchoolIncrease = 100;
+      newSchoolIncrease = 100
     }
 
-    let recordedSchoolIncrease = 0;
+    let recordedSchoolIncrease = 0
     if (lastMonthRecordedSchools > 0) {
       recordedSchoolIncrease =
         ((thisMonthRecordedSchools - lastMonthRecordedSchools) /
           lastMonthRecordedSchools) *
-        100;
+        100
     } else if (thisMonthRecordedSchools > 0) {
-      recordedSchoolIncrease = 100;
+      recordedSchoolIncrease = 100
     }
 
     res.status(200).json({
@@ -321,8 +319,8 @@ export const getSchoolStat = async (
       newSchoolIncrease,
       recordedSchools,
       recordedSchoolIncrease,
-    });
+    })
   } catch (error) {
-    handleError(res, undefined, undefined, error);
+    handleError(res, undefined, undefined, error)
   }
-};
+}

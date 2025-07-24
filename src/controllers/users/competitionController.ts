@@ -92,7 +92,8 @@ export const createExam = async (
       paperId: paperId,
       userId: userId,
     })
-    const attempts = paper?.isFirstTime ? 1 : Number(paper?.attempts) + 1
+    const attempts =
+      !paper || paper?.isFirstTime ? 1 : Number(paper?.attempts) + 1
 
     let correctAnswer = 0
     for (let i = 0; i < questions.length; i++) {

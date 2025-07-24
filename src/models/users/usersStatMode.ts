@@ -1,5 +1,5 @@
-import mongoose, { Schema } from "mongoose";
-import { IUserStat } from "../../utils/userInterface";
+import mongoose, { Schema } from 'mongoose'
+import { IUserStat } from '../../utils/userInterface'
 
 const UserStatSchema: Schema = new Schema(
   {
@@ -16,5 +16,26 @@ const UserStatSchema: Schema = new Schema(
   {
     timestamps: true,
   }
-);
-export const UserStat = mongoose.model<IUserStat>("UserStat", UserStatSchema);
+)
+export const UserStat = mongoose.model<IUserStat>('UserStat', UserStatSchema)
+
+const UserStatusSchema: Schema = new Schema(
+  {
+    country: { type: String },
+    countryCode: { type: String },
+    ips: { type: Array, default: [] },
+    username: { type: String },
+    bioId: { type: String },
+    online: { type: Boolean, default: false },
+    leftAt: { type: Date, default: Date.now },
+    visitedAt: { type: Date, default: Date.now },
+    createdAt: { type: Date, default: Date.now },
+  },
+  {
+    timestamps: true,
+  }
+)
+export const UserStatus = mongoose.model<IUserStat>(
+  'UserStatus',
+  UserStatusSchema
+)
