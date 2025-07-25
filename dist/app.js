@@ -47,76 +47,76 @@ const requestLogger = (req, res, next) => {
 app.use(requestLogger);
 app.use((0, cors_1.default)({
     origin: [
-        "http://localhost:3000",
-        "https://schoolingsocial.netlify.app",
-        "https://schoolingsocial.com",
-        "https://schooling-client-v1.onrender.com",
+        'http://localhost:3000',
+        'https://schoolingsocial.netlify.app',
+        'https://schoolingsocial.com',
+        'https://schooling-client-v1.onrender.com',
     ],
-    methods: ["GET", "POST", "PATCH", "PUT", "DELETE"],
+    methods: ['GET', 'POST', 'PATCH', 'PUT', 'DELETE'],
     credentials: true,
-    allowedHeaders: ["Content-Type", "Authorization", "socket-id"],
+    allowedHeaders: ['Content-Type', 'Authorization', 'socket-id'],
 }));
 const io = new socket_io_1.Server(server, {
     cors: {
         origin: [
-            "http://localhost:3000",
-            "https://schoolingsocial.netlify.app",
-            "https://schoolingsocial.com",
+            'http://localhost:3000',
+            'https://schoolingsocial.netlify.app',
+            'https://schoolingsocial.com',
         ],
-        methods: ["GET", "POST"],
+        methods: ['GET', 'POST'],
         credentials: true,
     },
-    transports: ["websocket", "polling"],
+    transports: ['websocket', 'polling'],
 });
 exports.io = io;
-io.on("connection", (socket) => {
+io.on('connection', (socket) => {
     console.log(`✅ User connected: ${socket.id}`);
-    socket.on("message", (data) => __awaiter(void 0, void 0, void 0, function* () {
+    socket.on('message', (data) => __awaiter(void 0, void 0, void 0, function* () {
         switch (data.to) {
-            case "chat":
+            case 'chat':
                 (0, chatController_1.createChat)(data);
                 break;
-            case "read":
+            case 'read':
                 (0, chatController_1.readChats)(data);
                 break;
-            case "deleteChat":
+            case 'deleteChat':
                 (0, chatController_1.deleteChat)(data);
                 break;
-            case "users":
+            case 'users':
                 (0, postController_1.createPost)(data);
                 break;
-            case "team":
+            case 'team':
                 yield (0, socketRoutes_1.TeamSocket)(data);
                 break;
             default:
                 break;
         }
     }));
-    socket.on("disconnect", () => {
+    socket.on('disconnect', () => {
         console.log(`❌ User disconnected.: ${socket.id}`);
     });
 });
 app.use(body_parser_1.default.json());
-app.use("/api/v1/s3-delete-file", fileUpload_1.removeFile);
-app.use("/api/v1/s3-presigned-url", fileUpload_1.getPresignedUrl);
+app.use('/api/v1/s3-delete-file', fileUpload_1.removeFile);
+app.use('/api/v1/s3-presigned-url', fileUpload_1.getPresignedUrl);
 // app.use("/api/v1/s3-metadata", getExtension);
-app.use("/api/v1/competitions", competitionRoutes_1.default);
-app.use("/api/v1/company", companyRoutes_1.default);
-app.use("/api/v1/messages", messageRoutes_1.default);
-app.use("/api/v1/news", newsRoutes_1.default);
-app.use("/api/v1/places", placeRoutes_1.default);
-app.use("/api/v1/posts", postRoutes_1.default);
-app.use("/api/v1/schools", schoolRoutes_1.default);
-app.use("/api/v1/user-competitions", userCompetitionRoutes_1.default);
-app.use("/api/v1/user-messages", userMessageRoutes_1.default);
-app.use("/api/v1/user-stats", statRoutes_1.default);
-app.use("/api/v1/users", userRoutes_1.default);
-app.get("/api/v1/user-ip", (req, res) => {
+app.use('/api/v1/competitions', competitionRoutes_1.default);
+app.use('/api/v1/company', companyRoutes_1.default);
+app.use('/api/v1/messages', messageRoutes_1.default);
+app.use('/api/v1/news', newsRoutes_1.default);
+app.use('/api/v1/places', placeRoutes_1.default);
+app.use('/api/v1/posts', postRoutes_1.default);
+app.use('/api/v1/schools', schoolRoutes_1.default);
+app.use('/api/v1/user-competitions', userCompetitionRoutes_1.default);
+app.use('/api/v1/user-messages', userMessageRoutes_1.default);
+app.use('/api/v1/user-stats', statRoutes_1.default);
+app.use('/api/v1/users', userRoutes_1.default);
+app.get('/api/v1/user-ip', (req, res) => {
     var _a;
     let ip;
-    const forwarded = req.headers["x-forwarded-for"];
-    if (typeof forwarded === "string") {
-        ip = forwarded.split(",")[0];
+    const forwarded = req.headers['x-forwarded-for'];
+    if (typeof forwarded === 'string') {
+        ip = forwarded.split(',')[0];
     }
     else if (Array.isArray(forwarded)) {
         ip = forwarded[0];
@@ -124,12 +124,12 @@ app.get("/api/v1/user-ip", (req, res) => {
     else {
         ip = ((_a = req.socket) === null || _a === void 0 ? void 0 : _a.remoteAddress) || undefined;
     }
-    if (ip === null || ip === void 0 ? void 0 : ip.startsWith("::ffff:")) {
-        ip = ip.replace("::ffff:", "");
+    if (ip === null || ip === void 0 ? void 0 : ip.startsWith('::ffff:')) {
+        ip = ip.replace('::ffff:', '');
     }
     res.json({ ip });
 });
-app.get("/api/v1/network", (req, res) => {
+app.get('/api/v1/network', (req, res) => {
     try {
         res.status(200).json({ message: `network` });
     }
@@ -139,4 +139,5 @@ app.get("/api/v1/network", (req, res) => {
 });
 app.use((req, res, next) => {
     (0, errorHandler_1.handleError)(res, 404, `Request not found: ${req.method} ${req.originalUrl}`);
+    next();
 });
