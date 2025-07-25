@@ -33,7 +33,7 @@ var __importStar = (this && this.__importStar) || (function () {
     };
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.Interest = exports.Expenses = exports.Company = exports.Position = void 0;
+exports.Interest = exports.Expenses = exports.Policy = exports.Company = exports.Position = void 0;
 const mongoose_1 = __importStar(require("mongoose"));
 const PositionSchema = new mongoose_1.Schema({
     role: { type: String },
@@ -61,6 +61,16 @@ const CompanySchema = new mongoose_1.Schema({
     timestamps: true,
 });
 exports.Company = mongoose_1.default.model('Company', CompanySchema);
+const PolicySchema = new mongoose_1.Schema({
+    name: { type: String, default: '' },
+    title: { type: String, default: '' },
+    content: { type: String, default: '' },
+    category: { type: String, default: '' },
+    createdAt: { type: Date, default: Date.now },
+}, {
+    timestamps: true,
+});
+exports.Policy = mongoose_1.default.model('Policy', PolicySchema);
 const ExpensesSchema = new mongoose_1.Schema({
     name: { type: String },
     amount: { type: Number },
