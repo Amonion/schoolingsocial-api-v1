@@ -35,13 +35,6 @@ import {
 
 const router = express.Router()
 
-console.log('✅ User Routes Loaded')
-router.stack.forEach((layer: any) => {
-  if (layer.route) {
-    console.log('Route:', layer.route.path, 'Methods:', layer.route.methods)
-  }
-})
-
 router.route('/login').post(upload.any(), loginUser)
 router.route('/auth/:id').get(getAuthUser)
 
@@ -90,12 +83,5 @@ router
 router.route('/:username').get(getAUser)
 
 router.route('/:id').patch(upload.any(), updateUser).delete(deleteUser)
-
-console.log('✅ User Routes Loaded')
-router.stack.forEach((layer: any) => {
-  if (layer.route) {
-    console.log('Route:', layer.route.path, 'Methods:', layer.route.methods)
-  }
-})
 
 export default router
