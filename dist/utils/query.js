@@ -17,19 +17,19 @@ const userModel_1 = require("../models/users/userModel");
 const buildFilterQuery = (req) => {
     const filters = {};
     const operators = {
-        lt: "$lt",
-        lte: "$lte",
-        gt: "$gt",
-        gte: "$gte",
-        ne: "$ne",
-        in: "$in",
-        nin: "$nin",
+        lt: '$lt',
+        lte: '$lte',
+        gt: '$gt',
+        gte: '$gte',
+        ne: '$ne',
+        in: '$in',
+        nin: '$nin',
     };
     const flattenQuery = (query) => {
         const flat = {};
         for (const key in query) {
             const value = query[key];
-            if (typeof value === "object" && !Array.isArray(value)) {
+            if (typeof value === 'object' && !Array.isArray(value)) {
                 for (const subKey in value) {
                     flat[`${key}[${subKey}]`] = value[subKey];
                 }
@@ -42,9 +42,9 @@ const buildFilterQuery = (req) => {
     };
     const flatQuery = flattenQuery(req.query);
     for (const [key, rawValue] of Object.entries(flatQuery)) {
-        if (key === "page" || key === "page_size" || key === "ordering")
+        if (key === 'page' || key === 'page_size' || key === 'ordering')
             continue;
-        const match = key.match(/^(.+)\[(.+)\]$/); // matches field[op]
+        const match = key.match(/^(.+)\[(.+)\]$/);
         if (match) {
             const field = match[1];
             const op = match[2];
@@ -52,12 +52,12 @@ const buildFilterQuery = (req) => {
                 const mongoOp = operators[op];
                 const value = Array.isArray(rawValue) ? rawValue : [rawValue];
                 const finalValues = value.map((v) => {
-                    if (typeof v === "string" && v.includes(",")) {
-                        return v.split(",").map((s) => s.trim());
+                    if (typeof v === 'string' && v.includes(',')) {
+                        return v.split(',').map((s) => s.trim());
                     }
-                    if (v === "true")
+                    if (v === 'true')
                         return true;
-                    if (v === "false")
+                    if (v === 'false')
                         return false;
                     if (!isNaN(Number(v)))
                         return Number(v);
@@ -72,33 +72,40 @@ const buildFilterQuery = (req) => {
         else {
             const value = Array.isArray(rawValue) ? rawValue : [rawValue];
             const normalizedValue = value[0];
-            // Special handling for schoolName inside nested school array
-            if (key === "levelName") {
+            if (key === 'levelName') {
                 const namesArray = normalizedValue
-                    .split(",")
+                    .split(',')
                     .map((name) => name.trim());
-                filters["levels.levelName"] = { $in: namesArray };
+                filters['levels.levelName'] = { $in: namesArray };
             }
-            else if (key === "usernames") {
+            else if (key === 'usernames') {
                 const namesArray = normalizedValue
-                    .split(",")
+                    .split(',')
                     .map((name) => name.trim());
-                filters["username"] = { $in: namesArray };
+                filters['username'] = { $in: namesArray };
             }
-            else if (normalizedValue === "") {
+            else if (normalizedValue === '') {
                 filters[key] = { $exists: false };
             }
-            else if (normalizedValue === "true" || normalizedValue === "false") {
-                filters[key] = normalizedValue === "true";
+            else if (normalizedValue === 'true' || normalizedValue === 'false') {
+                filters[key] = normalizedValue === 'true';
             }
             else if (!isNaN(Number(normalizedValue))) {
                 filters[key] = Number(normalizedValue);
             }
-            else if (typeof normalizedValue === "string") {
-                filters[key] = { $regex: normalizedValue, $options: "i" };
+            // else if (typeof normalizedValue === 'string') {
+            //   filters[key] = { $regex: normalizedValue, $options: 'i' }
+            // }
+            else if (typeof normalizedValue === 'string') {
+                if (key === 'username' && req.baseUrl.includes('/api/v1/posts')) {
+                    filters[key] = normalizedValue; // exact match
+                }
+                else {
+                    filters[key] = { $regex: normalizedValue, $options: 'i' }; // partial match
+                }
             }
             else {
-                filters[key] = normalizedValue; // fallback
+                filters[key] = normalizedValue;
             }
         }
     }
@@ -108,10 +115,10 @@ const buildSortingQuery = (req) => {
     const sort = {};
     if (req.query.ordering) {
         const ordering = req.query.ordering;
-        const fields = ordering.split(",");
+        const fields = ordering.split(',');
         fields.forEach((field) => {
-            const sortOrder = field.startsWith("-") ? -1 : 1;
-            const fieldName = field.replace("-", "");
+            const sortOrder = field.startsWith('-') ? -1 : 1;
+            const fieldName = field.replace('-', '');
             sort[fieldName] = sortOrder;
         });
     }
@@ -139,27 +146,27 @@ exports.queryData = queryData;
 const generalSearchQuery = (req) => {
     const rawIds = req.query.myIds;
     const userId = req.query.myId;
-    const userIds = typeof rawIds === "string" ? rawIds.split(",").map((id) => id.trim()) : [];
+    const userIds = typeof rawIds === 'string' ? rawIds.split(',').map((id) => id.trim()) : [];
     delete req.query.myIds;
     delete req.query.myId;
     const cleanedQuery = req.query;
     let searchQuery = {};
     const textFields = [
-        "title",
-        "name",
-        "instruction",
-        "username",
-        "content",
-        "displayName",
-        "firstName",
-        "middleName",
-        "lastName",
-        "subtitle",
+        'title',
+        'name',
+        'instruction',
+        'username',
+        'content',
+        'displayName',
+        'firstName',
+        'middleName',
+        'lastName',
+        'subtitle',
     ];
     const regexConditions = textFields
         .filter((field) => cleanedQuery[field])
         .map((field) => ({
-        [field]: { $regex: cleanedQuery[field], $options: "i" },
+        [field]: { $regex: cleanedQuery[field], $options: 'i' },
     }));
     let filter = Object.assign(Object.assign({}, searchQuery), (regexConditions.length ? { $or: regexConditions } : {}));
     if (userIds) {
@@ -230,10 +237,10 @@ function buildSearchQuery(req) {
     let searchQuery = {};
     const applyInFilter = (field) => {
         if (cleanedQuery[field]) {
-            const values = cleanedQuery[field].split(",").map((val) => {
-                if (val === "true")
+            const values = cleanedQuery[field].split(',').map((val) => {
+                if (val === 'true')
                     return true;
-                if (val === "false")
+                if (val === 'false')
                     return false;
                 return val;
             });
@@ -242,26 +249,26 @@ function buildSearchQuery(req) {
             });
         }
     };
-    applyInFilter("country");
-    applyInFilter("state");
-    applyInFilter("area");
-    applyInFilter("gender");
-    applyInFilter("currentSchoolCountry");
-    applyInFilter("currentSchoolName");
-    applyInFilter("currentAcademicLevelName");
-    applyInFilter("schoolCountry");
-    applyInFilter("schoolState");
-    applyInFilter("schoolArea");
-    applyInFilter("schoolLevelName");
-    applyInFilter("examCountries");
-    applyInFilter("examStates");
-    applyInFilter("isVerified");
-    applyInFilter("postType");
+    applyInFilter('country');
+    applyInFilter('state');
+    applyInFilter('area');
+    applyInFilter('gender');
+    applyInFilter('currentSchoolCountry');
+    applyInFilter('currentSchoolName');
+    applyInFilter('currentAcademicLevelName');
+    applyInFilter('schoolCountry');
+    applyInFilter('schoolState');
+    applyInFilter('schoolArea');
+    applyInFilter('schoolLevelName');
+    applyInFilter('examCountries');
+    applyInFilter('examStates');
+    applyInFilter('isVerified');
+    applyInFilter('postType');
     if (cleanedQuery.publishedAt) {
-        let [startDate, endDate] = cleanedQuery.publishedAt.split(",");
-        if (!startDate || startDate === "undefined")
+        let [startDate, endDate] = cleanedQuery.publishedAt.split(',');
+        if (!startDate || startDate === 'undefined')
             startDate = undefined;
-        if (!endDate || endDate === "undefined")
+        if (!endDate || endDate === 'undefined')
             endDate = undefined;
         const dateFilter = {};
         if (startDate)
@@ -273,20 +280,20 @@ function buildSearchQuery(req) {
         }
     }
     const textFields = [
-        "title",
-        "name",
-        "instruction",
-        "username",
-        "displayName",
-        "firstName",
-        "middleName",
-        "lastName",
-        "subtitle",
+        'title',
+        'name',
+        'instruction',
+        'username',
+        'displayName',
+        'firstName',
+        'middleName',
+        'lastName',
+        'subtitle',
     ];
     const regexConditions = textFields
         .filter((field) => cleanedQuery[field])
         .map((field) => ({
-        [field]: { $regex: cleanedQuery[field], $options: "i" },
+        [field]: { $regex: cleanedQuery[field], $options: 'i' },
     }));
     if (cleanedQuery.userId) {
         Object.assign(searchQuery, {
@@ -359,6 +366,7 @@ const followAccount = (req, res) => __awaiter(void 0, void 0, void 0, function* 
     if (follow) {
         yield postModel_1.Follower.findByIdAndDelete(follow._id);
         yield userModel_1.User.findByIdAndUpdate(req.params.id, { $inc: { followers: -1 } });
+        yield userModel_1.User.findByIdAndUpdate(follower === null || follower === void 0 ? void 0 : follower._id, { $inc: { following: -1 } });
         if (post) {
             yield postModel_1.Post.findByIdAndUpdate(post._id, {
                 $inc: { unfollowers: 1 },
@@ -372,15 +380,20 @@ const followAccount = (req, res) => __awaiter(void 0, void 0, void 0, function* 
     }
     else {
         yield postModel_1.Follower.create({
+            displayName: user === null || user === void 0 ? void 0 : user.displayName,
             username: user === null || user === void 0 ? void 0 : user.username,
             userId: user === null || user === void 0 ? void 0 : user._id,
             picture: user === null || user === void 0 ? void 0 : user.picture,
+            isVerified: user === null || user === void 0 ? void 0 : user.isVerified,
             followerId: follower === null || follower === void 0 ? void 0 : follower._id,
             followerUsername: follower === null || follower === void 0 ? void 0 : follower.username,
             followerPicture: follower === null || follower === void 0 ? void 0 : follower.picture,
+            followerDisplayName: follower === null || follower === void 0 ? void 0 : follower.displayName,
+            followerIsVerified: follower === null || follower === void 0 ? void 0 : follower.isVerified,
             postId: post ? post._id : undefined,
         });
         yield userModel_1.User.findByIdAndUpdate(req.params.id, { $inc: { followers: 1 } });
+        yield userModel_1.User.findByIdAndUpdate(follower === null || follower === void 0 ? void 0 : follower._id, { $inc: { following: 1 } });
         if (post) {
             yield postModel_1.Post.findByIdAndUpdate(post._id, {
                 $inc: { followers: 1 },

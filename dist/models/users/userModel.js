@@ -33,32 +33,34 @@ var __importStar = (this && this.__importStar) || (function () {
     };
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.User = void 0;
+exports.UserSettings = exports.User = void 0;
 const mongoose_1 = __importStar(require("mongoose"));
 const UserSchema = new mongoose_1.Schema({
     email: {
         type: String,
-        required: [true, "Email is required"],
-        unique: [true, "A user with this email already exists"],
-        match: [/\S+@\S+\.\S+/, "Please use a valid email address"],
+        required: [true, 'Email is required'],
+        unique: [true, 'A user with this email already exists'],
+        match: [/\S+@\S+\.\S+/, 'Please use a valid email address'],
+        lowercase: true,
     },
     username: {
         type: String,
     },
-    phone: { type: String, default: "" },
-    media: { type: String, default: "" },
-    picture: { type: String, default: "" },
-    displayName: { type: String, default: "" },
-    intro: { type: String, default: "" },
-    userId: { type: String, default: "" },
+    phone: { type: String, default: '' },
+    media: { type: String, default: '' },
+    picture: { type: String, default: '' },
+    displayName: { type: String, default: '' },
+    intro: { type: String, default: '' },
+    userId: { type: String, default: '' },
     role: { type: String, default: null },
-    signupIp: { type: String, default: "" },
+    signupIp: { type: String, default: '' },
     interests: { type: Array, default: [] },
-    userStatus: { type: String, default: "User" },
-    staffPositions: { type: String, default: "" },
-    homeCountry: { type: String, default: "" },
-    country: { type: String, default: "" },
-    signupCountry: { type: String, default: "" },
+    userStatus: { type: String, default: 'User' },
+    location: { type: Object, default: {} },
+    staffPositions: { type: String, default: '' },
+    homeCountry: { type: String, default: '' },
+    country: { type: String, default: '' },
+    signupCountry: { type: String, default: '' },
     level: { type: Number, default: 1 },
     followers: { type: Number, default: 0 },
     following: { type: Number, default: 0 },
@@ -66,6 +68,7 @@ const UserSchema = new mongoose_1.Schema({
     comments: { type: Number, default: 0 },
     uploads: { type: Number, default: 0 },
     exams: { type: Number, default: 0 },
+    totalAttempts: { type: Number, default: 0 },
     isOnVerification: { type: Boolean, default: false },
     isVerified: { type: Boolean, default: false },
     isPublic: { type: Boolean, default: false },
@@ -92,12 +95,60 @@ const UserSchema = new mongoose_1.Schema({
     passwordResetToken: { type: String, default: null },
     password: {
         type: String,
-        required: [true, "Password is required"],
-        minlength: [6, "Password must be at least 6 characters long"],
+        required: [true, 'Password is required'],
+        minlength: [6, 'Password must be at least 6 characters long'],
         select: false,
     },
     passwordExpiresAt: { type: Date, default: null },
 }, {
     timestamps: true,
 });
-exports.User = mongoose_1.default.model("User", UserSchema);
+exports.User = mongoose_1.default.model('User', UserSchema);
+const UserSettingsSchema = new mongoose_1.Schema({
+    username: {
+        type: String,
+    },
+    userId: { type: String, default: '' },
+    bioInfo: {
+        government: { type: Boolean, default: true },
+        institution: { type: Boolean, default: true },
+        single: { type: Boolean, default: false },
+        company: { type: Boolean, default: false },
+    },
+    originInfo: {
+        government: { type: Boolean, default: true },
+        institution: { type: Boolean, default: true },
+        single: { type: Boolean, default: false },
+        company: { type: Boolean, default: false },
+    },
+    residentialInfo: {
+        government: { type: Boolean, default: true },
+        institution: { type: Boolean, default: true },
+        single: { type: Boolean, default: false },
+        company: { type: Boolean, default: false },
+    },
+    relatedInfo: {
+        government: { type: Boolean, default: true },
+        institution: { type: Boolean, default: true },
+        single: { type: Boolean, default: false },
+        company: { type: Boolean, default: false },
+    },
+    documentInfo: {
+        government: { type: Boolean, default: true },
+        institution: { type: Boolean, default: true },
+        single: { type: Boolean, default: false },
+        company: { type: Boolean, default: false },
+    },
+    notification: {
+        jobPosting: { type: Boolean, default: true },
+        friendRequest: { type: Boolean, default: true },
+        newMessage: { type: Boolean, default: false },
+        newFollower: { type: Boolean, default: false },
+        postReply: { type: Boolean, default: false },
+        sound: { type: Boolean, default: false },
+    },
+    createdAt: { type: Date, default: Date.now },
+}, {
+    timestamps: true,
+});
+exports.UserSettings = mongoose_1.default.model('UserSettings', UserSettingsSchema);

@@ -9,20 +9,22 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.searchExamInfo = exports.getObjectives = exports.createObjective = exports.updatePaper = exports.getPapers = exports.getPaperById = exports.createPaper = exports.updateLeague = exports.getLeagues = exports.getLeagueById = exports.createLeague = exports.updateExam = exports.getExams = exports.getUserExam = exports.getExamById = exports.createExam = exports.updateWeekend = exports.getWeekends = exports.getWeekendById = exports.createWeekend = void 0;
+exports.searchExamInfo = exports.getObjectives = exports.createObjective = exports.updatePaper = exports.getPapers = exports.getPaperById = exports.createPaper = exports.updateLeague = exports.getLeagues = exports.getLeagueById = exports.createLeague = exports.updateExam = exports.getExams = exports.getUserExam = exports.getExamById = exports.initExam = exports.createExam = exports.updateWeekend = exports.getWeekends = exports.getWeekendById = exports.createWeekend = void 0;
 const errorHandler_1 = require("../../utils/errorHandler");
 const competitionModel_1 = require("../../models/team/competitionModel");
 const query_1 = require("../../utils/query");
 const competitionModel_2 = require("../../models/users/competitionModel");
+const userInfoModel_1 = require("../../models/users/userInfoModel");
+const userModel_1 = require("../../models/users/userModel");
 const createWeekend = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    (0, query_1.createItem)(req, res, competitionModel_1.Weekend, "Weekend was created successfully");
+    (0, query_1.createItem)(req, res, competitionModel_1.Weekend, 'Weekend was created successfully');
 });
 exports.createWeekend = createWeekend;
 const getWeekendById = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const item = yield competitionModel_1.Weekend.findById(req.params.id);
         if (!item) {
-            return res.status(404).json({ message: "Weekend not found" });
+            return res.status(404).json({ message: 'Weekend not found' });
         }
         res.status(200).json(item);
     }
@@ -43,7 +45,7 @@ const getWeekends = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
 exports.getWeekends = getWeekends;
 const updateWeekend = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        (0, query_1.updateItem)(req, res, competitionModel_1.Weekend, ["video", "picture"], ["Weekend not found", "Weekend was updated successfully"]);
+        (0, query_1.updateItem)(req, res, competitionModel_1.Weekend, ['video', 'picture'], ['Weekend not found', 'Weekend was updated successfully']);
     }
     catch (error) {
         (0, errorHandler_1.handleError)(res, undefined, undefined, error);
@@ -57,6 +59,7 @@ const createExam = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
         const userId = req.body.userId;
         const username = req.body.username;
         const picture = req.body.picture;
+        const displayName = req.body.displayName;
         const started = Number(req.body.started);
         const ended = Number(req.body.ended);
         // const attempts = Number(req.body.attempts);
@@ -64,12 +67,11 @@ const createExam = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
         const questions = req.body.questions ? JSON.parse(req.body.questions) : [];
         const rate = (1000 * questions.length) / (ended - started);
         let mainObjective = yield competitionModel_1.Objective.find({ paperId: paperId });
-        let participant = yield competitionModel_2.UserTestExam.find({
+        const paper = yield competitionModel_2.UserTestExam.findOne({
             paperId: paperId,
             userId: userId,
         });
-        const paper = yield competitionModel_2.UserTestExam.findOne({ paperId: paperId });
-        const attempts = Number(paper === null || paper === void 0 ? void 0 : paper.attempts) + 1;
+        const attempts = !paper || (paper === null || paper === void 0 ? void 0 : paper.isFirstTime) ? 1 : Number(paper === null || paper === void 0 ? void 0 : paper.attempts) + 1;
         let correctAnswer = 0;
         for (let i = 0; i < questions.length; i++) {
             const el = questions[i];
@@ -117,6 +119,7 @@ const createExam = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
                 paperId,
                 userId,
                 username,
+                displayName,
                 picture,
                 started,
                 ended,
@@ -125,6 +128,7 @@ const createExam = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
                 accuracy,
                 metric,
                 instruction,
+                isFirstTime: false,
                 questions: mainObjective.length,
                 attemptedQuestions: questions.length,
                 totalCorrectAnswer: correctAnswer,
@@ -133,36 +137,24 @@ const createExam = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
             new: true,
             upsert: true,
         });
+        const user = yield userInfoModel_1.UserInfo.findByIdAndUpdate(userId, { $inc: { examAttempts: (paper === null || paper === void 0 ? void 0 : paper.isFirstTime) ? 0 : 1 } }, { new: true, upsert: true });
+        yield userModel_1.User.updateMany({ userId: userId }, { $inc: { totalAttempts: (paper === null || paper === void 0 ? void 0 : paper.isFirstTime) ? 0 : 1 } });
         yield competitionModel_2.UserTest.deleteMany({ userId: userId, paperId: paperId });
         yield competitionModel_2.UserTest.insertMany(updatedQuestions);
-        const attempt = yield competitionModel_2.Attempt.findOne({ userId: userId, paperId: paperId });
-        if (participant.length === 0) {
+        if (!paper) {
             yield competitionModel_1.Exam.updateOne({ _id: paperId }, {
                 $inc: {
                     participants: 1,
                 },
             });
         }
-        if (attempt) {
-            yield competitionModel_2.Attempt.findByIdAndUpdate(attempt._id, {
-                $inc: {
-                    attempts: 1,
-                },
-            });
-        }
-        else {
-            yield competitionModel_2.Attempt.create({ paperId: paperId, userId: userId, attempts: 1 });
-        }
         const result = yield (0, query_1.queryData)(competitionModel_2.UserTest, req);
-        const newAttempt = yield competitionModel_2.Attempt.findOne({
-            userId: userId,
-            paperId: paperId,
-        });
         const data = {
             exam,
-            attempt: Number(newAttempt === null || newAttempt === void 0 ? void 0 : newAttempt.attempts),
+            attempt: Number(exam === null || exam === void 0 ? void 0 : exam.attempts),
             results: result.results,
-            message: "Exam submitted successfull",
+            totalAttempts: user === null || user === void 0 ? void 0 : user.examAttempts,
+            message: 'Exam submitted successfull',
         };
         res.status(200).json(data);
     }
@@ -172,11 +164,60 @@ const createExam = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
     }
 });
 exports.createExam = createExam;
+const initExam = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const paperId = req.body.paperId;
+        const userId = req.body.userId;
+        const username = req.body.username;
+        const picture = req.body.picture;
+        const displayName = req.body.displayName;
+        const started = Number(req.body.started);
+        const instruction = req.body.instruction;
+        let questions = yield competitionModel_1.Objective.countDocuments({ paperId: paperId });
+        yield competitionModel_2.UserTestExam.findOneAndUpdate({
+            paperId,
+            userId,
+        }, {
+            $set: {
+                paperId,
+                userId,
+                username,
+                displayName,
+                picture,
+                started,
+                attempts: 1,
+                isFirstTime: true,
+                rate: 0,
+                accuracy: 0,
+                instruction,
+                questions: questions,
+                attemptedQuestions: 0,
+                totalCorrectAnswer: 0,
+            },
+        }, {
+            new: true,
+            upsert: true,
+        });
+        yield competitionModel_1.Exam.updateOne({ _id: paperId }, {
+            $inc: {
+                participants: 1,
+            },
+        });
+        yield userInfoModel_1.UserInfo.findByIdAndUpdate(userId, { $inc: { examAttempts: 1 } }, { new: true, upsert: true });
+        yield userModel_1.User.updateMany({ userId: userId }, { $inc: { totalAttempts: 1 } });
+        res.status(200).json({ message: 'Exam is initialized' });
+    }
+    catch (error) {
+        console.log(error);
+        (0, errorHandler_1.handleError)(res, undefined, undefined, error);
+    }
+});
+exports.initExam = initExam;
 const getExamById = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const item = yield competitionModel_1.Exam.findById(req.params.id);
         if (!item) {
-            return res.status(404).json({ message: "Exam not found" });
+            return res.status(404).json({ message: 'Exam not found' });
         }
         res.status(200).json(item);
     }
@@ -215,7 +256,7 @@ const getExams = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
 exports.getExams = getExams;
 const updateExam = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        (0, query_1.updateItem)(req, res, competitionModel_1.Exam, [], ["Exam not found", "Exam was updated successfully"]);
+        (0, query_1.updateItem)(req, res, competitionModel_1.Exam, [], ['Exam not found', 'Exam was updated successfully']);
     }
     catch (error) {
         (0, errorHandler_1.handleError)(res, undefined, undefined, error);
@@ -224,14 +265,14 @@ const updateExam = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
 exports.updateExam = updateExam;
 //-------------------LEAGUE--------------------//
 const createLeague = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    (0, query_1.createItem)(req, res, competitionModel_1.League, "League was created successfully");
+    (0, query_1.createItem)(req, res, competitionModel_1.League, 'League was created successfully');
 });
 exports.createLeague = createLeague;
 const getLeagueById = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const item = yield competitionModel_1.League.findById(req.params.id);
         if (!item) {
-            return res.status(404).json({ message: "League not found" });
+            return res.status(404).json({ message: 'League not found' });
         }
         res.status(200).json(item);
     }
@@ -252,7 +293,7 @@ const getLeagues = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
 exports.getLeagues = getLeagues;
 const updateLeague = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        (0, query_1.updateItem)(req, res, competitionModel_1.Paper, ["media", "picture"], ["Paper not found", "Paper was updated successfully"]);
+        (0, query_1.updateItem)(req, res, competitionModel_1.Paper, ['media', 'picture'], ['Paper not found', 'Paper was updated successfully']);
     }
     catch (error) {
         (0, errorHandler_1.handleError)(res, undefined, undefined, error);
@@ -261,14 +302,14 @@ const updateLeague = (req, res) => __awaiter(void 0, void 0, void 0, function* (
 exports.updateLeague = updateLeague;
 //-----------------PAPER--------------------//
 const createPaper = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    (0, query_1.createItem)(req, res, competitionModel_1.Paper, "Paper was created successfully");
+    (0, query_1.createItem)(req, res, competitionModel_1.Paper, 'Paper was created successfully');
 });
 exports.createPaper = createPaper;
 const getPaperById = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const item = yield competitionModel_1.Paper.findById(req.params.id);
         if (!item) {
-            return res.status(404).json({ message: "Paper not found" });
+            return res.status(404).json({ message: 'Paper not found' });
         }
         res.status(200).json(item);
     }
@@ -289,7 +330,7 @@ const getPapers = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
 exports.getPapers = getPapers;
 const updatePaper = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        (0, query_1.updateItem)(req, res, competitionModel_1.Paper, [], ["Paper not found", "Paper was updated successfully"]);
+        (0, query_1.updateItem)(req, res, competitionModel_1.Paper, [], ['Paper not found', 'Paper was updated successfully']);
     }
     catch (error) {
         (0, errorHandler_1.handleError)(res, undefined, undefined, error);
@@ -306,7 +347,7 @@ const createObjective = (req, res) => __awaiter(void 0, void 0, void 0, function
     }
     for (let i = 0; i < questions.length; i++) {
         const el = questions[i];
-        if (el._id && el._id !== undefined && el._id !== "") {
+        if (el._id && el._id !== undefined && el._id !== '') {
             yield competitionModel_1.Objective.updateOne({ _id: el._id }, {
                 $set: {
                     question: el.question,
@@ -330,7 +371,7 @@ const createObjective = (req, res) => __awaiter(void 0, void 0, void 0, function
         questions: result.count,
     });
     res.status(200).json({
-        message: "The question was saved successfully",
+        message: 'The question was saved successfully',
         count: result.count,
         results: result.results,
         page_size: result.page_size,

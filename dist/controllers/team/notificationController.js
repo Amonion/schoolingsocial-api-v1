@@ -9,19 +9,21 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.deleteNotification = exports.updateNotification = exports.getNotifications = exports.getNotificationById = exports.ReadNotification = exports.getNotificationCounts = exports.createVerificationNotification = exports.routeNotification = void 0;
+exports.deleteNotification = exports.sendPushNotification = exports.setPushNotificationToken = exports.updateNotification = exports.getNotifications = exports.getNotificationById = exports.ReadNotification = exports.getNotificationCounts = exports.createVerificationNotification = exports.routeNotification = void 0;
 const emailModel_1 = require("../../models/team/emailModel");
 const errorHandler_1 = require("../../utils/errorHandler");
 const query_1 = require("../../utils/query");
+const expo_server_sdk_1 = require("expo-server-sdk");
+const userInfoModel_1 = require("../../models/users/userInfoModel");
+const expo = new expo_server_sdk_1.Expo();
 const routeNotification = (data) => __awaiter(void 0, void 0, void 0, function* () {
     switch (data.action) {
-        case "verification":
+        case 'verification':
             return (0, exports.createVerificationNotification)(data);
-        case "get-notifications":
+        case 'get-notifications':
             return (0, exports.getNotificationCounts)(data);
-        case "read-notifications":
+        case 'read-notifications':
             return (0, exports.ReadNotification)(data);
-            break;
         default:
             break;
     }
@@ -72,7 +74,7 @@ const getNotificationById = (req, res) => __awaiter(void 0, void 0, void 0, func
     try {
         const item = yield emailModel_1.Notification.findById(req.params.id);
         if (!item) {
-            return res.status(404).json({ message: "Notification not found" });
+            return res.status(404).json({ message: 'Notification not found' });
         }
         res.status(200).json(item);
     }
@@ -93,14 +95,52 @@ const getNotifications = (req, res) => __awaiter(void 0, void 0, void 0, functio
 exports.getNotifications = getNotifications;
 const updateNotification = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        (0, query_1.updateItem)(req, res, emailModel_1.Notification, [], ["Notification not found", "Notification was updated successfully"]);
+        (0, query_1.updateItem)(req, res, emailModel_1.Notification, [], ['Notification not found', 'Notification was updated successfully']);
     }
     catch (error) {
         (0, errorHandler_1.handleError)(res, undefined, undefined, error);
     }
 });
 exports.updateNotification = updateNotification;
+const setPushNotificationToken = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const { token, id } = req.body;
+    if (!expo_server_sdk_1.Expo.isExpoPushToken(token)) {
+        return res.status(400).send({ error: 'Invalid Expo push token' });
+    }
+    try {
+        yield userInfoModel_1.UserInfo.findByIdAndUpdate(id, { notificationToken: token }, { new: true });
+        res.send({ success: true });
+    }
+    catch (error) {
+        (0, errorHandler_1.handleError)(res, undefined, undefined, error);
+    }
+});
+exports.setPushNotificationToken = setPushNotificationToken;
+const sendPushNotification = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    var _a;
+    const { notificationId, token } = req.body;
+    // const user = await UserInfo.findById(userId)
+    const item = yield emailModel_1.Notification.findById(notificationId);
+    const cleanContent = (_a = item === null || item === void 0 ? void 0 : item.content) === null || _a === void 0 ? void 0 : _a.replace(/<[^>]*>?/gm, '').trim();
+    const messages = [
+        {
+            to: token,
+            sound: 'default',
+            title: item === null || item === void 0 ? void 0 : item.title,
+            body: cleanContent,
+            data: { type: 'notifications', screen: '/home/notifications' },
+        },
+    ];
+    try {
+        yield expo.sendPushNotificationsAsync(messages);
+        res.send({ success: true });
+    }
+    catch (error) {
+        (0, errorHandler_1.handleError)(res, undefined, undefined, error);
+    }
+});
+exports.sendPushNotification = sendPushNotification;
 const deleteNotification = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    yield (0, query_1.deleteItem)(req, res, emailModel_1.Notification, [], "Notification not found");
+    yield (0, query_1.deleteItem)(req, res, emailModel_1.Notification, [], 'Notification not found');
 });
 exports.deleteNotification = deleteNotification;

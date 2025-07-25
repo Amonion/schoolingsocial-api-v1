@@ -33,12 +33,12 @@ var __importStar = (this && this.__importStar) || (function () {
     };
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.UserStat = void 0;
+exports.UserStatus = exports.UserStat = void 0;
 const mongoose_1 = __importStar(require("mongoose"));
 const UserStatSchema = new mongoose_1.Schema({
     country: { type: String },
     countryCode: { type: String },
-    ip: { type: String },
+    ips: { type: Array, default: [] },
     username: { type: String },
     bioId: { type: String },
     online: { type: Boolean, default: false },
@@ -48,4 +48,18 @@ const UserStatSchema = new mongoose_1.Schema({
 }, {
     timestamps: true,
 });
-exports.UserStat = mongoose_1.default.model("UserStat", UserStatSchema);
+exports.UserStat = mongoose_1.default.model('UserStat', UserStatSchema);
+const UserStatusSchema = new mongoose_1.Schema({
+    country: { type: String },
+    countryCode: { type: String },
+    ips: { type: Array, default: [] },
+    username: { type: String },
+    bioId: { type: String },
+    online: { type: Boolean, default: false },
+    leftAt: { type: Date, default: Date.now },
+    visitedAt: { type: Date, default: Date.now },
+    createdAt: { type: Date, default: Date.now },
+}, {
+    timestamps: true,
+});
+exports.UserStatus = mongoose_1.default.model('UserStatus', UserStatusSchema);

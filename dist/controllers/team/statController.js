@@ -17,72 +17,107 @@ const chatModel_1 = require("../../models/users/chatModel");
 const errorHandler_1 = require("../../utils/errorHandler");
 const date_fns_1 = require("date-fns");
 const schoolModel_1 = require("../../models/team/schoolModel");
+const userInfoModel_1 = require("../../models/users/userInfoModel");
 //-----------------USERS--------------------//
 const updateVisit = (data) => __awaiter(void 0, void 0, void 0, function* () {
-    yield usersStatMode_1.UserStat.findOneAndUpdate({
-        $or: [{ ip: data.ip }, { username: data.username }],
-    }, {
-        $set: {
-            visitedAt: new Date(),
-            online: true,
-            ip: data.ip,
-            country: data.country,
-            countryCode: data.countryCode,
-            username: data.username,
-            bioId: data.bioId,
-            userId: data.userId,
-        },
-    }, {
-        new: true,
-        upsert: true,
-        setDefaultsOnInsert: true,
-    });
-    if (data.userId) {
-        yield userModel_1.User.findOneAndUpdate({ _id: data.userId, online: false }, {
-            visitedAt: data.visitedAt,
-            online: true,
-        });
-        const chats = yield chatModel_1.Chat.find({
-            connection: { $regex: data.userId },
-        });
-        for (let i = 0; i < chats.length; i++) {
-            const el = chats[i];
-            app_1.io.emit(el.connection, { action: "visit" });
-        }
+    if (!data.ip || !data.username) {
+        return;
     }
-    const visitors = yield usersStatMode_1.UserStat.countDocuments({ online: true });
-    app_1.io.emit("team", { action: "visit", type: "stat", visitors });
-});
-exports.updateVisit = updateVisit;
-const visitorLeft = (data) => __awaiter(void 0, void 0, void 0, function* () {
     if (data.username) {
-        yield usersStatMode_1.UserStat.findOneAndUpdate({ username: data.username, online: true }, {
+        yield usersStatMode_1.UserStatus.findOneAndUpdate({ username: data.username }, {
             $set: {
-                leftAt: data.leftAt,
-                online: false,
-                ip: data.ip,
+                visitedAt: data.visitedAt,
+                online: data.online,
+                country: data.country,
+                countryCode: data.countryCode,
+                username: data.username,
+                bioId: data.bioId,
+                userId: data.userId,
             },
+            $addToSet: {
+                ips: data.ip,
+            },
+        }, {
+            new: true,
+            upsert: true,
+            setDefaultsOnInsert: true,
         });
     }
     else {
-        yield usersStatMode_1.UserStat.findOneAndUpdate({ ip: data.ip, online: true }, {
+        yield usersStatMode_1.UserStatus.findOneAndUpdate({
+            ips: { $in: [data.ip] },
+        }, {
             $set: {
-                leftAt: data.leftAt,
-                online: false,
-                ip: data.ip,
+                visitedAt: new Date(),
+                online: true,
+                country: data.country,
+                countryCode: data.countryCode,
+                username: data.username,
+                bioId: data.bioId,
+                userId: data.userId,
             },
+            $addToSet: {
+                ips: data.ip,
+            },
+        }, {
+            new: true,
+            upsert: true,
+            setDefaultsOnInsert: true,
         });
     }
-    const visitors = yield usersStatMode_1.UserStat.countDocuments({ online: true });
-    app_1.io.emit("team", { action: "visit", type: "stat", visitors });
+    updateOnlineStatus(data.userId, data.visitedAt, userModel_1.User);
+    updateOnlineStatus(data.bioId, data.visitedAt, userInfoModel_1.UserInfo);
+    const visitors = yield usersStatMode_1.UserStatus.countDocuments({ online: true });
+    app_1.io.emit('team', { action: 'visit', type: 'stat', visitors });
+});
+exports.updateVisit = updateVisit;
+const visitorLeft = (data) => __awaiter(void 0, void 0, void 0, function* () {
+    // if (data.username) {
+    //   await UserStat.findOneAndUpdate(
+    //     { username: data.username, online: true },
+    //     {
+    //       $set: {
+    //         leftAt: data.leftAt,
+    //         online: false,
+    //         ip: data.ip,
+    //       },
+    //     }
+    //   );
+    // } else {
+    //   await UserStat.findOneAndUpdate(
+    //     { ip: data.ip, online: true },
+    //     {
+    //       $set: {
+    //         leftAt: data.leftAt,
+    //         online: false,
+    //         ip: data.ip,
+    //       },
+    //     }
+    //   );
+    // }
+    // const visitors = await UserStat.countDocuments({ online: true });
+    // io.emit("team", { action: "visit", type: "stat", visitors });
 });
 exports.visitorLeft = visitorLeft;
+const updateOnlineStatus = (userId, visitedAt, model) => __awaiter(void 0, void 0, void 0, function* () {
+    yield model.findOneAndUpdate({ _id: userId, online: false }, {
+        visitedAt: visitedAt,
+        online: true,
+    });
+    const chats = yield chatModel_1.Chat.find({
+        connection: { $regex: userId },
+    });
+    for (let i = 0; i < chats.length; i++) {
+        const el = chats[i];
+        app_1.io.emit(el.connection, { action: 'visit' });
+    }
+});
 const getUsersStat = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const now = new Date();
         const currentMonthStart = (0, date_fns_1.startOfMonth)(now);
         const lastMonthStart = (0, date_fns_1.startOfMonth)((0, date_fns_1.subMonths)(now, 1));
-        const onlineUsers = yield usersStatMode_1.UserStat.countDocuments({ online: true });
+        const onlineUsers = yield usersStatMode_1.UserStatus.countDocuments({ online: true });
         const verifyingUsers = yield userModel_1.User.countDocuments({
             isOnVerification: true,
         });
@@ -90,7 +125,7 @@ const getUsersStat = (req, res) => __awaiter(void 0, void 0, void 0, function* (
             isVerified: true,
         });
         const totalUsers = yield userModel_1.User.countDocuments();
-        const thisMonthOnline = yield usersStatMode_1.UserStat.countDocuments({
+        const thisMonthOnline = yield usersStatMode_1.UserStatus.countDocuments({
             online: true,
             createdAt: { $gte: currentMonthStart },
         });
@@ -105,7 +140,7 @@ const getUsersStat = (req, res) => __awaiter(void 0, void 0, void 0, function* (
             isVerified: true,
             createdAt: { $gte: currentMonthStart },
         });
-        const lastMonthOnline = yield usersStatMode_1.UserStat.countDocuments({
+        const lastMonthOnline = yield usersStatMode_1.UserStatus.countDocuments({
             online: true,
             createdAt: { $gte: lastMonthStart, $lt: currentMonthStart },
         });
