@@ -4,6 +4,7 @@ import {
   IExpenses,
   IPosition,
   IInterest,
+  IPolicy,
 } from '../../utils/teamInterface'
 
 const PositionSchema: Schema = new Schema(
@@ -39,6 +40,20 @@ const CompanySchema: Schema = new Schema(
   }
 )
 export const Company = mongoose.model<ICompany>('Company', CompanySchema)
+
+const PolicySchema: Schema = new Schema(
+  {
+    name: { type: String, default: '' },
+    title: { type: String, default: '' },
+    content: { type: String, default: '' },
+    category: { type: String, default: '' },
+    createdAt: { type: Date, default: Date.now },
+  },
+  {
+    timestamps: true,
+  }
+)
+export const Policy = mongoose.model<IPolicy>('Policy', PolicySchema)
 
 const ExpensesSchema: Schema = new Schema(
   {
