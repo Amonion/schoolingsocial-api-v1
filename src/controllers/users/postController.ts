@@ -794,7 +794,7 @@ export const updatePostStat = async (req: Request, res: Response) => {
     }
 
     if (req.body.views !== undefined) {
-      if (!req.body.viewedPostIds) {
+      if (req.body.viewedPostIds) {
         for (let i = 0; i < req.body.viewedPostIds.length; i++) {
           const el = req.body.viewedPostIds[i]
           const post = await View.findOne({ userId: userId, postId: el._id })
