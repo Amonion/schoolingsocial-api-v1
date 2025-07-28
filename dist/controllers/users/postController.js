@@ -20,7 +20,7 @@ var __rest = (this && this.__rest) || function (s, e) {
     return t;
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.followUser = exports.searchPosts = exports.getPostStat = exports.updatePostViews = exports.updatePostStat = exports.deletePost = exports.updatePost = exports.getBookMarkedPosts = exports.getMutedUsers = exports.getBlockedUsers = exports.getFollowings = exports.getFollowingPosts = exports.getPosts = exports.getPostById = exports.repostPost = exports.muteUser = exports.blockUser = exports.pinPost = exports.createPost = exports.makePost = exports.deleteAccount = exports.updateAccount = exports.getAccounts = exports.getAccountById = exports.createAccount = void 0;
+exports.followUser = exports.searchPosts = exports.getPostStat = exports.updatePostViews = exports.updatePostStat = exports.deletePost = exports.updatePost = exports.getBookMarkedPosts = exports.getMutedUsers = exports.getBlockedUsers = exports.getFollowings = exports.getFollowingPosts = exports.getPosts = exports.getPostById = exports.repostPost = exports.muteUser = exports.blockUser = exports.pinPost = exports.updatePoll = exports.createPost = exports.makePost = exports.deleteAccount = exports.updateAccount = exports.getAccounts = exports.getAccountById = exports.createAccount = void 0;
 const postModel_1 = require("../../models/users/postModel");
 const fileUpload_1 = require("../../utils/fileUpload");
 const errorHandler_1 = require("../../utils/errorHandler");
@@ -186,6 +186,37 @@ const createPost = (data) => __awaiter(void 0, void 0, void 0, function* () {
     }
 });
 exports.createPost = createPost;
+const updatePoll = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const { polls, userId, username, totalVotes, pollIndex } = req.body;
+        yield postModel_1.Poll.findOneAndUpdate({ postId: req.params.id, userId: userId }, {
+            $set: {
+                pollIndex: pollIndex,
+                username: username,
+                userId: userId,
+                postId: req.params.id,
+            },
+        }, { new: true, upsert: true });
+        const sanitizedPolls = polls.map((poll) => {
+            const { userId, isSelected } = poll, rest = __rest(poll, ["userId", "isSelected"]);
+            return rest;
+        });
+        const updatedPost = yield postModel_1.Post.findOneAndUpdate({ _id: req.params.id }, {
+            $set: {
+                totalVotes: totalVotes,
+                polls: sanitizedPolls,
+            },
+        }, { new: true });
+        return res.status(200).json({
+            data: updatedPost,
+            totalVotes: totalVotes,
+        });
+    }
+    catch (error) {
+        (0, errorHandler_1.handleError)(res, undefined, undefined, error);
+    }
+});
+exports.updatePoll = updatePoll;
 const pinPost = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const { userId, pinnedAt } = req.body;
@@ -323,39 +354,6 @@ const muteUser = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     }
 });
 exports.muteUser = muteUser;
-// export const muteUser = async (req: Request, res: Response) => {
-//   try {
-//     const { userId, accountUsername, accountUserId } = req.body;
-//     const mutedUser = await Mute.findOne({
-//       accountUsername: accountUsername,
-//       userId: userId,
-//     });
-//     if (mutedUser) {
-//       await Mute.findByIdAndDelete(mutedUser._id);
-//       await User.findByIdAndUpdate(accountUserId, { $inc: { mutes: -1 } });
-//     } else {
-//       await Mute.create({
-//         userId: userId,
-//         accountUsername: accountUsername,
-//         accountUserId: accountUserId,
-//       });
-//       await User.findByIdAndUpdate(accountUserId, { $inc: { mutes: 1 } });
-//       await Post.findByIdAndUpdate(req.params.id, { $inc: { mutes: 1 } });
-//     }
-//     const post = await Post.findById(req.params.id);
-//     if (!post) {
-//       return res.status(404).json({ message: "Post not found." });
-//     }
-//     res.status(201).json({
-//       userId: accountUserId,
-//       message: !mutedUser
-//         ? "The user has been muted successfully"
-//         : "The user has successfully been unmuted.",
-//     });
-//   } catch (error: any) {
-//     handleError(res, undefined, undefined, error);
-//   }
-// };
 const repostPost = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const post = yield postModel_1.Post.findByIdAndUpdate(req.params.id, { $inc: { reposts: 1 } }, { new: true });
@@ -734,7 +732,6 @@ const followUser = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
         const post = req.body.post;
         post.followed = follow ? false : true;
         post.isActive = false;
-        console.log(post.followed);
         res.status(200).json({
             message: message,
             data: post,
@@ -781,6 +778,10 @@ const processFetchedPosts = (req, followerId) => __awaiter(void 0, void 0, void 
         userId: followerId,
         postId: { $in: postIds },
     }).select('postId createdAt');
+    const polledPosts = yield postModel_1.Poll.find({
+        userId: followerId,
+        postId: { $in: postIds },
+    }).select('postId pollIndex');
     const likedPosts = yield statModel_1.Like.find({
         userId: followerId,
         postId: { $in: postIds },
@@ -794,6 +795,10 @@ const processFetchedPosts = (req, followerId) => __awaiter(void 0, void 0, void 
         postId: { $in: postIds },
     }).select('postId');
     const blockedPostIds = blockedUsers.map((block) => block.accountUserId.toString());
+    const polledList = polledPosts.map((poll) => ({
+        postId: poll.postId.toString(),
+        pollIndex: poll.pollIndex,
+    }));
     const mutedUserIds = mutedUsers.map((mute) => mute.accountUserId.toString());
     const likedPostIds = likedPosts.map((like) => like.postId.toString());
     const bookmarkedPostIds = bookmarkedPosts.map((bookmark) => bookmark.postId.toString());
@@ -814,6 +819,13 @@ const processFetchedPosts = (req, followerId) => __awaiter(void 0, void 0, void 
         }
         if (blockedPostIds.includes(el.userId.toString())) {
             el.blocked = true;
+        }
+        for (let x = 0; x < polledList.length; x++) {
+            const poll = polledList[x];
+            if (postIdStr.includes(poll.postId)) {
+                el.polls[poll.pollIndex].userId = followerId;
+                el.isSelected = true;
+            }
         }
         if (likedPostIds.includes(el._id.toString())) {
             el.liked = true;

@@ -18,6 +18,7 @@ router.route('/follow/:id').patch(upload.any(), userController_1.followUserAccou
 router.route('/staffs').get(staffController_1.getStaffs);
 router.route('/staffs/:id').get(staffController_1.getStaffById).patch(upload.any(), staffController_1.updateStaff);
 router.route('/info').get(staffController_1.getStaffs);
+router.route('/delete/:id').post(userController_1.deleteMyData);
 router.route('/info/:id').patch(upload.any(), userController_1.updateInfo);
 router.route('/username/:username').get(userController_1.getExistingUsername);
 router.route('/details').get(userController_1.getManyUserDetails);

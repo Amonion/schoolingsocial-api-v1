@@ -33,7 +33,7 @@ var __importStar = (this && this.__importStar) || (function () {
     };
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.UserSettings = exports.User = void 0;
+exports.DeletedUser = exports.UserSettings = exports.User = void 0;
 const mongoose_1 = __importStar(require("mongoose"));
 const UserSchema = new mongoose_1.Schema({
     email: {
@@ -152,3 +152,14 @@ const UserSettingsSchema = new mongoose_1.Schema({
     timestamps: true,
 });
 exports.UserSettings = mongoose_1.default.model('UserSettings', UserSettingsSchema);
+const DeletedUserSchema = new mongoose_1.Schema({
+    username: { type: String },
+    email: { type: String },
+    displayName: { type: String, default: '' },
+    picture: { type: String, default: '' },
+    userId: { type: String, default: '' },
+    createdAt: { type: Date, default: Date.now },
+}, {
+    timestamps: true,
+});
+exports.DeletedUser = mongoose_1.default.model('DeletedUser', DeletedUserSchema);

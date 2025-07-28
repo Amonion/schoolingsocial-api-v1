@@ -12,7 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.followUserAccount = exports.updateUserVerification = exports.searchAccounts = exports.searchUserInfo = exports.getExistingUsername = exports.getManyUserDetails = exports.getUserDetails = exports.getUserInfo = exports.getUserSchoolInfo = exports.getUserAccountInfo = exports.updateUserAccountInfo = exports.update = exports.updateUserInfoApp = exports.updateUserSchoolInfo = exports.updateUserInfo = exports.deleteUser = exports.updateInfo = exports.updateUserSettings = exports.updateUser = exports.getUsers = exports.getUserSettings = exports.getAUser = exports.createUser = void 0;
+exports.followUserAccount = exports.updateUserVerification = exports.searchAccounts = exports.searchUserInfo = exports.getExistingUsername = exports.getManyUserDetails = exports.getUserDetails = exports.getUserInfo = exports.getUserSchoolInfo = exports.getUserAccountInfo = exports.updateUserAccountInfo = exports.update = exports.updateUserInfoApp = exports.updateUserSchoolInfo = exports.updateUserInfo = exports.deleteUser = exports.updateInfo = exports.updateUserSettings = exports.updateUser = exports.getUsers = exports.deleteMyData = exports.getUserSettings = exports.getAUser = exports.createUser = void 0;
 const userModel_1 = require("../../models/users/userModel");
 const userInfoModel_1 = require("../../models/users/userInfoModel");
 const staffModel_1 = require("../../models/team/staffModel");
@@ -28,6 +28,8 @@ const schoolModel_1 = require("../../models/team/schoolModel");
 const competitionModel_1 = require("../../models/users/competitionModel");
 const usersStatMode_1 = require("../../models/users/usersStatMode");
 const expo_server_sdk_1 = require("expo-server-sdk");
+const statModel_1 = require("../../models/users/statModel");
+const emailModel_1 = require("../../models/team/emailModel");
 const expo = new expo_server_sdk_1.Expo();
 const createUser = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
@@ -102,6 +104,37 @@ const getUserSettings = (req, res) => __awaiter(void 0, void 0, void 0, function
     }
 });
 exports.getUserSettings = getUserSettings;
+const deleteMyData = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const user = yield userModel_1.User.findById(req.params.id);
+        yield userModel_1.DeletedUser.create({
+            email: user === null || user === void 0 ? void 0 : user.email,
+            username: user === null || user === void 0 ? void 0 : user.username,
+            displayName: user === null || user === void 0 ? void 0 : user.displayName,
+            picture: user === null || user === void 0 ? void 0 : user.picture,
+            userId: user === null || user === void 0 ? void 0 : user.userId,
+        });
+        yield statModel_1.Bookmark.deleteMany({ userId: req.params.id });
+        yield postModel_1.Follower.deleteMany({ userId: req.params.id });
+        yield statModel_1.Like.deleteMany({ userId: req.params.id });
+        yield postModel_1.Mute.deleteMany({ userId: req.params.id });
+        yield postModel_1.Pin.deleteMany({ userId: req.params.id });
+        yield postModel_1.Poll.deleteMany({ userId: req.params.id });
+        yield postModel_1.Post.deleteMany({ userId: req.params.id });
+        yield statModel_1.Repost.deleteMany({ userId: req.params.id });
+        yield emailModel_1.UserNotification.deleteMany({ userId: req.params.id });
+        yield usersStatMode_1.UserStatus.deleteMany({ bioId: user === null || user === void 0 ? void 0 : user.userId });
+        yield statModel_1.View.deleteMany({ userId: req.params.id });
+        yield userModel_1.User.findByIdAndDelete(req.params.id);
+        return res
+            .status(200)
+            .json({ message: 'Your account has been deleted successfully.' });
+    }
+    catch (error) {
+        (0, errorHandler_1.handleError)(res, undefined, undefined, error);
+    }
+});
+exports.deleteMyData = deleteMyData;
 const getUsers = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const result = yield (0, query_1.queryData)(userModel_1.User, req);

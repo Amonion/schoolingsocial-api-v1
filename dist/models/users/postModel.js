@@ -33,27 +33,29 @@ var __importStar = (this && this.__importStar) || (function () {
     };
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.Follower = exports.UserInterest = exports.Mute = exports.Block = exports.Pin = exports.Account = exports.Post = void 0;
+exports.Follower = exports.UserInterest = exports.Mute = exports.Block = exports.Pin = exports.Poll = exports.Account = exports.Post = void 0;
 const mongoose_1 = __importStar(require("mongoose"));
 const PostSchema = new mongoose_1.Schema({
     displayName: { type: String },
     username: { type: String },
     userId: { type: String },
-    picture: { type: String, default: "" },
+    picture: { type: String, default: '' },
     media: { type: Array, default: [] },
     polls: { type: Array, default: [] },
     users: { type: Array, default: [] },
-    content: { type: String, default: "" },
-    postCountry: { type: String, default: "" },
-    postType: { type: String, default: "main" },
-    repostedUsername: { type: String, default: "" },
-    postId: { type: String, default: "" },
+    content: { type: String, default: '' },
+    postCountry: { type: String, default: '' },
+    postType: { type: String, default: 'main' },
+    repostedUsername: { type: String, default: '' },
+    postId: { type: String, default: '' },
     isVerified: { type: Boolean, default: false },
+    isSelected: { type: Boolean, default: false },
     replies: { type: Number, default: 0 },
     bookmarks: { type: Number, default: 0 },
     followers: { type: Number, default: 0 },
     unfollowers: { type: Number, default: 0 },
     shares: { type: Number, default: 0 },
+    totalVotes: { type: Number, default: 0 },
     likes: { type: Number, default: 0 },
     followed: { type: Boolean, default: false },
     muted: { type: Boolean, default: false },
@@ -75,15 +77,15 @@ const PostSchema = new mongoose_1.Schema({
 }, {
     timestamps: true,
 });
-exports.Post = mongoose_1.default.model("Post", PostSchema);
+exports.Post = mongoose_1.default.model('Post', PostSchema);
 const AccountSchema = new mongoose_1.Schema({
     displayName: { type: String },
     username: { type: String },
     userId: { type: String },
-    picture: { type: String, default: "" },
+    picture: { type: String, default: '' },
     media: { type: String, default: null },
-    description: { type: String, default: "" },
-    type: { type: String, default: "Original" },
+    description: { type: String, default: '' },
+    type: { type: String, default: 'Original' },
     isVerified: { type: Boolean, default: false },
     verificationLevel: { type: Number, default: 0 },
     posts: { type: Number, default: 0 },
@@ -94,7 +96,17 @@ const AccountSchema = new mongoose_1.Schema({
 }, {
     timestamps: true,
 });
-exports.Account = mongoose_1.default.model("Account", AccountSchema);
+exports.Account = mongoose_1.default.model('Account', AccountSchema);
+const PollSchema = new mongoose_1.Schema({
+    userId: { type: String },
+    username: { type: String },
+    postId: { type: String },
+    pollIndex: { type: Number },
+    createdAt: { type: Date, default: Date.now },
+}, {
+    timestamps: true,
+});
+exports.Poll = mongoose_1.default.model('Poll', PollSchema);
 const PinSchema = new mongoose_1.Schema({
     userId: { type: String },
     postId: { type: String },
@@ -102,7 +114,7 @@ const PinSchema = new mongoose_1.Schema({
 }, {
     timestamps: true,
 });
-exports.Pin = mongoose_1.default.model("Pin", PinSchema);
+exports.Pin = mongoose_1.default.model('Pin', PinSchema);
 const BlockSchema = new mongoose_1.Schema({
     userId: { type: String },
     postId: { type: String },
@@ -121,7 +133,7 @@ const BlockSchema = new mongoose_1.Schema({
 }, {
     timestamps: true,
 });
-exports.Block = mongoose_1.default.model("Block", BlockSchema);
+exports.Block = mongoose_1.default.model('Block', BlockSchema);
 const MuteSchema = new mongoose_1.Schema({
     userId: { type: String },
     postId: { type: String },
@@ -140,7 +152,7 @@ const MuteSchema = new mongoose_1.Schema({
 }, {
     timestamps: true,
 });
-exports.Mute = mongoose_1.default.model("Mute", MuteSchema);
+exports.Mute = mongoose_1.default.model('Mute', MuteSchema);
 const UserInterestSchema = new mongoose_1.Schema({
     userId: { type: String },
     interests: { type: Array },
@@ -148,7 +160,7 @@ const UserInterestSchema = new mongoose_1.Schema({
 }, {
     timestamps: true,
 });
-exports.UserInterest = mongoose_1.default.model("UserInterest", UserInterestSchema);
+exports.UserInterest = mongoose_1.default.model('UserInterest', UserInterestSchema);
 const FollowerSchema = new mongoose_1.Schema({
     userId: { type: String },
     bioId: { type: String },
@@ -166,4 +178,4 @@ const FollowerSchema = new mongoose_1.Schema({
 }, {
     timestamps: true,
 });
-exports.Follower = mongoose_1.default.model("Follower", FollowerSchema);
+exports.Follower = mongoose_1.default.model('Follower', FollowerSchema);
