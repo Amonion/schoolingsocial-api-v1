@@ -1,5 +1,5 @@
 import mongoose, { Schema } from 'mongoose'
-import { IUser, IUserSettings } from '../../utils/userInterface'
+import { IUser, IUserSettings, IDeletedUser } from '../../utils/userInterface'
 
 const UserSchema: Schema = new Schema(
   {
@@ -129,4 +129,23 @@ const UserSettingsSchema: Schema = new Schema(
 export const UserSettings = mongoose.model<IUserSettings>(
   'UserSettings',
   UserSettingsSchema
+)
+
+const DeletedUserSchema: Schema = new Schema(
+  {
+    username: { type: String },
+    email: { type: String },
+    displayName: { type: String, default: '' },
+    picture: { type: String, default: '' },
+    userId: { type: String, default: '' },
+    createdAt: { type: Date, default: Date.now },
+  },
+  {
+    timestamps: true,
+  }
+)
+
+export const DeletedUser = mongoose.model<IDeletedUser>(
+  'DeletedUser',
+  DeletedUserSchema
 )

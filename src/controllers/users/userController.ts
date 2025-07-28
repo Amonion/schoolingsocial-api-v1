@@ -1,6 +1,6 @@
 import { Request, Response } from 'express'
 import { IUser, IUserInfo } from '../../utils/userInterface'
-import { User, UserSettings } from '../../models/users/userModel'
+import { DeletedUser, User, UserSettings } from '../../models/users/userModel'
 import {
   UserInfo,
   UserSchoolInfo,
@@ -11,7 +11,7 @@ import { handleError } from '../../utils/errorHandler'
 import { queryData, search, followAccount } from '../../utils/query'
 import { uploadFilesToS3 } from '../../utils/fileUpload'
 import bcrypt from 'bcryptjs'
-import { Follower, Post } from '../../models/users/postModel'
+import { Follower, Mute, Pin, Poll, Post } from '../../models/users/postModel'
 import { io } from '../../app'
 import { sendEmail, sendNotification } from '../../utils/sendEmail'
 import { AcademicLevel } from '../../models/team/academicLevelModel'
@@ -19,6 +19,8 @@ import { Department, Faculty, School } from '../../models/team/schoolModel'
 import { UserTestExam } from '../../models/users/competitionModel'
 import { UserStatus } from '../../models/users/usersStatMode'
 import { Expo } from 'expo-server-sdk'
+import { Bookmark, Like, Repost, View } from '../../models/users/statModel'
+import { UserNotification } from '../../models/team/emailModel'
 const expo = new Expo()
 
 export const createUser = async (
@@ -106,6 +108,39 @@ export const getUserSettings = async (
     }
 
     return res.status(200).json(user)
+  } catch (error) {
+    handleError(res, undefined, undefined, error)
+  }
+}
+
+export const deleteMyData = async (
+  req: Request,
+  res: Response
+): Promise<Response | void> => {
+  try {
+    const user = await User.findById(req.params.id)
+    await DeletedUser.create({
+      email: user?.email,
+      username: user?.username,
+      displayName: user?.displayName,
+      picture: user?.picture,
+      userId: user?.userId,
+    })
+    await Bookmark.deleteMany({ userId: req.params.id })
+    await Follower.deleteMany({ userId: req.params.id })
+    await Like.deleteMany({ userId: req.params.id })
+    await Mute.deleteMany({ userId: req.params.id })
+    await Pin.deleteMany({ userId: req.params.id })
+    await Poll.deleteMany({ userId: req.params.id })
+    await Post.deleteMany({ userId: req.params.id })
+    await Repost.deleteMany({ userId: req.params.id })
+    await UserNotification.deleteMany({ userId: req.params.id })
+    await UserStatus.deleteMany({ bioId: user?.userId })
+    await View.deleteMany({ userId: req.params.id })
+    await User.findByIdAndDelete(req.params.id)
+    return res
+      .status(200)
+      .json({ message: 'Your account has been deleted successfully.' })
   } catch (error) {
     handleError(res, undefined, undefined, error)
   }

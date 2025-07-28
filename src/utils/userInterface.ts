@@ -81,6 +81,13 @@ export interface IChatData extends Document {
   userId: string
   data: unknown
 }
+export interface IDeletedUser extends Document {
+  email: string
+  username: string
+  displayName: string
+  picture: string
+  userId: string
+}
 
 export interface IFollower extends Document {
   userId: string
@@ -138,8 +145,10 @@ interface Option {
 interface Poll {
   picture: string
   text: string
+  userId: string
   index: number
   percent: number
+  isSelected: boolean
 }
 
 export interface IParticipant extends Document {
@@ -154,6 +163,14 @@ export interface IParticipant extends Document {
 export interface IPin extends Document {
   userId: string
   postId: string
+  createdAt: Date
+}
+
+export interface IPoll extends Document {
+  userId: string
+  postId: string
+  username: string
+  pollIndex: number
   createdAt: Date
 }
 
@@ -172,11 +189,13 @@ export interface IPost extends Document {
   postCountry: string
   mutes: number
   blocks: number
+  totalVotes: number
   media: Media[]
   polls: Poll[]
   users: string[]
   picture: string
   country: string
+  isSelected: boolean
   status: boolean
   followed: boolean
   muted: boolean

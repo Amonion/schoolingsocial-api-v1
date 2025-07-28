@@ -1,34 +1,37 @@
-import mongoose, { Schema } from "mongoose";
+import mongoose, { Schema } from 'mongoose'
 import {
   IAccount,
   IPost,
+  IPoll,
   IUserInterest,
   IFollower,
   IPin,
   IMute,
   IBlock,
-} from "../../utils/userInterface";
+} from '../../utils/userInterface'
 
 const PostSchema: Schema = new Schema(
   {
     displayName: { type: String },
     username: { type: String },
     userId: { type: String },
-    picture: { type: String, default: "" },
+    picture: { type: String, default: '' },
     media: { type: Array, default: [] },
     polls: { type: Array, default: [] },
     users: { type: Array, default: [] },
-    content: { type: String, default: "" },
-    postCountry: { type: String, default: "" },
-    postType: { type: String, default: "main" },
-    repostedUsername: { type: String, default: "" },
-    postId: { type: String, default: "" },
+    content: { type: String, default: '' },
+    postCountry: { type: String, default: '' },
+    postType: { type: String, default: 'main' },
+    repostedUsername: { type: String, default: '' },
+    postId: { type: String, default: '' },
     isVerified: { type: Boolean, default: false },
+    isSelected: { type: Boolean, default: false },
     replies: { type: Number, default: 0 },
     bookmarks: { type: Number, default: 0 },
     followers: { type: Number, default: 0 },
     unfollowers: { type: Number, default: 0 },
     shares: { type: Number, default: 0 },
+    totalVotes: { type: Number, default: 0 },
     likes: { type: Number, default: 0 },
     followed: { type: Boolean, default: false },
     muted: { type: Boolean, default: false },
@@ -51,18 +54,18 @@ const PostSchema: Schema = new Schema(
   {
     timestamps: true,
   }
-);
-export const Post = mongoose.model<IPost>("Post", PostSchema);
+)
+export const Post = mongoose.model<IPost>('Post', PostSchema)
 
 const AccountSchema: Schema = new Schema(
   {
     displayName: { type: String },
     username: { type: String },
     userId: { type: String },
-    picture: { type: String, default: "" },
+    picture: { type: String, default: '' },
     media: { type: String, default: null },
-    description: { type: String, default: "" },
-    type: { type: String, default: "Original" },
+    description: { type: String, default: '' },
+    type: { type: String, default: 'Original' },
     isVerified: { type: Boolean, default: false },
     verificationLevel: { type: Number, default: 0 },
     posts: { type: Number, default: 0 },
@@ -74,8 +77,22 @@ const AccountSchema: Schema = new Schema(
   {
     timestamps: true,
   }
-);
-export const Account = mongoose.model<IAccount>("Account", AccountSchema);
+)
+export const Account = mongoose.model<IAccount>('Account', AccountSchema)
+
+const PollSchema: Schema = new Schema(
+  {
+    userId: { type: String },
+    username: { type: String },
+    postId: { type: String },
+    pollIndex: { type: Number },
+    createdAt: { type: Date, default: Date.now },
+  },
+  {
+    timestamps: true,
+  }
+)
+export const Poll = mongoose.model<IPoll>('Poll', PollSchema)
 
 const PinSchema: Schema = new Schema(
   {
@@ -86,8 +103,8 @@ const PinSchema: Schema = new Schema(
   {
     timestamps: true,
   }
-);
-export const Pin = mongoose.model<IPin>("Pin", PinSchema);
+)
+export const Pin = mongoose.model<IPin>('Pin', PinSchema)
 
 const BlockSchema: Schema = new Schema(
   {
@@ -109,8 +126,8 @@ const BlockSchema: Schema = new Schema(
   {
     timestamps: true,
   }
-);
-export const Block = mongoose.model<IBlock>("Block", BlockSchema);
+)
+export const Block = mongoose.model<IBlock>('Block', BlockSchema)
 
 const MuteSchema: Schema = new Schema(
   {
@@ -132,8 +149,8 @@ const MuteSchema: Schema = new Schema(
   {
     timestamps: true,
   }
-);
-export const Mute = mongoose.model<IMute>("Mute", MuteSchema);
+)
+export const Mute = mongoose.model<IMute>('Mute', MuteSchema)
 
 const UserInterestSchema: Schema = new Schema(
   {
@@ -144,11 +161,11 @@ const UserInterestSchema: Schema = new Schema(
   {
     timestamps: true,
   }
-);
+)
 export const UserInterest = mongoose.model<IUserInterest>(
-  "UserInterest",
+  'UserInterest',
   UserInterestSchema
-);
+)
 
 const FollowerSchema: Schema = new Schema(
   {
@@ -169,5 +186,5 @@ const FollowerSchema: Schema = new Schema(
   {
     timestamps: true,
   }
-);
-export const Follower = mongoose.model<IFollower>("Follower", FollowerSchema);
+)
+export const Follower = mongoose.model<IFollower>('Follower', FollowerSchema)

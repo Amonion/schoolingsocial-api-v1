@@ -5,6 +5,7 @@ import {
   Follower,
   Mute,
   Pin,
+  Poll,
   Post,
 } from '../../models/users/postModel'
 import { deleteFileFromS3, uploadFilesToS3 } from '../../utils/fileUpload'
@@ -237,6 +238,48 @@ export const createPost = async (data: IPost) => {
   }
 }
 
+export const updatePoll = async (req: Request, res: Response) => {
+  try {
+    const { polls, userId, username, totalVotes, pollIndex } = req.body
+
+    await Poll.findOneAndUpdate(
+      { postId: req.params.id, userId: userId },
+      {
+        $set: {
+          pollIndex: pollIndex,
+          username: username,
+          userId: userId,
+          postId: req.params.id,
+        },
+      },
+      { new: true, upsert: true }
+    )
+
+    const sanitizedPolls = polls.map((poll: any) => {
+      const { userId, isSelected, ...rest } = poll
+      return rest
+    })
+
+    const updatedPost = await Post.findOneAndUpdate(
+      { _id: req.params.id },
+      {
+        $set: {
+          totalVotes: totalVotes,
+          polls: sanitizedPolls,
+        },
+      },
+      { new: true }
+    )
+
+    return res.status(200).json({
+      data: updatedPost,
+      totalVotes: totalVotes,
+    })
+  } catch (error: any) {
+    handleError(res, undefined, undefined, error)
+  }
+}
+
 export const pinPost = async (req: Request, res: Response) => {
   try {
     const { userId, pinnedAt } = req.body
@@ -403,44 +446,6 @@ export const muteUser = async (req: Request, res: Response) => {
     handleError(res, undefined, undefined, error)
   }
 }
-
-// export const muteUser = async (req: Request, res: Response) => {
-//   try {
-//     const { userId, accountUsername, accountUserId } = req.body;
-
-//     const mutedUser = await Mute.findOne({
-//       accountUsername: accountUsername,
-//       userId: userId,
-//     });
-
-//     if (mutedUser) {
-//       await Mute.findByIdAndDelete(mutedUser._id);
-//       await User.findByIdAndUpdate(accountUserId, { $inc: { mutes: -1 } });
-//     } else {
-//       await Mute.create({
-//         userId: userId,
-//         accountUsername: accountUsername,
-//         accountUserId: accountUserId,
-//       });
-//       await User.findByIdAndUpdate(accountUserId, { $inc: { mutes: 1 } });
-//       await Post.findByIdAndUpdate(req.params.id, { $inc: { mutes: 1 } });
-//     }
-
-//     const post = await Post.findById(req.params.id);
-//     if (!post) {
-//       return res.status(404).json({ message: "Post not found." });
-//     }
-
-//     res.status(201).json({
-//       userId: accountUserId,
-//       message: !mutedUser
-//         ? "The user has been muted successfully"
-//         : "The user has successfully been unmuted.",
-//     });
-//   } catch (error: any) {
-//     handleError(res, undefined, undefined, error);
-//   }
-// };
 
 export const repostPost = async (req: Request, res: Response) => {
   try {
@@ -909,8 +914,6 @@ export const followUser = async (req: Request, res: Response) => {
     post.followed = follow ? false : true
     post.isActive = false
 
-    console.log(post.followed)
-
     res.status(200).json({
       message: message,
       data: post,
@@ -967,6 +970,11 @@ const processFetchedPosts = async (req: Request, followerId: string) => {
     postId: { $in: postIds },
   }).select('postId createdAt')
 
+  const polledPosts = await Poll.find({
+    userId: followerId,
+    postId: { $in: postIds },
+  }).select('postId pollIndex')
+
   const likedPosts = await Like.find({
     userId: followerId,
     postId: { $in: postIds },
@@ -985,6 +993,11 @@ const processFetchedPosts = async (req: Request, followerId: string) => {
   const blockedPostIds = blockedUsers.map((block) =>
     block.accountUserId.toString()
   )
+
+  const polledList = polledPosts.map((poll) => ({
+    postId: poll.postId.toString(),
+    pollIndex: poll.pollIndex,
+  }))
 
   const mutedUserIds = mutedUsers.map((mute) => mute.accountUserId.toString())
 
@@ -1019,6 +1032,14 @@ const processFetchedPosts = async (req: Request, followerId: string) => {
 
     if (blockedPostIds.includes(el.userId.toString())) {
       el.blocked = true
+    }
+
+    for (let x = 0; x < polledList.length; x++) {
+      const poll = polledList[x]
+      if (postIdStr.includes(poll.postId)) {
+        el.polls[poll.pollIndex].userId = followerId
+        el.isSelected = true
+      }
     }
 
     if (likedPostIds.includes(el._id.toString())) {

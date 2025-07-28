@@ -26,6 +26,7 @@ import {
   updateUserInfoApp,
   updateUserSchoolInfo,
   getUserSchoolInfo,
+  deleteMyData,
 } from '../../controllers/users/userController'
 import {
   getStaffById,
@@ -46,6 +47,7 @@ router.route('/staffs').get(getStaffs)
 router.route('/staffs/:id').get(getStaffById).patch(upload.any(), updateStaff)
 
 router.route('/info').get(getStaffs)
+router.route('/delete/:id').post(deleteMyData)
 router.route('/info/:id').patch(upload.any(), updateInfo)
 router.route('/username/:username').get(getExistingUsername)
 router.route('/details').get(getManyUserDetails)
