@@ -637,7 +637,7 @@ const updatePostStat = (req, res) => __awaiter(void 0, void 0, void 0, function*
             }
         }
         if (req.body.views !== undefined) {
-            if (!req.body.viewedPostIds) {
+            if (req.body.viewedPostIds) {
                 for (let i = 0; i < req.body.viewedPostIds.length; i++) {
                     const el = req.body.viewedPostIds[i];
                     const post = yield statModel_1.View.findOne({ userId: userId, postId: el._id });
