@@ -475,10 +475,12 @@ export interface IUserSettings {
 export interface IUserStat extends Document {
   online: boolean
   userId: string
+  bioId: string
   country: string
   countryCode: string
   ips: string[]
   username: string
+  visitedAt: Date
 }
 
 export interface IUserTestExam extends Document {

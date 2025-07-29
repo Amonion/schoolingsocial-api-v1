@@ -16,55 +16,129 @@ export const updateVisit = async (data: IUserData) => {
     return
   }
 
+  // if (data.username) {
+  //   await UserStatus.findOneAndUpdate(
+  //     { username: data.username },
+  //     {
+  //       $set: {
+  //         visitedAt: data.visitedAt,
+  //         online: data.online,
+  //         country: data.country,
+  //         countryCode: data.countryCode,
+  //         username: data.username,
+  //         bioId: data.bioId,
+  //         userId: data.userId,
+  //       },
+  //       $addToSet: {
+  //         ips: data.ip,
+  //       },
+  //     },
+  //     {
+  //       new: true,
+  //       upsert: true,
+  //       setDefaultsOnInsert: true,
+  //     }
+  //   )
+  // } else {
+  //   await UserStatus.findOneAndUpdate(
+  //     {
+  //       ips: { $in: [data.ip] },
+  //     },
+  //     {
+  //       $set: {
+  //         visitedAt: new Date(),
+  //         online: true,
+  //         country: data.country,
+  //         countryCode: data.countryCode,
+  //         username: data.username,
+  //         bioId: data.bioId,
+  //         userId: data.userId,
+  //       },
+  //       $addToSet: {
+  //         ips: data.ip,
+  //       },
+  //     },
+  //     {
+  //       new: true,
+  //       upsert: true,
+  //       setDefaultsOnInsert: true,
+  //     }
+  //   )
+  // }
+
   if (data.username) {
-    await UserStatus.findOneAndUpdate(
-      { username: data.username },
-      {
-        $set: {
-          visitedAt: data.visitedAt,
-          online: data.online,
-          country: data.country,
-          countryCode: data.countryCode,
-          username: data.username,
-          bioId: data.bioId,
-          userId: data.userId,
-        },
-        $addToSet: {
-          ips: data.ip,
-        },
-      },
-      {
-        new: true,
-        upsert: true,
-        setDefaultsOnInsert: true,
+    // Step 1: Find document by username
+    let userStatus = await UserStatus.findOne({ username: data.username })
+
+    // Step 2: Create new doc if not exists
+    if (!userStatus) {
+      userStatus = new UserStatus({
+        username: data.username,
+        visitedAt: data.visitedAt,
+        online: data.online,
+        country: data.country,
+        countryCode: data.countryCode,
+        bioId: data.bioId,
+        userId: data.userId,
+        ips: [data.ip], // start with IP
+      })
+    } else {
+      // Step 3: Normalize ips to an array
+      if (!Array.isArray(userStatus.ips)) {
+        userStatus.ips = userStatus.ips ? [String(userStatus.ips)] : []
       }
-    )
+
+      // Step 4: Add IP if not present
+      if (!userStatus.ips.includes(data.ip)) {
+        userStatus.ips.push(data.ip)
+      }
+
+      // Step 5: Update other fields
+      userStatus.visitedAt = data.visitedAt
+      userStatus.online = data.online
+      userStatus.country = data.country
+      userStatus.countryCode = data.countryCode
+      userStatus.bioId = data.bioId
+      userStatus.userId = data.userId
+    }
+
+    await userStatus.save()
   } else {
-    await UserStatus.findOneAndUpdate(
-      {
-        ips: { $in: [data.ip] },
-      },
-      {
-        $set: {
-          visitedAt: new Date(),
-          online: true,
-          country: data.country,
-          countryCode: data.countryCode,
-          username: data.username,
-          bioId: data.bioId,
-          userId: data.userId,
-        },
-        $addToSet: {
-          ips: data.ip,
-        },
-      },
-      {
-        new: true,
-        upsert: true,
-        setDefaultsOnInsert: true,
+    // Case where username is not provided
+    let userStatus = await UserStatus.findOne({ ips: { $in: [data.ip] } })
+
+    if (!userStatus) {
+      userStatus = new UserStatus({
+        visitedAt: new Date(),
+        online: true,
+        country: data.country,
+        countryCode: data.countryCode,
+        username: data.username,
+        bioId: data.bioId,
+        userId: data.userId,
+        ips: [data.ip],
+      })
+    } else {
+      if (!Array.isArray(userStatus.ips)) {
+        userStatus.ips = userStatus.ips ? [String(userStatus.ips)] : []
       }
-    )
+
+      if (!userStatus.ips.includes(data.ip)) {
+        userStatus.ips.push(data.ip)
+      }
+
+      userStatus.visitedAt = new Date()
+      userStatus.online = true
+      userStatus.country = data.country
+      userStatus.countryCode = data.countryCode
+      userStatus.username = data.username
+      userStatus.bioId = data.bioId
+      userStatus.userId = data.userId
+    }
+
+    await userStatus.save()
   }
+
   if (data.bioId) {
     updateOnlineStatus(data.bioId, data.visitedAt, UserInfo)
   }

@@ -23,31 +23,95 @@ const updateVisit = (data) => __awaiter(void 0, void 0, void 0, function* () {
     if (!data.ip || data.ip === '') {
         return;
     }
+    // if (data.username) {
+    //   await UserStatus.findOneAndUpdate(
+    //     { username: data.username },
+    //     {
+    //       $set: {
+    //         visitedAt: data.visitedAt,
+    //         online: data.online,
+    //         country: data.country,
+    //         countryCode: data.countryCode,
+    //         username: data.username,
+    //         bioId: data.bioId,
+    //         userId: data.userId,
+    //       },
+    //       $addToSet: {
+    //         ips: data.ip,
+    //       },
+    //     },
+    //     {
+    //       new: true,
+    //       upsert: true,
+    //       setDefaultsOnInsert: true,
+    //     }
+    //   )
+    // } else {
+    //   await UserStatus.findOneAndUpdate(
+    //     {
+    //       ips: { $in: [data.ip] },
+    //     },
+    //     {
+    //       $set: {
+    //         visitedAt: new Date(),
+    //         online: true,
+    //         country: data.country,
+    //         countryCode: data.countryCode,
+    //         username: data.username,
+    //         bioId: data.bioId,
+    //         userId: data.userId,
+    //       },
+    //       $addToSet: {
+    //         ips: data.ip,
+    //       },
+    //     },
+    //     {
+    //       new: true,
+    //       upsert: true,
+    //       setDefaultsOnInsert: true,
+    //     }
+    //   )
+    // }
     if (data.username) {
-        yield usersStatMode_1.UserStatus.findOneAndUpdate({ username: data.username }, {
-            $set: {
+        // Step 1: Find document by username
+        let userStatus = yield usersStatMode_1.UserStatus.findOne({ username: data.username });
+        // Step 2: Create new doc if not exists
+        if (!userStatus) {
+            userStatus = new usersStatMode_1.UserStatus({
+                username: data.username,
                 visitedAt: data.visitedAt,
                 online: data.online,
                 country: data.country,
                 countryCode: data.countryCode,
-                username: data.username,
                 bioId: data.bioId,
                 userId: data.userId,
-            },
-            $addToSet: {
-                ips: data.ip,
-            },
-        }, {
-            new: true,
-            upsert: true,
-            setDefaultsOnInsert: true,
-        });
+                ips: [data.ip], // start with IP
+            });
+        }
+        else {
+            // Step 3: Normalize ips to an array
+            if (!Array.isArray(userStatus.ips)) {
+                userStatus.ips = userStatus.ips ? [String(userStatus.ips)] : [];
+            }
+            // Step 4: Add IP if not present
+            if (!userStatus.ips.includes(data.ip)) {
+                userStatus.ips.push(data.ip);
+            }
+            // Step 5: Update other fields
+            userStatus.visitedAt = data.visitedAt;
+            userStatus.online = data.online;
+            userStatus.country = data.country;
+            userStatus.countryCode = data.countryCode;
+            userStatus.bioId = data.bioId;
+            userStatus.userId = data.userId;
+        }
+        yield userStatus.save();
     }
     else {
-        yield usersStatMode_1.UserStatus.findOneAndUpdate({
-            ips: { $in: [data.ip] },
-        }, {
-            $set: {
+        // Case where username is not provided
+        let userStatus = yield usersStatMode_1.UserStatus.findOne({ ips: { $in: [data.ip] } });
+        if (!userStatus) {
+            userStatus = new usersStatMode_1.UserStatus({
                 visitedAt: new Date(),
                 online: true,
                 country: data.country,
@@ -55,15 +119,25 @@ const updateVisit = (data) => __awaiter(void 0, void 0, void 0, function* () {
                 username: data.username,
                 bioId: data.bioId,
                 userId: data.userId,
-            },
-            $addToSet: {
-                ips: data.ip,
-            },
-        }, {
-            new: true,
-            upsert: true,
-            setDefaultsOnInsert: true,
-        });
+                ips: [data.ip],
+            });
+        }
+        else {
+            if (!Array.isArray(userStatus.ips)) {
+                userStatus.ips = userStatus.ips ? [String(userStatus.ips)] : [];
+            }
+            if (!userStatus.ips.includes(data.ip)) {
+                userStatus.ips.push(data.ip);
+            }
+            userStatus.visitedAt = new Date();
+            userStatus.online = true;
+            userStatus.country = data.country;
+            userStatus.countryCode = data.countryCode;
+            userStatus.username = data.username;
+            userStatus.bioId = data.bioId;
+            userStatus.userId = data.userId;
+        }
+        yield userStatus.save();
     }
     if (data.bioId) {
         updateOnlineStatus(data.bioId, data.visitedAt, userInfoModel_1.UserInfo);
