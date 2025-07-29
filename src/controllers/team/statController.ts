@@ -12,7 +12,7 @@ import { UserInfo } from '../../models/users/userInfoModel'
 
 //-----------------USERS--------------------//
 export const updateVisit = async (data: IUserData) => {
-  if (!data.ip && !data.username) {
+  if (!data.ip || data.ip === '') {
     return
   }
 
@@ -65,8 +65,12 @@ export const updateVisit = async (data: IUserData) => {
       }
     )
   }
-  updateOnlineStatus(data.userId, data.visitedAt, User)
-  updateOnlineStatus(data.bioId, data.visitedAt, UserInfo)
+  if (data.bioId) {
+    updateOnlineStatus(data.bioId, data.visitedAt, UserInfo)
+  }
+  if (data.userId) {
+    updateOnlineStatus(data.userId, data.visitedAt, User)
+  }
   const visitors = await UserStatus.countDocuments({ online: true })
   io.emit('team', { action: 'visit', type: 'stat', visitors })
 }

@@ -20,7 +20,7 @@ const schoolModel_1 = require("../../models/team/schoolModel");
 const userInfoModel_1 = require("../../models/users/userInfoModel");
 //-----------------USERS--------------------//
 const updateVisit = (data) => __awaiter(void 0, void 0, void 0, function* () {
-    if (!data.ip && !data.username) {
+    if (!data.ip || data.ip === '') {
         return;
     }
     if (data.username) {
@@ -65,8 +65,12 @@ const updateVisit = (data) => __awaiter(void 0, void 0, void 0, function* () {
             setDefaultsOnInsert: true,
         });
     }
-    updateOnlineStatus(data.userId, data.visitedAt, userModel_1.User);
-    updateOnlineStatus(data.bioId, data.visitedAt, userInfoModel_1.UserInfo);
+    if (data.bioId) {
+        updateOnlineStatus(data.bioId, data.visitedAt, userInfoModel_1.UserInfo);
+    }
+    if (data.userId) {
+        updateOnlineStatus(data.userId, data.visitedAt, userModel_1.User);
+    }
     const visitors = yield usersStatMode_1.UserStatus.countDocuments({ online: true });
     app_1.io.emit('team', { action: 'visit', type: 'stat', visitors });
 });
