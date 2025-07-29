@@ -23,7 +23,7 @@ const UserStatusSchema: Schema = new Schema(
   {
     country: { type: String },
     countryCode: { type: String },
-    ips: { type: Array, default: [] },
+    ips: { type: [String], default: [] },
     username: { type: String },
     bioId: { type: String },
     online: { type: Boolean, default: false },
@@ -35,6 +35,13 @@ const UserStatusSchema: Schema = new Schema(
     timestamps: true,
   }
 )
+
+UserStatusSchema.pre('save', function (next) {
+  if (!Array.isArray(this.ips)) {
+    this.ips = this.ips ? [String(this.ips)] : []
+  }
+  next()
+})
 export const UserStatus = mongoose.model<IUserStat>(
   'UserStatus',
   UserStatusSchema
