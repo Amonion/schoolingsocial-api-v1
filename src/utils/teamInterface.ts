@@ -53,6 +53,8 @@ export interface ICompany extends Document {
   phone: string
   allowSignup: boolean
   headqauters: string
+  newVersion: string
+  newVersionLink: string
   createdAt: Date
 }
 

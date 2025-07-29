@@ -64,7 +64,7 @@ export const createUser = async (
 
     await sendEmail('', email, 'welcome')
 
-    res.status(201).json({
+    res.status(200).json({
       message: 'User created successfully',
       user: newUser,
     })
@@ -898,7 +898,6 @@ export const getExistingUsername = async (
     const user =
       (await UserInfo.findOne({ username: req.params.username })) ||
       (await User.findOne({ username: req.params.username }))
-
     res.status(200).json(user)
   } catch (error) {
     handleError(res, undefined, undefined, error)

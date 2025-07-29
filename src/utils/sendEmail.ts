@@ -1,18 +1,18 @@
-import nodemailer from "nodemailer";
-import { promises as fs } from "fs";
-import path from "path";
+import nodemailer from 'nodemailer'
+import { promises as fs } from 'fs'
+import path from 'path'
 import {
   Email,
   Notification,
   UserNotification,
-} from "../models/team/emailModel";
-import { Company } from "../models/team/companyModel";
+} from '../models/team/emailModel'
+import { Company } from '../models/team/companyModel'
 
 interface NotificationData {
-  username: string;
-  receiverUsername: string;
-  userId: string;
-  from: string;
+  username: string
+  receiverUsername: string
+  userId: string
+  from: string
 }
 
 export async function sendEmail(
@@ -22,26 +22,32 @@ export async function sendEmail(
   data?: Record<string, any>
 ): Promise<boolean> {
   try {
+    // ✅ Only send emails in development environment
+    if (process.env.NODE_ENV !== 'development') {
+      console.log(`Email sending skipped: ${process.env.NODE_ENV} environment`)
+      return true // Return success so it doesn't break app logic
+    }
+
     const templatePath = path.join(
       process.cwd(),
-      "public",
-      "templates",
-      "emailTemplate.html"
-    );
+      'public',
+      'templates',
+      'emailTemplate.html'
+    )
 
-    let templateContent = await fs.readFile(templatePath, "utf-8");
+    let templateContent = await fs.readFile(templatePath, 'utf-8')
 
-    const email = await Email.findOne({ name: emailName });
-    const [company] = await Company.find();
+    const email = await Email.findOne({ name: emailName })
+    const [company] = await Company.find()
 
-    if (!email) throw new Error(`Email template '${emailName}' not found`);
-    if (!company) throw new Error("Company information is missing");
+    if (!email) throw new Error(`Email template '${emailName}' not found`)
+    if (!company) throw new Error('Company information is missing')
 
-    let content = email.content;
+    let content = email.content
 
     content = String(content)
-      .replace("{{username}}", username)
-      .replace("{{greetings}}", String(email.greetings));
+      .replace('{{username}}', username)
+      .replace('{{greetings}}', String(email.greetings))
 
     templateContent = templateContent
       .replace(/{{title}}/g, email.title)
@@ -51,37 +57,37 @@ export async function sendEmail(
       .replace(/{{companyName}}/g, company.name)
       .replace(/{{greetings}}/g, String(email.greetings))
       .replace(/{{logo}}/g, `${company.domain}/images/NewLogo.png`)
-      .replace(/{{whiteLogo}}/g, `${company.domain}/images/NewLogoWhite.png`);
+      .replace(/{{whiteLogo}}/g, `${company.domain}/images/NewLogoWhite.png`)
 
     const transporter = nodemailer.createTransport({
       host: process.env.SMTP_HOST,
-      port: parseInt(process.env.SMTP_PORT || "465"),
-      secure: process.env.SMTP_SECURE === "true",
+      port: parseInt(process.env.SMTP_PORT || '465'),
+      secure: process.env.SMTP_SECURE === 'true',
       auth: {
         user: company.email,
         pass: process.env.EMAIL_PASSWORD,
       },
-    });
+    })
 
     const mailOptions = {
       from: process.env.EMAIL_USERNAME,
       to: userEmail,
       subject: email.title,
       html: templateContent,
-    };
+    }
 
-    await transporter.sendMail(mailOptions);
-    return true;
+    await transporter.sendMail(mailOptions)
+    return true
   } catch (error) {
     if (error instanceof Error) {
-      console.error("Error sending email:", {
+      console.error('Error sending email:', {
         message: error.message,
         user: userEmail,
-      });
+      })
     } else {
-      console.error("Unexpected error:", error);
+      console.error('Unexpected error:', error)
     }
-    return false;
+    return false
   }
 }
 
@@ -89,20 +95,20 @@ export const sendNotification = async (
   templateName: string,
   data: NotificationData
 ) => {
-  const notificationTemp = await Notification.findOne({ name: templateName });
+  const notificationTemp = await Notification.findOne({ name: templateName })
 
   if (!notificationTemp) {
-    throw new Error(`Notification template '${templateName}' not found.`);
+    throw new Error(`Notification template '${templateName}' not found.`)
   }
 
   const click_here =
-    templateName === "friend_request"
+    templateName === 'friend_request'
       ? `<a href="/home/chat/${data.from}/${data.username}" class="text-[var(--custom)]">click here</a>`
-      : "";
+      : ''
 
   const content = notificationTemp.content
-    .replace("{{sender_username}}", data.username)
-    .replace("{{click_here}}", click_here);
+    .replace('{{sender_username}}', data.username)
+    .replace('{{click_here}}', click_here)
 
   const newNotification = await UserNotification.create({
     greetings: notificationTemp.greetings,
@@ -111,12 +117,12 @@ export const sendNotification = async (
     username: data.receiverUsername,
     userId: data.userId,
     content,
-  });
+  })
 
   const count = await UserNotification.countDocuments({
     username: data.receiverUsername,
     unread: true,
-  });
+  })
 
-  return { data: newNotification, count };
-};
+  return { data: newNotification, count }
+}

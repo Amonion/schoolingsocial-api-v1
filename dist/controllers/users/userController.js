@@ -61,7 +61,7 @@ const createUser = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
             },
         });
         yield (0, sendEmail_1.sendEmail)('', email, 'welcome');
-        res.status(201).json({
+        res.status(200).json({
             message: 'User created successfully',
             user: newUser,
         });

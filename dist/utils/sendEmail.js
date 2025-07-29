@@ -22,18 +22,23 @@ const companyModel_1 = require("../models/team/companyModel");
 function sendEmail(username, userEmail, emailName, data) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
-            const templatePath = path_1.default.join(process.cwd(), "public", "templates", "emailTemplate.html");
-            let templateContent = yield fs_1.promises.readFile(templatePath, "utf-8");
+            // ✅ Only send emails in development environment
+            if (process.env.NODE_ENV !== 'development') {
+                console.log(`Email sending skipped: ${process.env.NODE_ENV} environment`);
+                return true; // Return success so it doesn't break app logic
+            }
+            const templatePath = path_1.default.join(process.cwd(), 'public', 'templates', 'emailTemplate.html');
+            let templateContent = yield fs_1.promises.readFile(templatePath, 'utf-8');
             const email = yield emailModel_1.Email.findOne({ name: emailName });
             const [company] = yield companyModel_1.Company.find();
             if (!email)
                 throw new Error(`Email template '${emailName}' not found`);
             if (!company)
-                throw new Error("Company information is missing");
+                throw new Error('Company information is missing');
             let content = email.content;
             content = String(content)
-                .replace("{{username}}", username)
-                .replace("{{greetings}}", String(email.greetings));
+                .replace('{{username}}', username)
+                .replace('{{greetings}}', String(email.greetings));
             templateContent = templateContent
                 .replace(/{{title}}/g, email.title)
                 .replace(/{{content}}/g, content)
@@ -45,8 +50,8 @@ function sendEmail(username, userEmail, emailName, data) {
                 .replace(/{{whiteLogo}}/g, `${company.domain}/images/NewLogoWhite.png`);
             const transporter = nodemailer_1.default.createTransport({
                 host: process.env.SMTP_HOST,
-                port: parseInt(process.env.SMTP_PORT || "465"),
-                secure: process.env.SMTP_SECURE === "true",
+                port: parseInt(process.env.SMTP_PORT || '465'),
+                secure: process.env.SMTP_SECURE === 'true',
                 auth: {
                     user: company.email,
                     pass: process.env.EMAIL_PASSWORD,
@@ -63,13 +68,13 @@ function sendEmail(username, userEmail, emailName, data) {
         }
         catch (error) {
             if (error instanceof Error) {
-                console.error("Error sending email:", {
+                console.error('Error sending email:', {
                     message: error.message,
                     user: userEmail,
                 });
             }
             else {
-                console.error("Unexpected error:", error);
+                console.error('Unexpected error:', error);
             }
             return false;
         }
@@ -80,12 +85,12 @@ const sendNotification = (templateName, data) => __awaiter(void 0, void 0, void 
     if (!notificationTemp) {
         throw new Error(`Notification template '${templateName}' not found.`);
     }
-    const click_here = templateName === "friend_request"
+    const click_here = templateName === 'friend_request'
         ? `<a href="/home/chat/${data.from}/${data.username}" class="text-[var(--custom)]">click here</a>`
-        : "";
+        : '';
     const content = notificationTemp.content
-        .replace("{{sender_username}}", data.username)
-        .replace("{{click_here}}", click_here);
+        .replace('{{sender_username}}', data.username)
+        .replace('{{click_here}}', click_here);
     const newNotification = yield emailModel_1.UserNotification.create({
         greetings: notificationTemp.greetings,
         name: notificationTemp.name,

@@ -7,7 +7,7 @@ import { deleteFileFromS3 } from '../../utils/fileUpload'
 import { io } from '../../app'
 import { sendNotification } from '../../utils/sendEmail'
 import { UserInfo } from '../../models/users/userInfoModel'
-import { UserStat } from '../../models/users/usersStatMode'
+import { UserStat, UserStatus } from '../../models/users/usersStatMode'
 import { Expo } from 'expo-server-sdk'
 import { User } from '../../models/users/userModel'
 const expo = new Expo()
@@ -111,7 +111,7 @@ export const createChat = async (data: IChat) => {
         })
       }
 
-      const onlineUser = await UserStat.findOne({
+      const onlineUser = await UserStatus.findOne({
         username: data.receiverUsername,
       })
 

@@ -92,7 +92,7 @@ const createChat = (data) => __awaiter(void 0, void 0, void 0, function* () {
                     totalUnread: totalUnread,
                 });
             }
-            const onlineUser = yield usersStatMode_1.UserStat.findOne({
+            const onlineUser = yield usersStatMode_1.UserStatus.findOne({
                 username: data.receiverUsername,
             });
             if (!(onlineUser === null || onlineUser === void 0 ? void 0 : onlineUser.online)) {

@@ -56,6 +56,8 @@ const CompanySchema = new mongoose_1.Schema({
     welcomeMessage: { type: String, default: '' },
     phone: { type: String, default: '' },
     headquaters: { type: String, default: '' },
+    newVersion: { type: String, default: '' },
+    newVersionLink: { type: String, default: '' },
     createdAt: { type: Date, default: Date.now },
 }, {
     timestamps: true,
