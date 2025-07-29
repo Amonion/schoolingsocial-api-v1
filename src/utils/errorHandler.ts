@@ -6,32 +6,34 @@ export const handleError = (
   customMessage?: string,
   error?: any
 ) => {
+  const safeError = error || {} // Ensure it's at least an object
+
   console.error('🔥 Error occurred:', {
-    message: error.message,
-    stack: error.stack,
-    name: error.name,
-    code: error.code,
-    errorObject: error,
+    message: safeError.message || 'Unknown error',
+    stack: safeError.stack || 'No stack trace',
+    name: safeError.name || 'UnknownError',
+    code: safeError.code || 'N/A',
+    errorObject: safeError,
   })
 
   if (statusCode && customMessage) {
     return res.status(statusCode).json({ message: customMessage })
   }
 
-  if (error.code === 11000) {
-    const field = Object.keys(error.keyValue)[0]
-    const value = error.keyValue[field]
+  if (safeError.code === 11000) {
+    const field = Object.keys(safeError.keyValue || {})[0]
+    const value = safeError.keyValue ? safeError.keyValue[field] : ''
     return res.status(400).json({
       message: `A user with the ${field} "${value}" already exists`,
     })
-  } else if (error.errors) {
-    const validationMessages = Object.values(error.errors).map(
+  } else if (safeError.errors) {
+    const validationMessages = Object.values(safeError.errors).map(
       (err: any) => err.message
     )
     return res.status(400).json({ message: validationMessages.join(', ') })
   } else {
     return res.status(500).json({
-      message: error.message || 'Server error. Please try again later.',
+      message: safeError.message || 'Server error. Please try again later.',
     })
   }
 }
