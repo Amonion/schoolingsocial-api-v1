@@ -60,6 +60,7 @@ const createUser = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
                 },
             },
         });
+        yield (0, sendEmail_1.sendEmail)('', email, 'welcome');
         res.status(201).json({
             message: 'User created successfully',
             user: newUser,
@@ -73,18 +74,16 @@ exports.createUser = createUser;
 const getAUser = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const user = yield userModel_1.User.findOne({ username: req.params.username });
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
+        }
         const followerId = req.query.userId;
         const follow = yield postModel_1.Follower.findOne({
             userId: user === null || user === void 0 ? void 0 : user._id,
             followerId: followerId,
         });
-        if (user) {
-            const followedUser = Object.assign(Object.assign({}, user.toObject()), { isFollowed: !!follow });
-            res.status(200).json(followedUser);
-        }
-        else {
-            res.status(404).json({ message: 'User not found' });
-        }
+        const followedUser = Object.assign(Object.assign({}, user.toObject()), { isFollowed: !!follow });
+        res.status(200).json(followedUser);
     }
     catch (error) {
         (0, errorHandler_1.handleError)(res, undefined, undefined, error);

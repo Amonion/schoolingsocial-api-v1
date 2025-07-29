@@ -61,6 +61,9 @@ export const createUser = async (
         },
       }
     )
+
+    await sendEmail('', email, 'welcome')
+
     res.status(201).json({
       message: 'User created successfully',
       user: newUser,
@@ -76,21 +79,19 @@ export const getAUser = async (
 ): Promise<Response | void> => {
   try {
     const user = await User.findOne({ username: req.params.username })
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' })
+    }
     const followerId = req.query.userId
     const follow = await Follower.findOne({
       userId: user?._id,
       followerId: followerId,
     })
-
-    if (user) {
-      const followedUser = {
-        ...user.toObject(),
-        isFollowed: !!follow,
-      }
-      res.status(200).json(followedUser)
-    } else {
-      res.status(404).json({ message: 'User not found' })
+    const followedUser = {
+      ...user.toObject(),
+      isFollowed: !!follow,
     }
+    res.status(200).json(followedUser)
   } catch (error) {
     handleError(res, undefined, undefined, error)
   }

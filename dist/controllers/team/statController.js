@@ -9,7 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getSchoolStat = exports.getUsersStat = exports.visitorLeft = exports.updateVisit = void 0;
+exports.getSchoolStat = exports.getUsersStat = exports.updateVisit = void 0;
 const usersStatMode_1 = require("../../models/users/usersStatMode");
 const app_1 = require("../../app");
 const userModel_1 = require("../../models/users/userModel");
@@ -20,7 +20,7 @@ const schoolModel_1 = require("../../models/team/schoolModel");
 const userInfoModel_1 = require("../../models/users/userInfoModel");
 //-----------------USERS--------------------//
 const updateVisit = (data) => __awaiter(void 0, void 0, void 0, function* () {
-    if (!data.ip || !data.username) {
+    if (!data.ip && !data.username) {
         return;
     }
     if (data.username) {
@@ -71,34 +71,6 @@ const updateVisit = (data) => __awaiter(void 0, void 0, void 0, function* () {
     app_1.io.emit('team', { action: 'visit', type: 'stat', visitors });
 });
 exports.updateVisit = updateVisit;
-const visitorLeft = (data) => __awaiter(void 0, void 0, void 0, function* () {
-    // if (data.username) {
-    //   await UserStat.findOneAndUpdate(
-    //     { username: data.username, online: true },
-    //     {
-    //       $set: {
-    //         leftAt: data.leftAt,
-    //         online: false,
-    //         ip: data.ip,
-    //       },
-    //     }
-    //   );
-    // } else {
-    //   await UserStat.findOneAndUpdate(
-    //     { ip: data.ip, online: true },
-    //     {
-    //       $set: {
-    //         leftAt: data.leftAt,
-    //         online: false,
-    //         ip: data.ip,
-    //       },
-    //     }
-    //   );
-    // }
-    // const visitors = await UserStat.countDocuments({ online: true });
-    // io.emit("team", { action: "visit", type: "stat", visitors });
-});
-exports.visitorLeft = visitorLeft;
 const updateOnlineStatus = (userId, visitedAt, model) => __awaiter(void 0, void 0, void 0, function* () {
     yield model.findOneAndUpdate({ _id: userId, online: false }, {
         visitedAt: visitedAt,

@@ -13,7 +13,7 @@ exports.TeamSocket = void 0;
 const statController_1 = require("../../controllers/team/statController");
 const TeamSocket = (data) => __awaiter(void 0, void 0, void 0, function* () {
     switch (data.action) {
-        case "visit":
+        case 'visit':
             (0, statController_1.updateVisit)(data.data);
             break;
         default:
