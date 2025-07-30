@@ -597,6 +597,8 @@ const updatePostStat = (req, res) => __awaiter(void 0, void 0, void 0, function*
     try {
         const { userId, id } = req.body;
         let updateQuery = {};
+        let liked = false;
+        let bookmarked = false;
         const post = yield postModel_1.Post.findById(id);
         if (!post) {
             return res.status(404).json({ message: 'Post not found' });
@@ -612,6 +614,7 @@ const updatePostStat = (req, res) => __awaiter(void 0, void 0, void 0, function*
             }
             else {
                 updateQuery.$inc = { likes: 1 };
+                liked = true;
                 yield statModel_1.Like.create({ postId: id, userId });
             }
         }
@@ -628,6 +631,7 @@ const updatePostStat = (req, res) => __awaiter(void 0, void 0, void 0, function*
                 yield statModel_1.Bookmark.deleteOne({ postId: id, bookmarkUserId: userId });
             }
             else {
+                bookmarked = true;
                 updateQuery.$inc = { bookmarks: 1 };
                 yield statModel_1.Bookmark.create({
                     postId: id,
@@ -663,10 +667,10 @@ const updatePostStat = (req, res) => __awaiter(void 0, void 0, void 0, function*
             yield postModel_1.Post.findByIdAndUpdate(id, updateQuery, {
                 new: true,
             });
-            return res.status(200).json({ message: null });
+            return res.status(200).json({ message: null, liked, bookmarked });
         }
         else {
-            return res.status(200).json({ message: null });
+            return res.status(200).json({ message: null, liked, bookmarked });
         }
     }
     catch (error) {

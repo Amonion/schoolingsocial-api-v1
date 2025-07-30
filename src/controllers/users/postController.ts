@@ -750,6 +750,8 @@ export const updatePostStat = async (req: Request, res: Response) => {
   try {
     const { userId, id } = req.body
     let updateQuery: any = {}
+    let liked = false
+    let bookmarked = false
 
     const post = await Post.findById(id)
 
@@ -768,6 +770,7 @@ export const updatePostStat = async (req: Request, res: Response) => {
         await Like.deleteOne({ postId: id, userId })
       } else {
         updateQuery.$inc = { likes: 1 }
+        liked = true
         await Like.create({ postId: id, userId })
       }
     }
@@ -784,6 +787,7 @@ export const updatePostStat = async (req: Request, res: Response) => {
         updateQuery.$inc = { bookmarks: -1 }
         await Bookmark.deleteOne({ postId: id, bookmarkUserId: userId })
       } else {
+        bookmarked = true
         updateQuery.$inc = { bookmarks: 1 }
         await Bookmark.create({
           postId: id,
@@ -832,9 +836,9 @@ export const updatePostStat = async (req: Request, res: Response) => {
       await Post.findByIdAndUpdate(id, updateQuery, {
         new: true,
       })
-      return res.status(200).json({ message: null })
+      return res.status(200).json({ message: null, liked, bookmarked })
     } else {
-      return res.status(200).json({ message: null })
+      return res.status(200).json({ message: null, liked, bookmarked })
     }
   } catch (error: any) {
     handleError(res, undefined, undefined, error)
