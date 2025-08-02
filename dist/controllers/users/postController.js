@@ -37,7 +37,7 @@ const fs_1 = __importDefault(require("fs"));
 const canvas_1 = require("canvas");
 let model;
 (() => __awaiter(void 0, void 0, void 0, function* () {
-    model = yield (0, nsfwjs_1.load)();
+    model = yield (0, nsfwjs_1.load)('lite_mobilenet_v2');
 }))();
 const createAccount = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {

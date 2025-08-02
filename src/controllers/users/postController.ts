@@ -28,7 +28,8 @@ import fs from 'fs'
 import { createCanvas, loadImage } from 'canvas'
 let model: NSFWJS
 ;(async () => {
-  model = await load()
+  model = await load('lite_mobilenet_v2')
+
 })()
 
 export const createAccount = async (
