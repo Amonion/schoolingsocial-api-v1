@@ -24,6 +24,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.followUser = exports.searchPosts = exports.getPostStat = exports.updatePostViews = exports.updatePostStat = exports.deletePost = exports.updatePost = exports.getBookMarkedPosts = exports.getMutedUsers = exports.getBlockedUsers = exports.getFollowings = exports.getFollowingPosts = exports.getPosts = exports.getPostById = exports.repostPost = exports.muteUser = exports.blockUser = exports.pinPost = exports.updatePoll = exports.createPost = exports.makePost = exports.deleteAccount = exports.updateAccount = exports.getAccounts = exports.getAccountById = exports.createAccount = exports.checkNudeMedia = void 0;
+exports.loadModel = loadModel;
 const postModel_1 = require("../../models/users/postModel");
 const fileUpload_1 = require("../../utils/fileUpload");
 const errorHandler_1 = require("../../utils/errorHandler");
@@ -32,36 +33,95 @@ const query_1 = require("../../utils/query");
 const statModel_1 = require("../../models/users/statModel");
 const computation_1 = require("../../utils/computation");
 const app_1 = require("../../app");
+// import { load, NSFWJS } from 'nsfwjs'
+// import fs from 'fs'
+// import { createCanvas, loadImage } from 'canvas'
+// let model: NSFWJS
+// ;(async () => {
+//   model = await load()
+// })()
+// export const checkNudeMedia = async (req: Request, res: Response) => {
+//   try {
+//     if (!model) {
+//       return res.status(503).json({ message: 'Model loading, try again' })
+//     }
+//     const filePath = req.file?.path // ✅ Now we have a path
+//     const fileType = req.file?.mimetype
+//     if (!filePath || !fileType) {
+//       return res.status(400).json({ message: 'File not found' })
+//     }
+//     let response
+//     if (fileType.startsWith('image')) {
+//       response = await analyzeImage(filePath)
+//       fs.unlinkSync(filePath)
+//     }
+//     res.json({ success: true, data: response })
+//   } catch (error: any) {
+//     handleError(res, undefined, undefined, error)
+//   }
+// }
 const nsfwjs_1 = require("nsfwjs");
+const path_1 = __importDefault(require("path"));
 const fs_1 = __importDefault(require("fs"));
 const canvas_1 = require("canvas");
-let model;
-(() => __awaiter(void 0, void 0, void 0, function* () {
-    model = yield (0, nsfwjs_1.load)();
-}))();
+let model = null;
+// ✅ Load NSFW model (from local or CDN)
+function loadModel() {
+    return __awaiter(this, void 0, void 0, function* () {
+        if (model)
+            return model; // Avoid reloading if already loaded
+        const customModelPath = process.env.NSFW_MODEL_PATH;
+        if (customModelPath) {
+            // ✅ Local model for Render or localhost
+            const modelPath = path_1.default.resolve(customModelPath, 'model.json');
+            console.log(`✅ Loading NSFW model from local path: ${modelPath}`);
+            model = yield (0, nsfwjs_1.load)(`file://${modelPath}`);
+        }
+        else {
+            // ✅ Remote fallback from CDN
+            console.log('✅ Loading NSFW Lite model from CDN...');
+            model = yield (0, nsfwjs_1.load)('https://nsfwjs.com/models/lite_mobilenet_v2/model.json');
+        }
+        return model;
+    });
+}
+// ✅ Controller for NSFW detection
 const checkNudeMedia = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     var _a, _b;
     try {
-        if (!model) {
-            return res.status(503).json({ message: 'Model loading, try again' });
-        }
-        const filePath = (_a = req.file) === null || _a === void 0 ? void 0 : _a.path; // ✅ Now we have a path
+        const nsfwModel = yield loadModel(); // Ensure model is ready
+        const filePath = (_a = req.file) === null || _a === void 0 ? void 0 : _a.path;
         const fileType = (_b = req.file) === null || _b === void 0 ? void 0 : _b.mimetype;
         if (!filePath || !fileType) {
             return res.status(400).json({ message: 'File not found' });
         }
         let response;
         if (fileType.startsWith('image')) {
-            response = yield analyzeImage(filePath);
-            fs_1.default.unlinkSync(filePath);
+            response = yield analyzeImage(filePath, nsfwModel);
         }
-        res.json({ success: true, data: response });
+        // ✅ Clean up file after analysis
+        fs_1.default.unlinkSync(filePath);
+        return res.json({ success: true, data: response });
     }
     catch (error) {
-        (0, errorHandler_1.handleError)(res, undefined, undefined, error);
+        console.error('❌ Error in checkNudeMedia:', error);
+        return res
+            .status(500)
+            .json({ message: 'Server error', error: error.message });
     }
 });
 exports.checkNudeMedia = checkNudeMedia;
+// ✅ Analyze image using NSFWJS model
+function analyzeImage(filePath, model) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const img = yield (0, canvas_1.loadImage)(filePath);
+        const canvas = (0, canvas_1.createCanvas)(img.width, img.height);
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0);
+        const predictions = yield model.classify(canvas);
+        return predictions;
+    });
+}
 // import { load, NSFWJS } from 'nsfwjs'
 // import path from 'path'
 // import fs from 'fs'
@@ -789,17 +849,14 @@ const updatePostViews = (req, res) => __awaiter(void 0, void 0, void 0, function
     }
 });
 exports.updatePostViews = updatePostViews;
-function analyzeImage(imagePath) {
-    return __awaiter(this, void 0, void 0, function* () {
-        if (!model)
-            throw new Error('Model not loaded');
-        const img = yield (0, canvas_1.loadImage)(imagePath);
-        const canvas = (0, canvas_1.createCanvas)(img.width, img.height);
-        const ctx = canvas.getContext('2d');
-        ctx.drawImage(img, 0, 0);
-        return yield model.classify(canvas);
-    });
-}
+// async function analyzeImage(imagePath: string): Promise<any> {
+//   if (!model) throw new Error('Model not loaded')
+//   const img = await loadImage(imagePath)
+//   const canvas = createCanvas(img.width, img.height)
+//   const ctx = canvas.getContext('2d')
+//   ctx.drawImage(img, 0, 0)
+//   return await model.classify(canvas as unknown as HTMLCanvasElement)
+// }
 const getPostStat = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const { id, userId } = req.query;
