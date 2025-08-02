@@ -6,8 +6,23 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = __importDefault(require("express"));
 const multer_1 = __importDefault(require("multer"));
 const upload = (0, multer_1.default)();
+const path_1 = __importDefault(require("path"));
+const fs_1 = __importDefault(require("fs"));
 const postController_1 = require("../../controllers/users/postController");
 const uploadController_1 = require("../../controllers/users/uploadController");
+const uploadDir = path_1.default.join(__dirname, 'uploads');
+if (!fs_1.default.existsSync(uploadDir))
+    fs_1.default.mkdirSync(uploadDir);
+const storage = multer_1.default.diskStorage({
+    destination: (req, file, cb) => {
+        cb(null, uploadDir);
+    },
+    filename: (req, file, cb) => {
+        const ext = path_1.default.extname(file.originalname);
+        cb(null, `${Date.now()}-${file.originalname.replace(/\s/g, '_')}`);
+    },
+});
+const uploadFile = (0, multer_1.default)({ storage });
 const router = express_1.default.Router();
 router.route('/follow/:id').patch(upload.any(), postController_1.followUser);
 router.route('/poll/:id').post(upload.any(), postController_1.updatePoll);
@@ -28,6 +43,7 @@ router.route('/create').get(postController_1.getPosts).post(upload.any(), postCo
 router.route('/following').get(postController_1.getFollowingPosts);
 router.route('/bookmarks').get(postController_1.getBookMarkedPosts);
 router.route('/search').get(postController_1.searchPosts);
+router.route('/check-nsfw').post(uploadFile.single('file'), postController_1.checkNudeMedia);
 router
     .route('/uploads/:id')
     .get(uploadController_1.getUploadById)

@@ -23,6 +23,13 @@ import { IBlock, IFollower, IMute, IPost } from '../../utils/userInterface'
 import { Bookmark, Like, View } from '../../models/users/statModel'
 import { postScore } from '../../utils/computation'
 import { io } from '../../app'
+import { load, NSFWJS } from 'nsfwjs'
+import fs from 'fs'
+import { createCanvas, loadImage } from 'canvas'
+let model: NSFWJS
+;(async () => {
+  model = await load()
+})()
 
 export const createAccount = async (
   req: Request,
@@ -886,6 +893,40 @@ export const updatePostViews = async (req: Request, res: Response) => {
     }
 
     return res.status(200).json({ message: null })
+  } catch (error: any) {
+    handleError(res, undefined, undefined, error)
+  }
+}
+
+async function analyzeImage(imagePath: string): Promise<any> {
+  if (!model) throw new Error('Model not loaded')
+  const img = await loadImage(imagePath)
+  const canvas = createCanvas(img.width, img.height)
+  const ctx = canvas.getContext('2d')
+  ctx.drawImage(img, 0, 0)
+
+  return await model.classify(canvas as unknown as HTMLCanvasElement)
+}
+
+export const checkNudeMedia = async (req: Request, res: Response) => {
+  try {
+    if (!model) {
+      return res.status(503).json({ message: 'Model loading, try again' })
+    }
+
+    const filePath = req.file?.path // ✅ Now we have a path
+    const fileType = req.file?.mimetype
+
+    if (!filePath || !fileType) {
+      return res.status(400).json({ message: 'File not found' })
+    }
+
+    let response
+    if (fileType.startsWith('image')) {
+      response = await analyzeImage(filePath)
+      fs.unlinkSync(filePath)
+    }
+    res.json({ success: true, data: response })
   } catch (error: any) {
     handleError(res, undefined, undefined, error)
   }

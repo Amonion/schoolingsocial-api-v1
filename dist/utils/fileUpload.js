@@ -25,7 +25,7 @@ function uploadFilesToS3(req) {
     return __awaiter(this, void 0, void 0, function* () {
         const bucketName = process.env.AWS_S3_BUCKET_NAME;
         if (!bucketName) {
-            throw new Error("S3 bucket name is not defined in environment variables.");
+            throw new Error('S3 bucket name is not defined in environment variables.');
         }
         if (!req.files) {
             return Promise.all([]);
@@ -37,7 +37,7 @@ function uploadFilesToS3(req) {
                 uploadPromises.push(uploadPromise);
             }
         }
-        else if (typeof req.files === "object") {
+        else if (typeof req.files === 'object') {
             for (const fieldName in req.files) {
                 const files = req.files[fieldName];
                 if (Array.isArray(files)) {
@@ -67,7 +67,7 @@ function uploadToS3(file, bucketName, fieldName) {
             };
         }
         catch (error) {
-            console.error("S3 upload failed:", error);
+            console.error('S3 upload failed:', error);
             throw new Error(`Failed to upload file to S3: ${error}`);
         }
     });
@@ -76,13 +76,13 @@ const getPresignedUrl = (req, res) => __awaiter(void 0, void 0, void 0, function
     try {
         const { fileName, fileType } = req.body; // Get file name & type from frontend
         if (!fileName || !fileType) {
-            return res.status(400).json({ error: "Missing fileName or fileType" });
+            return res.status(400).json({ error: 'Missing fileName or fileType' });
         }
         const bucketName = process.env.AWS_S3_BUCKET_NAME;
         if (!bucketName) {
             return res
                 .status(500)
-                .json({ error: "S3 bucket name is not set in environment variables" });
+                .json({ error: 'S3 bucket name is not set in environment variables' });
         }
         // ✅ Generate a unique file name
         const s3Params = {
@@ -91,26 +91,26 @@ const getPresignedUrl = (req, res) => __awaiter(void 0, void 0, void 0, function
             ContentType: fileType,
             Expires: 300, // URL expires in 5 minutes
         };
-        const uploadUrl = yield s3.getSignedUrlPromise("putObject", s3Params);
+        const uploadUrl = yield s3.getSignedUrlPromise('putObject', s3Params);
         return res.json({ uploadUrl });
     }
     catch (error) {
-        console.error("❌ Error generating presigned URL:", error);
-        return res.status(500).json({ error: "Failed to generate upload URL" });
+        console.error('❌ Error generating presigned URL:', error);
+        return res.status(500).json({ error: 'Failed to generate upload URL' });
     }
 });
 exports.getPresignedUrl = getPresignedUrl;
 const removeFile = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { fileKey } = req.body;
     if (!fileKey) {
-        return res.status(400).json({ error: "File key is required" });
+        return res.status(400).json({ error: 'File key is required' });
     }
     try {
         const bucketName = process.env.AWS_S3_BUCKET_NAME;
         if (!bucketName) {
             return res
                 .status(500)
-                .json({ error: "S3 bucket name is not set in environment variables" });
+                .json({ error: 'S3 bucket name is not set in environment variables' });
         }
         yield s3
             .deleteObject({
@@ -121,15 +121,15 @@ const removeFile = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
         res.json({ success: true });
     }
     catch (error) {
-        console.error("S3 Deletion Error:", error);
-        res.status(500).json({ error: "Failed to delete file" });
+        console.error('S3 Deletion Error:', error);
+        res.status(500).json({ error: 'Failed to delete file' });
     }
 });
 exports.removeFile = removeFile;
 const deleteFileFromS3 = (url) => __awaiter(void 0, void 0, void 0, function* () {
     if (!url)
         return;
-    const bucketName = process.env.AWS_S3_BUCKET_NAME || "";
+    const bucketName = process.env.AWS_S3_BUCKET_NAME || '';
     const fileKey = url.split(`${bucketName}/`)[1];
     if (!fileKey)
         return;
@@ -146,7 +146,7 @@ const deleteFilesFromS3 = (modelInstance, fields) => __awaiter(void 0, void 0, v
         .filter((key) => key);
     if (keysToDelete.length > 0) {
         const deleteParams = {
-            Bucket: process.env.AWS_S3_BUCKET_NAME || "",
+            Bucket: process.env.AWS_S3_BUCKET_NAME || '',
             Delete: {
                 Objects: keysToDelete.map((Key) => ({ Key })),
             },

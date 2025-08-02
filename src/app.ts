@@ -96,7 +96,6 @@ io.on('connection', (socket) => {
 app.use(bodyParser.json())
 app.use('/api/v1/s3-delete-file', removeFile)
 app.use('/api/v1/s3-presigned-url', getPresignedUrl)
-// app.use("/api/v1/s3-metadata", getExtension);
 app.use('/api/v1/competitions', competitionRoutes)
 app.use('/api/v1/company', companyRoutes)
 app.use('/api/v1/messages', messageRoutes)
