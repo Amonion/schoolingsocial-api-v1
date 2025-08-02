@@ -23,7 +23,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.followUser = exports.searchPosts = exports.getPostStat = exports.checkNudeMedia = exports.updatePostViews = exports.updatePostStat = exports.deletePost = exports.updatePost = exports.getBookMarkedPosts = exports.getMutedUsers = exports.getBlockedUsers = exports.getFollowings = exports.getFollowingPosts = exports.getPosts = exports.getPostById = exports.repostPost = exports.muteUser = exports.blockUser = exports.pinPost = exports.updatePoll = exports.createPost = exports.makePost = exports.deleteAccount = exports.updateAccount = exports.getAccounts = exports.getAccountById = exports.createAccount = void 0;
+exports.followUser = exports.searchPosts = exports.getPostStat = exports.updatePostViews = exports.updatePostStat = exports.deletePost = exports.updatePost = exports.getBookMarkedPosts = exports.getMutedUsers = exports.getBlockedUsers = exports.getFollowings = exports.getFollowingPosts = exports.getPosts = exports.getPostById = exports.repostPost = exports.muteUser = exports.blockUser = exports.pinPost = exports.updatePoll = exports.createPost = exports.makePost = exports.deleteAccount = exports.updateAccount = exports.getAccounts = exports.getAccountById = exports.createAccount = exports.checkNudeMedia = void 0;
 const postModel_1 = require("../../models/users/postModel");
 const fileUpload_1 = require("../../utils/fileUpload");
 const errorHandler_1 = require("../../utils/errorHandler");
@@ -37,8 +37,77 @@ const fs_1 = __importDefault(require("fs"));
 const canvas_1 = require("canvas");
 let model;
 (() => __awaiter(void 0, void 0, void 0, function* () {
-    model = yield (0, nsfwjs_1.load)('lite_mobilenet_v2');
+    model = yield (0, nsfwjs_1.load)();
 }))();
+const checkNudeMedia = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    var _a, _b;
+    try {
+        if (!model) {
+            return res.status(503).json({ message: 'Model loading, try again' });
+        }
+        const filePath = (_a = req.file) === null || _a === void 0 ? void 0 : _a.path; // ✅ Now we have a path
+        const fileType = (_b = req.file) === null || _b === void 0 ? void 0 : _b.mimetype;
+        if (!filePath || !fileType) {
+            return res.status(400).json({ message: 'File not found' });
+        }
+        let response;
+        if (fileType.startsWith('image')) {
+            response = yield analyzeImage(filePath);
+            fs_1.default.unlinkSync(filePath);
+        }
+        res.json({ success: true, data: response });
+    }
+    catch (error) {
+        (0, errorHandler_1.handleError)(res, undefined, undefined, error);
+    }
+});
+exports.checkNudeMedia = checkNudeMedia;
+// import { load, NSFWJS } from 'nsfwjs'
+// import path from 'path'
+// import fs from 'fs'
+// import { createCanvas, loadImage } from 'canvas'
+// import { loadModel } from './nsfw-model'
+// let model: NSFWJS | null = null
+// export async function loadModel(): Promise<NSFWJS> {
+//   if (model) return model // Avoid reloading
+//   const customModelPath = process.env.NSFW_MODEL_PATH
+//   if (customModelPath) {
+//     const modelPath = path.resolve(customModelPath, 'model.json')
+//     console.log(`✅ Loading NSFW model from local path: ${modelPath}`)
+//     model = await load(`file://${modelPath}`)
+//   } else {
+//     console.log('✅ Loading NSFW Lite model from CDN...')
+//     model = await load('https://nsfwjs.com/model/lite_mobilenet_v2/model.json')
+//   }
+//   return model
+// }
+// export const checkNudeMedia = async (req: Request, res: Response) => {
+//   try {
+//     const nsfwModel = await loadModel() // ✅ Always ensure model is ready
+//     const filePath = req.file?.path
+//     const fileType = req.file?.mimetype
+//     if (!filePath || !fileType) {
+//       return res.status(400).json({ message: 'File not found' })
+//     }
+//     let response
+//     if (fileType.startsWith('image')) {
+//       response = await analyzeImage(filePath, nsfwModel)
+//     }
+//     // ✅ Clean up file after use
+//     fs.unlinkSync(filePath)
+//     return res.json({ success: true, data: response })
+//   } catch (error: any) {
+//     handleError(res, undefined, undefined, error)
+//   }
+// }
+// async function analyzeImage(filePath: string, model: any) {
+//   const img = await loadImage(filePath)
+//   const canvas = createCanvas(img.width, img.height)
+//   const ctx = canvas.getContext('2d')
+//   ctx.drawImage(img, 0, 0)
+//   const predictions = await model.classify(canvas)
+//   return predictions
+// }
 const createAccount = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const uploadedFiles = yield (0, fileUpload_1.uploadFilesToS3)(req);
@@ -731,29 +800,6 @@ function analyzeImage(imagePath) {
         return yield model.classify(canvas);
     });
 }
-const checkNudeMedia = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    var _a, _b;
-    try {
-        if (!model) {
-            return res.status(503).json({ message: 'Model loading, try again' });
-        }
-        const filePath = (_a = req.file) === null || _a === void 0 ? void 0 : _a.path; // ✅ Now we have a path
-        const fileType = (_b = req.file) === null || _b === void 0 ? void 0 : _b.mimetype;
-        if (!filePath || !fileType) {
-            return res.status(400).json({ message: 'File not found' });
-        }
-        let response;
-        if (fileType.startsWith('image')) {
-            response = yield analyzeImage(filePath);
-            fs_1.default.unlinkSync(filePath);
-        }
-        res.json({ success: true, data: response });
-    }
-    catch (error) {
-        (0, errorHandler_1.handleError)(res, undefined, undefined, error);
-    }
-});
-exports.checkNudeMedia = checkNudeMedia;
 const getPostStat = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const { id, userId } = req.query;
