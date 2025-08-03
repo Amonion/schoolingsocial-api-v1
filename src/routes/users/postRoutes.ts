@@ -31,7 +31,7 @@ import {
   getBlockedUsers,
   getMutedUsers,
   updatePoll,
-  checkNudeMedia,
+  // checkNudeMedia,
 } from '../../controllers/users/postController'
 
 import {
@@ -43,20 +43,20 @@ import {
   multiSearch,
 } from '../../controllers/users/uploadController'
 
-const uploadDir = path.join(__dirname, 'uploads')
-if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir)
+// const uploadDir = path.join(__dirname, 'uploads')
+// if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir)
 
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, uploadDir)
-  },
-  filename: (req, file, cb) => {
-    const ext = path.extname(file.originalname)
-    cb(null, `${Date.now()}-${file.originalname.replace(/\s/g, '_')}`)
-  },
-})
+// const storage = multer.diskStorage({
+//   destination: (req, file, cb) => {
+//     cb(null, uploadDir)
+//   },
+//   filename: (req, file, cb) => {
+//     const ext = path.extname(file.originalname)
+//     cb(null, `${Date.now()}-${file.originalname.replace(/\s/g, '_')}`)
+//   },
+// })
 
-const uploadFile = multer({ storage })
+// const uploadFile = multer({ storage })
 const router = express.Router()
 router.route('/follow/:id').patch(upload.any(), followUser)
 router.route('/poll/:id').post(upload.any(), updatePoll)
@@ -77,7 +77,7 @@ router.route('/create').get(getPosts).post(upload.any(), makePost)
 router.route('/following').get(getFollowingPosts)
 router.route('/bookmarks').get(getBookMarkedPosts)
 router.route('/search').get(searchPosts)
-router.route('/check-nsfw').post(uploadFile.single('file'), checkNudeMedia)
+// router.route('/check-nsfw').post(uploadFile.single('file'), checkNudeMedia)
 
 router
   .route('/uploads/:id')
