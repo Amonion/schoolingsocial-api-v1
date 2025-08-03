@@ -5,9 +5,9 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = __importDefault(require("express"));
 const multer_1 = __importDefault(require("multer"));
-const upload = (0, multer_1.default)();
 const path_1 = __importDefault(require("path"));
 const fs_1 = __importDefault(require("fs"));
+const upload = (0, multer_1.default)();
 const postController_1 = require("../../controllers/users/postController");
 const uploadController_1 = require("../../controllers/users/uploadController");
 const uploadDir = path_1.default.join(__dirname, 'uploads');

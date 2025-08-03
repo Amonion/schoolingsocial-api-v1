@@ -23,72 +23,23 @@ import { IBlock, IFollower, IMute, IPost } from '../../utils/userInterface'
 import { Bookmark, Like, View } from '../../models/users/statModel'
 import { postScore } from '../../utils/computation'
 import { io } from '../../app'
-// import { load, NSFWJS } from 'nsfwjs'
-// import fs from 'fs'
-// import { createCanvas, loadImage } from 'canvas'
-
-// let model: NSFWJS
-// ;(async () => {
-//   model = await load()
-// })()
-
-// export const checkNudeMedia = async (req: Request, res: Response) => {
-//   try {
-//     if (!model) {
-//       return res.status(503).json({ message: 'Model loading, try again' })
-//     }
-
-//     const filePath = req.file?.path // ✅ Now we have a path
-//     const fileType = req.file?.mimetype
-
-//     if (!filePath || !fileType) {
-//       return res.status(400).json({ message: 'File not found' })
-//     }
-
-//     let response
-//     if (fileType.startsWith('image')) {
-//       response = await analyzeImage(filePath)
-//       fs.unlinkSync(filePath)
-//     }
-//     res.json({ success: true, data: response })
-//   } catch (error: any) {
-//     handleError(res, undefined, undefined, error)
-//   }
-// }
 
 import { load, NSFWJS } from 'nsfwjs'
-import path from 'path'
 import fs from 'fs'
 import { createCanvas, loadImage } from 'canvas'
 
-let model: NSFWJS | null = null
+let model: NSFWJS
+;(async () => {
+  model = await load()
+})()
 
-// ✅ Load NSFW model (from local or CDN)
-export async function loadModel(): Promise<NSFWJS> {
-  if (model) return model // Avoid reloading if already loaded
-
-  const customModelPath = process.env.NSFW_MODEL_PATH
-
-  if (customModelPath) {
-    // ✅ Local model for Render or localhost
-    const modelPath = path.resolve(customModelPath, 'model.json')
-    console.log(`✅ Loading NSFW model from local path: ${modelPath}`)
-    model = await load(`file://${modelPath}`)
-  } else {
-    // ✅ Remote fallback from CDN
-    console.log('✅ Loading NSFW Lite model from CDN...')
-    model = await load('https://nsfwjs.com/models/lite_mobilenet_v2/model.json')
-  }
-
-  return model
-}
-
-// ✅ Controller for NSFW detection
 export const checkNudeMedia = async (req: Request, res: Response) => {
   try {
-    const nsfwModel = await loadModel() // Ensure model is ready
+    if (!model) {
+      return res.status(503).json({ message: 'Model loading, try again' })
+    }
 
-    const filePath = req.file?.path
+    const filePath = req.file?.path // ✅ Now we have a path
     const fileType = req.file?.mimetype
 
     if (!filePath || !fileType) {
@@ -97,91 +48,24 @@ export const checkNudeMedia = async (req: Request, res: Response) => {
 
     let response
     if (fileType.startsWith('image')) {
-      response = await analyzeImage(filePath, nsfwModel)
+      response = await analyzeImage(filePath)
+      fs.unlinkSync(filePath)
     }
-
-    // ✅ Clean up file after analysis
-    fs.unlinkSync(filePath)
-
-    return res.json({ success: true, data: response })
+    res.json({ success: true, data: response })
   } catch (error: any) {
-    console.error('❌ Error in checkNudeMedia:', error)
-    return res
-      .status(500)
-      .json({ message: 'Server error', error: error.message })
+    handleError(res, undefined, undefined, error)
   }
 }
 
-// ✅ Analyze image using NSFWJS model
-async function analyzeImage(filePath: string, model: NSFWJS) {
-  const img = await loadImage(filePath)
+async function analyzeImage(imagePath: string): Promise<any> {
+  if (!model) throw new Error('Model not loaded')
+  const img = await loadImage(imagePath)
   const canvas = createCanvas(img.width, img.height)
   const ctx = canvas.getContext('2d')
   ctx.drawImage(img, 0, 0)
 
-  const predictions = await model.classify(canvas as any)
-  return predictions
+  return await model.classify(canvas as unknown as HTMLCanvasElement)
 }
-
-// import { load, NSFWJS } from 'nsfwjs'
-// import path from 'path'
-// import fs from 'fs'
-// import { createCanvas, loadImage } from 'canvas'
-// import { loadModel } from './nsfw-model'
-
-// let model: NSFWJS | null = null
-
-// export async function loadModel(): Promise<NSFWJS> {
-//   if (model) return model // Avoid reloading
-
-//   const customModelPath = process.env.NSFW_MODEL_PATH
-
-//   if (customModelPath) {
-//     const modelPath = path.resolve(customModelPath, 'model.json')
-//     console.log(`✅ Loading NSFW model from local path: ${modelPath}`)
-//     model = await load(`file://${modelPath}`)
-//   } else {
-//     console.log('✅ Loading NSFW Lite model from CDN...')
-//     model = await load('https://nsfwjs.com/model/lite_mobilenet_v2/model.json')
-//   }
-
-//   return model
-// }
-
-// export const checkNudeMedia = async (req: Request, res: Response) => {
-//   try {
-//     const nsfwModel = await loadModel() // ✅ Always ensure model is ready
-
-//     const filePath = req.file?.path
-//     const fileType = req.file?.mimetype
-
-//     if (!filePath || !fileType) {
-//       return res.status(400).json({ message: 'File not found' })
-//     }
-
-//     let response
-//     if (fileType.startsWith('image')) {
-//       response = await analyzeImage(filePath, nsfwModel)
-//     }
-
-//     // ✅ Clean up file after use
-//     fs.unlinkSync(filePath)
-
-//     return res.json({ success: true, data: response })
-//   } catch (error: any) {
-//     handleError(res, undefined, undefined, error)
-//   }
-// }
-
-// async function analyzeImage(filePath: string, model: any) {
-//   const img = await loadImage(filePath)
-//   const canvas = createCanvas(img.width, img.height)
-//   const ctx = canvas.getContext('2d')
-//   ctx.drawImage(img, 0, 0)
-
-//   const predictions = await model.classify(canvas)
-//   return predictions
-// }
 
 export const createAccount = async (
   req: Request,
@@ -1049,16 +933,6 @@ export const updatePostViews = async (req: Request, res: Response) => {
     handleError(res, undefined, undefined, error)
   }
 }
-
-// async function analyzeImage(imagePath: string): Promise<any> {
-//   if (!model) throw new Error('Model not loaded')
-//   const img = await loadImage(imagePath)
-//   const canvas = createCanvas(img.width, img.height)
-//   const ctx = canvas.getContext('2d')
-//   ctx.drawImage(img, 0, 0)
-
-//   return await model.classify(canvas as unknown as HTMLCanvasElement)
-// }
 
 export const getPostStat = async (req: Request, res: Response) => {
   try {

@@ -1,8 +1,8 @@
 import express from 'express'
 import multer from 'multer'
-const upload = multer()
 import path from 'path'
 import fs from 'fs'
+const upload = multer()
 
 import {
   getAccountById,
@@ -78,6 +78,7 @@ router.route('/following').get(getFollowingPosts)
 router.route('/bookmarks').get(getBookMarkedPosts)
 router.route('/search').get(searchPosts)
 router.route('/check-nsfw').post(uploadFile.single('file'), checkNudeMedia)
+
 router
   .route('/uploads/:id')
   .get(getUploadById)
