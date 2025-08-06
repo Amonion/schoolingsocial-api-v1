@@ -47,6 +47,7 @@ const PostSchema = new mongoose_1.Schema({
     postCountry: { type: String, default: '' },
     postType: { type: String, default: 'main' },
     repostedUsername: { type: String, default: '' },
+    uniqueId: { type: String, default: '' },
     postId: { type: String, default: '' },
     isVerified: { type: Boolean, default: false },
     isSelected: { type: Boolean, default: false },

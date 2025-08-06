@@ -29,41 +29,6 @@ const query_1 = require("../../utils/query");
 const statModel_1 = require("../../models/users/statModel");
 const computation_1 = require("../../utils/computation");
 const app_1 = require("../../app");
-// import { load, NSFWJS } from 'nsfwjs'
-// import fs from 'fs'
-// import { createCanvas, loadImage } from 'canvas'
-// let model: NSFWJS
-// ;(async () => {
-//   model = await load()
-// })()
-// export const checkNudeMedia = async (req: Request, res: Response) => {
-//   try {
-//     if (!model) {
-//       return res.status(503).json({ message: 'Model loading, try again' })
-//     }
-//     const filePath = req.file?.path // ✅ Now we have a path
-//     const fileType = req.file?.mimetype
-//     if (!filePath || !fileType) {
-//       return res.status(400).json({ message: 'File not found' })
-//     }
-//     let response
-//     if (fileType.startsWith('image')) {
-//       response = await analyzeImage(filePath)
-//       fs.unlinkSync(filePath)
-//     }
-//     res.json({ success: true, data: response })
-//   } catch (error: any) {
-//     handleError(res, undefined, undefined, error)
-//   }
-// }
-// async function analyzeImage(imagePath: string): Promise<any> {
-//   if (!model) throw new Error('Model not loaded')
-//   const img = await loadImage(imagePath)
-//   const canvas = createCanvas(img.width, img.height)
-//   const ctx = canvas.getContext('2d')
-//   ctx.drawImage(img, 0, 0)
-//   return await model.classify(canvas as unknown as HTMLCanvasElement)
-// }
 const createAccount = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const uploadedFiles = yield (0, fileUpload_1.uploadFilesToS3)(req);
@@ -133,6 +98,7 @@ const makePost = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
             displayName: sender.displayName,
             polls: data.polls,
             users: data.users,
+            uniqueId: data.uniqueId,
             userId: sender._id,
             postId: data.postId,
             postType: data.postType,
@@ -163,7 +129,9 @@ const makePost = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
             userId: sender._id,
         });
         res.status(200).json({
-            message: 'Your content is posted successfully',
+            message: data.postType === 'comment'
+                ? null
+                : 'Your content is posted successfully',
             data: post,
         });
     }
