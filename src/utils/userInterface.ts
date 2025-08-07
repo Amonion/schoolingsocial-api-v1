@@ -184,10 +184,12 @@ export interface IPost extends Document {
   userId: string
   sender: IUser
   postType: string
+  replyToId: string
   displayName: string
   content: string
   postCountry: string
   mutes: number
+  hates: number
   blocks: number
   totalVotes: number
   media: Media[]
@@ -200,6 +202,7 @@ export interface IPost extends Document {
   followed: boolean
   muted: boolean
   liked: boolean
+  hated: boolean
   bookmarked: boolean
   isPinned: boolean
   viewed: boolean
@@ -242,6 +245,8 @@ export interface IRepliedChatContent extends Document {
 export interface IStat extends Document {
   userId: string
   postId: string
+  hated: boolean
+  liked: boolean
   bookmarkUserId: string
 }
 

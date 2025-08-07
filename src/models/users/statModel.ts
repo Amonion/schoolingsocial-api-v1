@@ -1,17 +1,30 @@
-import mongoose, { Schema } from "mongoose";
-import { IStat } from "../../utils/userInterface";
+import mongoose, { Schema } from 'mongoose'
+import { IStat } from '../../utils/userInterface'
 
-const LikeSchema: Schema = new Schema(
+const HateSchema: Schema = new Schema(
   {
     userId: { type: String },
     postId: { type: String },
+    hated: { type: Boolean },
     createdAt: { type: Date, default: Date.now },
   },
   {
     timestamps: true,
   }
-);
-export const Like = mongoose.model<IStat>("Like", LikeSchema);
+)
+export const Hate = mongoose.model<IStat>('Hate', HateSchema)
+const LikeSchema: Schema = new Schema(
+  {
+    userId: { type: String },
+    postId: { type: String },
+    liked: { type: Boolean },
+    createdAt: { type: Date, default: Date.now },
+  },
+  {
+    timestamps: true,
+  }
+)
+export const Like = mongoose.model<IStat>('Like', LikeSchema)
 
 const BookmarkSchema: Schema = new Schema(
   {
@@ -23,8 +36,8 @@ const BookmarkSchema: Schema = new Schema(
   {
     timestamps: true,
   }
-);
-export const Bookmark = mongoose.model<IStat>("Bookmark", BookmarkSchema);
+)
+export const Bookmark = mongoose.model<IStat>('Bookmark', BookmarkSchema)
 
 const CommentSchema: Schema = new Schema(
   {
@@ -35,8 +48,8 @@ const CommentSchema: Schema = new Schema(
   {
     timestamps: true,
   }
-);
-export const CommentStat = mongoose.model<IStat>("CommentStat", CommentSchema);
+)
+export const CommentStat = mongoose.model<IStat>('CommentStat', CommentSchema)
 
 const ViewSchema: Schema = new Schema(
   {
@@ -47,8 +60,8 @@ const ViewSchema: Schema = new Schema(
   {
     timestamps: true,
   }
-);
-export const View = mongoose.model<IStat>("Views", ViewSchema);
+)
+export const View = mongoose.model<IStat>('Views', ViewSchema)
 
 const RepostSchema: Schema = new Schema(
   {
@@ -59,5 +72,5 @@ const RepostSchema: Schema = new Schema(
   {
     timestamps: true,
   }
-);
-export const Repost = mongoose.model<IStat>("Repost", RepostSchema);
+)
+export const Repost = mongoose.model<IStat>('Repost', RepostSchema)

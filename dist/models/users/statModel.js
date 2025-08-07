@@ -33,16 +33,26 @@ var __importStar = (this && this.__importStar) || (function () {
     };
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.Repost = exports.View = exports.CommentStat = exports.Bookmark = exports.Like = void 0;
+exports.Repost = exports.View = exports.CommentStat = exports.Bookmark = exports.Like = exports.Hate = void 0;
 const mongoose_1 = __importStar(require("mongoose"));
-const LikeSchema = new mongoose_1.Schema({
+const HateSchema = new mongoose_1.Schema({
     userId: { type: String },
     postId: { type: String },
+    hated: { type: Boolean },
     createdAt: { type: Date, default: Date.now },
 }, {
     timestamps: true,
 });
-exports.Like = mongoose_1.default.model("Like", LikeSchema);
+exports.Hate = mongoose_1.default.model('Hate', HateSchema);
+const LikeSchema = new mongoose_1.Schema({
+    userId: { type: String },
+    postId: { type: String },
+    liked: { type: Boolean },
+    createdAt: { type: Date, default: Date.now },
+}, {
+    timestamps: true,
+});
+exports.Like = mongoose_1.default.model('Like', LikeSchema);
 const BookmarkSchema = new mongoose_1.Schema({
     userId: { type: String },
     postId: { type: String },
@@ -51,7 +61,7 @@ const BookmarkSchema = new mongoose_1.Schema({
 }, {
     timestamps: true,
 });
-exports.Bookmark = mongoose_1.default.model("Bookmark", BookmarkSchema);
+exports.Bookmark = mongoose_1.default.model('Bookmark', BookmarkSchema);
 const CommentSchema = new mongoose_1.Schema({
     userId: { type: String },
     postId: { type: String },
@@ -59,7 +69,7 @@ const CommentSchema = new mongoose_1.Schema({
 }, {
     timestamps: true,
 });
-exports.CommentStat = mongoose_1.default.model("CommentStat", CommentSchema);
+exports.CommentStat = mongoose_1.default.model('CommentStat', CommentSchema);
 const ViewSchema = new mongoose_1.Schema({
     userId: { type: String },
     postId: { type: String },
@@ -67,7 +77,7 @@ const ViewSchema = new mongoose_1.Schema({
 }, {
     timestamps: true,
 });
-exports.View = mongoose_1.default.model("Views", ViewSchema);
+exports.View = mongoose_1.default.model('Views', ViewSchema);
 const RepostSchema = new mongoose_1.Schema({
     userId: { type: String },
     postId: { type: String },
@@ -75,4 +85,4 @@ const RepostSchema = new mongoose_1.Schema({
 }, {
     timestamps: true,
 });
-exports.Repost = mongoose_1.default.model("Repost", RepostSchema);
+exports.Repost = mongoose_1.default.model('Repost', RepostSchema);

@@ -20,7 +20,7 @@ import {
   search,
 } from '../../utils/query'
 import { IBlock, IFollower, IMute, IPost } from '../../utils/userInterface'
-import { Bookmark, Like, View } from '../../models/users/statModel'
+import { Bookmark, Like, View, Hate } from '../../models/users/statModel'
 import { postScore } from '../../utils/computation'
 import { io } from '../../app'
 
@@ -111,16 +111,23 @@ export const deleteAccount = async (req: Request, res: Response) => {
 export const makePost = async (req: Request, res: Response) => {
   try {
     const sender = req.body.sender
-    const data = req.body
+    const data = { ...req.body } // Make a copy
+    if (data._id) {
+      delete data._id // Remove _id if it exists
+    }
+
     const form = {
       picture: sender.picture,
       username: sender.username,
       displayName: sender.displayName,
       polls: data.polls,
       users: data.users,
+      replyTo: data.replyTo,
       uniqueId: data.uniqueId,
       userId: sender._id,
       postId: data.postId,
+      level: data.level,
+      replyToId: data.replyToId,
       postType: data.postType,
       content: data.content,
       createdAt: data.createdAt,
@@ -146,7 +153,7 @@ export const makePost = async (req: Request, res: Response) => {
         }
       )
       await Post.updateOne(
-        { _id: data.postId },
+        { _id: post.replyToId },
         {
           $inc: { replies: 1 },
           $set: { score: score },
@@ -726,7 +733,7 @@ export const deletePost = async (req: Request, res: Response) => {
         }
       )
       await Post.updateOne(
-        { _id: post._id },
+        { _id: post.postId },
         {
           $inc: { replies: -1 },
         }
@@ -755,6 +762,7 @@ export const updatePostStat = async (req: Request, res: Response) => {
     const { userId, id } = req.body
     let updateQuery: any = {}
     let liked = false
+    let hated = false
     let bookmarked = false
 
     const post = await Post.findById(id)
@@ -776,6 +784,32 @@ export const updatePostStat = async (req: Request, res: Response) => {
         updateQuery.$inc = { likes: 1 }
         liked = true
         await Like.create({ postId: id, userId })
+        const hate = await Hate.findOne({ postId: id, userId })
+        if (hate) {
+          updateQuery.$inc.hates = -1
+          await Hate.deleteOne({ postId: id, userId })
+        }
+      }
+    }
+
+    if (req.body.hates !== undefined) {
+      if (!req.body.hates && post.hates <= 0) {
+        return res.status(200).json({ message: null })
+      }
+
+      const hate = await Hate.findOne({ postId: id, userId })
+      if (hate) {
+        updateQuery.$inc = { hates: -1 }
+        await Hate.deleteOne({ postId: id, userId })
+      } else {
+        updateQuery.$inc = { hates: 1 }
+        hated = true
+        await Hate.create({ postId: id, userId })
+        const like = await Like.findOne({ postId: id, userId })
+        if (like) {
+          updateQuery.$inc.likes = -1
+          await Like.deleteOne({ postId: id, userId })
+        }
       }
     }
 
@@ -830,7 +864,7 @@ export const updatePostStat = async (req: Request, res: Response) => {
     )
 
     await Post.updateOne(
-      { _id: post._id },
+      { _id: post.postId },
       {
         $set: { score: score },
       }
@@ -988,6 +1022,11 @@ const processFetchedPosts = async (req: Request, followerId: string) => {
     postId: { $in: postIds },
   }).select('postId')
 
+  const hatedPosts = await Hate.find({
+    userId: followerId,
+    postId: { $in: postIds },
+  }).select('postId')
+
   const bookmarkedPosts = await Bookmark.find({
     bookmarkUserId: followerId,
     postId: { $in: postIds },
@@ -1010,6 +1049,7 @@ const processFetchedPosts = async (req: Request, followerId: string) => {
   const mutedUserIds = mutedUsers.map((mute) => mute.accountUserId.toString())
 
   const likedPostIds = likedPosts.map((like) => like.postId.toString())
+  const hatedPostIds = hatedPosts.map((hate) => hate.postId.toString())
 
   const bookmarkedPostIds = bookmarkedPosts.map((bookmark) =>
     bookmark.postId.toString()
@@ -1052,6 +1092,10 @@ const processFetchedPosts = async (req: Request, followerId: string) => {
 
     if (likedPostIds.includes(el._id.toString())) {
       el.liked = true
+    }
+
+    if (hatedPostIds.includes(el._id.toString())) {
+      el.hated = true
     }
 
     if (bookmarkedPostIds.includes(el._id.toString())) {

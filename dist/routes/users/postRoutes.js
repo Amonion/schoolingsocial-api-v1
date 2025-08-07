@@ -8,18 +8,6 @@ const multer_1 = __importDefault(require("multer"));
 const upload = (0, multer_1.default)();
 const postController_1 = require("../../controllers/users/postController");
 const uploadController_1 = require("../../controllers/users/uploadController");
-// const uploadDir = path.join(__dirname, 'uploads')
-// if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir)
-// const storage = multer.diskStorage({
-//   destination: (req, file, cb) => {
-//     cb(null, uploadDir)
-//   },
-//   filename: (req, file, cb) => {
-//     const ext = path.extname(file.originalname)
-//     cb(null, `${Date.now()}-${file.originalname.replace(/\s/g, '_')}`)
-//   },
-// })
-// const uploadFile = multer({ storage })
 const router = express_1.default.Router();
 router.route('/follow/:id').patch(upload.any(), postController_1.followUser);
 router.route('/poll/:id').post(upload.any(), postController_1.updatePoll);

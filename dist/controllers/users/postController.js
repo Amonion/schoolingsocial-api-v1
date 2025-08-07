@@ -91,16 +91,22 @@ exports.deleteAccount = deleteAccount;
 const makePost = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const sender = req.body.sender;
-        const data = req.body;
+        const data = Object.assign({}, req.body); // Make a copy
+        if (data._id) {
+            delete data._id; // Remove _id if it exists
+        }
         const form = {
             picture: sender.picture,
             username: sender.username,
             displayName: sender.displayName,
             polls: data.polls,
             users: data.users,
+            replyTo: data.replyTo,
             uniqueId: data.uniqueId,
             userId: sender._id,
             postId: data.postId,
+            level: data.level,
+            replyToId: data.replyToId,
             postType: data.postType,
             content: data.content,
             createdAt: data.createdAt,
@@ -114,7 +120,7 @@ const makePost = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
             yield userModel_1.User.updateOne({ _id: sender._id }, {
                 $inc: { comments: 1 },
             });
-            yield postModel_1.Post.updateOne({ _id: data.postId }, {
+            yield postModel_1.Post.updateOne({ _id: post.replyToId }, {
                 $inc: { replies: 1 },
                 $set: { score: score },
             });
@@ -577,7 +583,7 @@ const deletePost = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
             yield userModel_1.User.updateOne({ _id: post.userId }, {
                 $inc: { comments: -1 },
             });
-            yield postModel_1.Post.updateOne({ _id: post._id }, {
+            yield postModel_1.Post.updateOne({ _id: post.postId }, {
                 $inc: { replies: -1 },
             });
         }
@@ -601,6 +607,7 @@ const updatePostStat = (req, res) => __awaiter(void 0, void 0, void 0, function*
         const { userId, id } = req.body;
         let updateQuery = {};
         let liked = false;
+        let hated = false;
         let bookmarked = false;
         const post = yield postModel_1.Post.findById(id);
         if (!post) {
@@ -619,6 +626,31 @@ const updatePostStat = (req, res) => __awaiter(void 0, void 0, void 0, function*
                 updateQuery.$inc = { likes: 1 };
                 liked = true;
                 yield statModel_1.Like.create({ postId: id, userId });
+                const hate = yield statModel_1.Hate.findOne({ postId: id, userId });
+                if (hate) {
+                    updateQuery.$inc.hates = -1;
+                    yield statModel_1.Hate.deleteOne({ postId: id, userId });
+                }
+            }
+        }
+        if (req.body.hates !== undefined) {
+            if (!req.body.hates && post.hates <= 0) {
+                return res.status(200).json({ message: null });
+            }
+            const hate = yield statModel_1.Hate.findOne({ postId: id, userId });
+            if (hate) {
+                updateQuery.$inc = { hates: -1 };
+                yield statModel_1.Hate.deleteOne({ postId: id, userId });
+            }
+            else {
+                updateQuery.$inc = { hates: 1 };
+                hated = true;
+                yield statModel_1.Hate.create({ postId: id, userId });
+                const like = yield statModel_1.Like.findOne({ postId: id, userId });
+                if (like) {
+                    updateQuery.$inc.likes = -1;
+                    yield statModel_1.Like.deleteOne({ postId: id, userId });
+                }
             }
         }
         if (req.body.bookmarks !== undefined) {
@@ -663,7 +695,7 @@ const updatePostStat = (req, res) => __awaiter(void 0, void 0, void 0, function*
             }
         }
         const score = (0, computation_1.postScore)(post.likes, post.replies, post.shares, post.bookmarks, post.reposts, post.views);
-        yield postModel_1.Post.updateOne({ _id: post._id }, {
+        yield postModel_1.Post.updateOne({ _id: post.postId }, {
             $set: { score: score },
         });
         if (Object.keys(updateQuery).length > 0) {
@@ -793,6 +825,10 @@ const processFetchedPosts = (req, followerId) => __awaiter(void 0, void 0, void 
         userId: followerId,
         postId: { $in: postIds },
     }).select('postId');
+    const hatedPosts = yield statModel_1.Hate.find({
+        userId: followerId,
+        postId: { $in: postIds },
+    }).select('postId');
     const bookmarkedPosts = yield statModel_1.Bookmark.find({
         bookmarkUserId: followerId,
         postId: { $in: postIds },
@@ -808,6 +844,7 @@ const processFetchedPosts = (req, followerId) => __awaiter(void 0, void 0, void 
     }));
     const mutedUserIds = mutedUsers.map((mute) => mute.accountUserId.toString());
     const likedPostIds = likedPosts.map((like) => like.postId.toString());
+    const hatedPostIds = hatedPosts.map((hate) => hate.postId.toString());
     const bookmarkedPostIds = bookmarkedPosts.map((bookmark) => bookmark.postId.toString());
     const viewedPostIds = viewedPosts.map((view) => view.postId.toString());
     const updatedPosts = [];
@@ -836,6 +873,9 @@ const processFetchedPosts = (req, followerId) => __awaiter(void 0, void 0, void 
         }
         if (likedPostIds.includes(el._id.toString())) {
             el.liked = true;
+        }
+        if (hatedPostIds.includes(el._id.toString())) {
+            el.hated = true;
         }
         if (bookmarkedPostIds.includes(el._id.toString())) {
             el.bookmarked = true;
