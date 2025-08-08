@@ -126,8 +126,8 @@ const makePost = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
                     $set: { score: score },
                 });
             }
-            else if (sender._id) {
-                yield postModel_1.Post.updateOne({ _id: sender._id }, {
+            else if (data.postId) {
+                yield postModel_1.Post.updateOne({ _id: data.postId }, {
                     $inc: { replies: 1 },
                     $set: { score: score },
                 });

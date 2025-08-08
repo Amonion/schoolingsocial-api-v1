@@ -145,6 +145,7 @@ export const makePost = async (req: Request, res: Response) => {
       post.reposts,
       post.views
     )
+
     if (data.postType === 'comment') {
       await User.updateOne(
         { _id: sender._id },
@@ -160,9 +161,9 @@ export const makePost = async (req: Request, res: Response) => {
             $set: { score: score },
           }
         )
-      } else if (sender._id) {
+      } else if (data.postId) {
         await Post.updateOne(
-          { _id: sender._id },
+          { _id: data.postId },
           {
             $inc: { replies: 1 },
             $set: { score: score },
