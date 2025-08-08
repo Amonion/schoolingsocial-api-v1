@@ -152,13 +152,23 @@ export const makePost = async (req: Request, res: Response) => {
           $inc: { comments: 1 },
         }
       )
-      await Post.updateOne(
-        { _id: post.replyToId },
-        {
-          $inc: { replies: 1 },
-          $set: { score: score },
-        }
-      )
+      if (post.replyToId) {
+        await Post.updateOne(
+          { _id: post.replyToId },
+          {
+            $inc: { replies: 1 },
+            $set: { score: score },
+          }
+        )
+      } else if (sender._id) {
+        await Post.updateOne(
+          { _id: sender._id },
+          {
+            $inc: { replies: 1 },
+            $set: { score: score },
+          }
+        )
+      }
     } else {
       await User.updateOne(
         { _id: sender._id },
