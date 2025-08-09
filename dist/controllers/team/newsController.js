@@ -9,26 +9,51 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.deleteNews = exports.updateNews = exports.getNews = exports.getNewsById = exports.createNews = void 0;
+exports.deleteNews = exports.updateNews = exports.getNews = exports.updateExams = exports.getNewsById = exports.createNews = void 0;
 const newsModel_1 = require("../../models/team/newsModel");
 const query_1 = require("../../utils/query");
+const competitionModel_1 = require("../../models/team/competitionModel");
 const createNews = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    (0, query_1.createItem)(req, res, newsModel_1.News, "News was created successfully");
+    (0, query_1.createItem)(req, res, newsModel_1.News, 'News was created successfully');
 });
 exports.createNews = createNews;
 const getNewsById = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    (0, query_1.getItemById)(req, res, newsModel_1.News, "News was not found");
+    (0, query_1.getItemById)(req, res, newsModel_1.News, 'News was not found');
 });
 exports.getNewsById = getNewsById;
+const updateExams = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const waecLogo = yield newsModel_1.News.find({ tags: 'WAECLogo' });
+        const waecNews = yield newsModel_1.News.find({ tags: 'WAEC' });
+        yield competitionModel_1.Exam.updateMany({ name: 'WAEC' }, { logo: waecLogo[0].picture });
+        const waecExams = yield competitionModel_1.Exam.find({ name: 'WAEC' });
+        let x = 0;
+        for (let i = 0; i < waecExams.length; i++) {
+            const el = waecExams[i];
+            yield competitionModel_1.Exam.findByIdAndUpdate(el._id, { picture: waecNews[x].picture });
+            if (x === waecNews.length - 1) {
+                x = 0;
+            }
+            else {
+                x++;
+            }
+        }
+        res.status(200).json({ message: 'News updated successfully.' });
+    }
+    catch (error) {
+        console.log(error);
+    }
+});
+exports.updateExams = updateExams;
 const getNews = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     (0, query_1.getItems)(req, res, newsModel_1.News);
 });
 exports.getNews = getNews;
 const updateNews = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    (0, query_1.updateItem)(req, res, newsModel_1.News, ["picture", "video"], ["News not found", "News was updated successfully"]);
+    (0, query_1.updateItem)(req, res, newsModel_1.News, ['picture', 'video'], ['News not found', 'News was updated successfully']);
 });
 exports.updateNews = updateNews;
 const deleteNews = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    yield (0, query_1.deleteItem)(req, res, newsModel_1.News, ["picture", "video"], "News not found");
+    yield (0, query_1.deleteItem)(req, res, newsModel_1.News, ['picture', 'video'], 'News not found');
 });
 exports.deleteNews = deleteNews;

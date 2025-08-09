@@ -1,6 +1,6 @@
-import express from "express";
-import multer from "multer";
-const upload = multer();
+import express from 'express'
+import multer from 'multer'
+const upload = multer()
 
 import {
   getNewsById,
@@ -8,15 +8,17 @@ import {
   updateNews,
   deleteNews,
   createNews,
-} from "../../controllers/team/newsController";
+  updateExams,
+} from '../../controllers/team/newsController'
 
-const router = express.Router();
+const router = express.Router()
 
-router.route("/").get(getNews).post(upload.any(), createNews);
+router.route('/').get(getNews).post(upload.any(), createNews)
+router.route('/update-exams').patch(upload.any(), updateExams)
 router
-  .route("/:id")
+  .route('/:id')
   .get(getNewsById)
   .patch(upload.any(), updateNews)
-  .delete(deleteNews);
+  .delete(deleteNews)
 
-export default router;
+export default router

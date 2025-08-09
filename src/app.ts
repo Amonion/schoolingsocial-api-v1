@@ -13,6 +13,7 @@ import placeRoutes from './routes/team/placeRoutes'
 import postRoutes from './routes/users/postRoutes'
 import schoolRoutes from './routes/team/schoolRoutes'
 import statRoutes from './routes/team/statRoutes'
+import utilityRoutes from './routes/utility/utilityRoutes'
 import userMessageRoutes from './routes/users/userMessageRoutes'
 import userCompetitionRoutes from './routes/users/userCompetitionRoutes'
 import userRoutes from './routes/users/userRoutes'
@@ -103,6 +104,7 @@ app.use('/api/v1/news', newsRoutes)
 app.use('/api/v1/places', placeRoutes)
 app.use('/api/v1/posts', postRoutes)
 app.use('/api/v1/schools', schoolRoutes)
+app.use('/api/v1/utilities', utilityRoutes)
 app.use('/api/v1/user-competitions', userCompetitionRoutes)
 app.use('/api/v1/user-messages', userMessageRoutes)
 app.use('/api/v1/user-stats', statRoutes)

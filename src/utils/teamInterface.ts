@@ -116,6 +116,7 @@ export interface IExam extends Document {
   subtitle: string
   name: string
   picture: string
+  logo: string
   username: string
   subjects: string
   continent: string
