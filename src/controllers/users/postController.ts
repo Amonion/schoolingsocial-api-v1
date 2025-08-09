@@ -111,9 +111,9 @@ export const deleteAccount = async (req: Request, res: Response) => {
 export const makePost = async (req: Request, res: Response) => {
   try {
     const sender = req.body.sender
-    const data = { ...req.body } // Make a copy
+    const data = { ...req.body }
     if (data._id) {
-      delete data._id // Remove _id if it exists
+      delete data._id
     }
 
     const form = {
@@ -153,17 +153,9 @@ export const makePost = async (req: Request, res: Response) => {
           $inc: { comments: 1 },
         }
       )
-      if (post.replyToId) {
+      if (data.replyToId) {
         await Post.updateOne(
-          { _id: post.replyToId },
-          {
-            $inc: { replies: 1 },
-            $set: { score: score },
-          }
-        )
-      } else if (data.postId) {
-        await Post.updateOne(
-          { _id: data.postId },
+          { _id: data.replyToId },
           {
             $inc: { replies: 1 },
             $set: { score: score },

@@ -91,9 +91,9 @@ exports.deleteAccount = deleteAccount;
 const makePost = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const sender = req.body.sender;
-        const data = Object.assign({}, req.body); // Make a copy
+        const data = Object.assign({}, req.body);
         if (data._id) {
-            delete data._id; // Remove _id if it exists
+            delete data._id;
         }
         const form = {
             picture: sender.picture,
@@ -120,14 +120,8 @@ const makePost = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
             yield userModel_1.User.updateOne({ _id: sender._id }, {
                 $inc: { comments: 1 },
             });
-            if (post.replyToId) {
-                yield postModel_1.Post.updateOne({ _id: post.replyToId }, {
-                    $inc: { replies: 1 },
-                    $set: { score: score },
-                });
-            }
-            else if (data.postId) {
-                yield postModel_1.Post.updateOne({ _id: data.postId }, {
+            if (data.replyToId) {
+                yield postModel_1.Post.updateOne({ _id: data.replyToId }, {
                     $inc: { replies: 1 },
                     $set: { score: score },
                 });
