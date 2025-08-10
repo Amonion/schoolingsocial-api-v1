@@ -9,7 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.deleteNews = exports.updateNews = exports.getNews = exports.updateExams = exports.getNewsById = exports.createNews = void 0;
+exports.deleteNews = exports.updateNews = exports.getNews = exports.updateExamQuestions = exports.updateExams = exports.getNewsById = exports.createNews = void 0;
 const newsModel_1 = require("../../models/team/newsModel");
 const query_1 = require("../../utils/query");
 const competitionModel_1 = require("../../models/team/competitionModel");
@@ -23,10 +23,10 @@ const getNewsById = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
 exports.getNewsById = getNewsById;
 const updateExams = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const waecLogo = yield newsModel_1.News.find({ tags: 'WAECLogo' });
-        const waecNews = yield newsModel_1.News.find({ tags: 'WAEC' });
-        yield competitionModel_1.Exam.updateMany({ name: 'WAEC' }, { logo: waecLogo[0].picture });
-        const waecExams = yield competitionModel_1.Exam.find({ name: 'WAEC' });
+        const waecLogo = yield newsModel_1.News.find({ tags: 'JAMBLogo' });
+        yield competitionModel_1.Exam.updateMany({ name: 'JAMB' }, { logo: waecLogo[0].picture });
+        const waecNews = yield newsModel_1.News.find({ tags: { $in: ['JAMB', 'WAEC'] } });
+        const waecExams = yield competitionModel_1.Exam.find({ name: 'JAMB' });
         let x = 0;
         for (let i = 0; i < waecExams.length; i++) {
             const el = waecExams[i];
@@ -45,6 +45,21 @@ const updateExams = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
     }
 });
 exports.updateExams = updateExams;
+const updateExamQuestions = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const exams = yield competitionModel_1.Exam.find().select('_id');
+        for (let i = 0; i < exams.length; i++) {
+            const el = exams[i];
+            const questions = yield competitionModel_1.Objective.countDocuments({ paperId: el._id });
+            yield competitionModel_1.Exam.findByIdAndUpdate(el, { questions: questions });
+        }
+        res.status(200).json({ message: 'News updated successfully.' });
+    }
+    catch (error) {
+        console.log(error);
+    }
+});
+exports.updateExamQuestions = updateExamQuestions;
 const getNews = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     (0, query_1.getItems)(req, res, newsModel_1.News);
 });

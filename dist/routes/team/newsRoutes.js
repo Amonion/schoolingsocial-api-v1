@@ -10,6 +10,7 @@ const newsController_1 = require("../../controllers/team/newsController");
 const router = express_1.default.Router();
 router.route('/').get(newsController_1.getNews).post(upload.any(), newsController_1.createNews);
 router.route('/update-exams').patch(upload.any(), newsController_1.updateExams);
+router.route('/update-exam-questions').patch(upload.any(), newsController_1.updateExamQuestions);
 router
     .route('/:id')
     .get(newsController_1.getNewsById)

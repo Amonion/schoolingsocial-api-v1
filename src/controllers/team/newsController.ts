@@ -8,7 +8,7 @@ import {
   getItemById,
   getItems,
 } from '../../utils/query'
-import { Exam } from '../../models/team/competitionModel'
+import { Exam, Objective } from '../../models/team/competitionModel'
 
 export const createNews = async (
   req: Request,
@@ -29,10 +29,11 @@ export const updateExams = async (
   res: Response
 ): Promise<Response | void> => {
   try {
-    const waecLogo = await News.find({ tags: 'WAECLogo' })
-    const waecNews = await News.find({ tags: 'WAEC' })
-    await Exam.updateMany({ name: 'WAEC' }, { logo: waecLogo[0].picture })
-    const waecExams = await Exam.find({ name: 'WAEC' })
+    const waecLogo = await News.find({ tags: 'JAMBLogo' })
+    await Exam.updateMany({ name: 'JAMB' }, { logo: waecLogo[0].picture })
+
+    const waecNews = await News.find({ tags: { $in: ['JAMB', 'WAEC'] } })
+    const waecExams = await Exam.find({ name: 'JAMB' })
     let x = 0
     for (let i = 0; i < waecExams.length; i++) {
       const el = waecExams[i]
@@ -42,6 +43,24 @@ export const updateExams = async (
       } else {
         x++
       }
+    }
+
+    res.status(200).json({ message: 'News updated successfully.' })
+  } catch (error) {
+    console.log(error)
+  }
+}
+
+export const updateExamQuestions = async (
+  req: Request,
+  res: Response
+): Promise<Response | void> => {
+  try {
+    const exams = await Exam.find().select('_id')
+    for (let i = 0; i < exams.length; i++) {
+      const el = exams[i]
+      const questions = await Objective.countDocuments({ paperId: el._id })
+      await Exam.findByIdAndUpdate(el, { questions: questions })
     }
 
     res.status(200).json({ message: 'News updated successfully.' })
