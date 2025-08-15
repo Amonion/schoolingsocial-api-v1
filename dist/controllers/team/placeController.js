@@ -16,13 +16,14 @@ const paymentModel_1 = require("../../models/team/paymentModel");
 const errorHandler_1 = require("../../utils/errorHandler");
 const query_1 = require("../../utils/query");
 const fileUpload_1 = require("../../utils/fileUpload");
+const adModel_1 = require("../../models/utility/adModel");
 //--------------------PAYMENTS-----------------------//
 const createPayment = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    (0, query_1.createItem)(req, res, paymentModel_1.Payment, "Payments was created successfully");
+    (0, query_1.createItem)(req, res, paymentModel_1.Payment, 'Payments was created successfully');
 });
 exports.createPayment = createPayment;
 const getPaymentById = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    (0, query_1.getItemById)(req, res, paymentModel_1.Payment, "Payment was not found");
+    (0, query_1.getItemById)(req, res, paymentModel_1.Payment, 'Payment was not found');
 });
 exports.getPaymentById = getPaymentById;
 const getPayments = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
@@ -30,23 +31,23 @@ const getPayments = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
 });
 exports.getPayments = getPayments;
 const updatePayment = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    (0, query_1.updateItem)(req, res, paymentModel_1.Payment, ["logo"], ["Payment not found", "Payment was updated successfully"]);
+    (0, query_1.updateItem)(req, res, paymentModel_1.Payment, ['logo'], ['Payment not found', 'Payment was updated successfully']);
 });
 exports.updatePayment = updatePayment;
 const deletePayment = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    yield (0, query_1.deleteItem)(req, res, paymentModel_1.Payment, ["logo"], "Payment not found");
+    yield (0, query_1.deleteItem)(req, res, paymentModel_1.Payment, ['logo'], 'Payment not found');
 });
 exports.deletePayment = deletePayment;
 //--------------------ADS-----------------------//
 const createAd = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    (0, query_1.createItem)(req, res, placeModel_1.Ad, "Ads was created successfully");
+    (0, query_1.createItem)(req, res, adModel_1.Ad, 'Ads was created successfully');
 });
 exports.createAd = createAd;
 const getAdById = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const result = yield placeModel_1.Ad.findById(req.params.id);
+        const result = yield adModel_1.Ad.findById(req.params.id);
         if (!result) {
-            return res.status(404).json({ message: "Ad not found" });
+            return res.status(404).json({ message: 'Ad not found' });
         }
         res.status(200).json(result);
     }
@@ -57,7 +58,7 @@ const getAdById = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
 exports.getAdById = getAdById;
 const getAds = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const result = yield (0, query_1.queryData)(placeModel_1.Ad, req);
+        const result = yield (0, query_1.queryData)(adModel_1.Ad, req);
         res.status(200).json(result);
     }
     catch (error) {
@@ -67,7 +68,7 @@ const getAds = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
 exports.getAds = getAds;
 const updateAd = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        (0, query_1.updateItem)(req, res, placeModel_1.Ad, ["picture"], ["Ad not found", "Ad was updated successfully"]);
+        (0, query_1.updateItem)(req, res, adModel_1.Ad, ['picture'], ['Ad not found', 'Ad was updated successfully']);
     }
     catch (error) {
         (0, errorHandler_1.handleError)(res, undefined, undefined, error);
@@ -75,17 +76,17 @@ const updateAd = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
 });
 exports.updateAd = updateAd;
 const deleteAd = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    yield (0, query_1.deleteItems)(req, res, placeModel_1.Place, ["countryFlag"], "Place not found");
+    yield (0, query_1.deleteItems)(req, res, placeModel_1.Place, ['countryFlag'], 'Place not found');
 });
 exports.deleteAd = deleteAd;
 //-----------------ACADEMIC LEVEL--------------------//
 const createAcademicLevel = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    (0, query_1.createItem)(req, res, academicLevelModel_1.AcademicLevel, "Academic Level was created successfully");
+    (0, query_1.createItem)(req, res, academicLevelModel_1.AcademicLevel, 'Academic Level was created successfully');
 });
 exports.createAcademicLevel = createAcademicLevel;
 const updateAcademicLevel = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        (0, query_1.updateItem)(req, res, academicLevelModel_1.AcademicLevel, ["logo"], ["Academic Level not found", "Academic Level was updated successfully"]);
+        (0, query_1.updateItem)(req, res, academicLevelModel_1.AcademicLevel, ['logo'], ['Academic Level not found', 'Academic Level was updated successfully']);
     }
     catch (error) {
         (0, errorHandler_1.handleError)(res, undefined, undefined, error);
@@ -96,7 +97,7 @@ const getAcademicLevelById = (req, res) => __awaiter(void 0, void 0, void 0, fun
     try {
         const item = yield academicLevelModel_1.AcademicLevel.findById(req.params.id);
         if (!item) {
-            return res.status(404).json({ message: "AcademicLevel not found" });
+            return res.status(404).json({ message: 'AcademicLevel not found' });
         }
         res.status(200).json(item);
     }
@@ -116,17 +117,17 @@ const getAcademicLevels = (req, res) => __awaiter(void 0, void 0, void 0, functi
 });
 exports.getAcademicLevels = getAcademicLevels;
 const deleteAcademicLevel = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    yield (0, query_1.deleteItem)(req, res, academicLevelModel_1.AcademicLevel, ["logo"], "AcademicLevel not found");
+    yield (0, query_1.deleteItem)(req, res, academicLevelModel_1.AcademicLevel, ['logo'], 'AcademicLevel not found');
 });
 exports.deleteAcademicLevel = deleteAcademicLevel;
 //-----------------DOCUMENT--------------------//
 const createDocument = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    (0, query_1.createItem)(req, res, placeModel_1.Document, "Document was created successfully");
+    (0, query_1.createItem)(req, res, placeModel_1.Document, 'Document was created successfully');
 });
 exports.createDocument = createDocument;
 const updateDocument = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        (0, query_1.updateItem)(req, res, placeModel_1.Document, [], ["Document  not found", "Document was updated successfully"]);
+        (0, query_1.updateItem)(req, res, placeModel_1.Document, [], ['Document  not found', 'Document was updated successfully']);
     }
     catch (error) {
         (0, errorHandler_1.handleError)(res, undefined, undefined, error);
@@ -147,7 +148,7 @@ const getDocumentById = (req, res) => __awaiter(void 0, void 0, void 0, function
     try {
         const item = yield placeModel_1.Document.findById(req.params.id);
         if (!item) {
-            return res.status(404).json({ message: "Document not found" });
+            return res.status(404).json({ message: 'Document not found' });
         }
         res.status(200).json(item);
     }
@@ -157,17 +158,17 @@ const getDocumentById = (req, res) => __awaiter(void 0, void 0, void 0, function
 });
 exports.getDocumentById = getDocumentById;
 const deleteDocument = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    yield (0, query_1.deleteItem)(req, res, placeModel_1.Document, [], "Document not found");
+    yield (0, query_1.deleteItem)(req, res, placeModel_1.Document, [], 'Document not found');
 });
 exports.deleteDocument = deleteDocument;
 //-----------------BANK--------------------//
 const createBank = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    (0, query_1.createItem)(req, res, placeModel_1.Bank, "Bank was created successfully");
+    (0, query_1.createItem)(req, res, placeModel_1.Bank, 'Bank was created successfully');
 });
 exports.createBank = createBank;
 const updateBank = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        (0, query_1.updateItem)(req, res, placeModel_1.Bank, [], ["Bank  not found", "Bank was updated successfully"]);
+        (0, query_1.updateItem)(req, res, placeModel_1.Bank, [], ['Bank  not found', 'Bank was updated successfully']);
     }
     catch (error) {
         (0, errorHandler_1.handleError)(res, undefined, undefined, error);
@@ -188,7 +189,7 @@ const getBankById = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
     try {
         const item = yield placeModel_1.Bank.findById(req.params.id);
         if (!item) {
-            return res.status(404).json({ message: "Bank not found" });
+            return res.status(404).json({ message: 'Bank not found' });
         }
         res.status(200).json(item);
     }
@@ -198,19 +199,19 @@ const getBankById = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
 });
 exports.getBankById = getBankById;
 const deleteBank = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    yield (0, query_1.deleteItem)(req, res, placeModel_1.Bank, [], "Bank not found");
+    yield (0, query_1.deleteItem)(req, res, placeModel_1.Bank, [], 'Bank not found');
 });
 exports.deleteBank = deleteBank;
 //--------------------PLACE-----------------------//
 const createPlace = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    (0, query_1.createItem)(req, res, placeModel_1.Place, "Country was created successfully");
+    (0, query_1.createItem)(req, res, placeModel_1.Place, 'Country was created successfully');
 });
 exports.createPlace = createPlace;
 const getPlaceById = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const result = yield placeModel_1.Place.findById(req.params.id);
         if (!result) {
-            return res.status(404).json({ message: "Place not found" });
+            return res.status(404).json({ message: 'Place not found' });
         }
         res.status(200).json(result);
     }
@@ -238,20 +239,20 @@ const getAllPlaces = (req, res) => __awaiter(void 0, void 0, void 0, function* (
             {
                 $match: {
                     $or: [
-                        { country: { $regex: `^${searchTerm}`, $options: "i" } },
-                        { state: { $regex: `^${searchTerm}`, $options: "i" } },
-                        { area: { $regex: `^${searchTerm}`, $options: "i" } },
+                        { country: { $regex: `^${searchTerm}`, $options: 'i' } },
+                        { state: { $regex: `^${searchTerm}`, $options: 'i' } },
+                        { area: { $regex: `^${searchTerm}`, $options: 'i' } },
                     ],
                 },
             },
             {
                 $group: {
-                    _id: "$area", // Group by area
-                    doc: { $first: "$$ROOT" }, // Keep the first doc in each group
+                    _id: '$area', // Group by area
+                    doc: { $first: '$$ROOT' }, // Keep the first doc in each group
                 },
             },
             {
-                $replaceRoot: { newRoot: "$doc" },
+                $replaceRoot: { newRoot: '$doc' },
             },
             { $skip: skip },
             { $limit: limit },
@@ -274,7 +275,7 @@ const updatePlace = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
         }
         const place = yield placeModel_1.Place.findById(req.params.id);
         const source = req.body.source;
-        if (source === "Country") {
+        if (source === 'Country') {
             if ((place === null || place === void 0 ? void 0 : place.country) === req.body.country) {
                 yield placeModel_1.Place.updateMany({ country: req.body.country }, req.body);
             }
@@ -282,7 +283,7 @@ const updatePlace = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
                 yield placeModel_1.Place.updateMany({ country: place === null || place === void 0 ? void 0 : place.country }, { $set: req.body });
             }
         }
-        else if (source === "State") {
+        else if (source === 'State') {
             if ((place === null || place === void 0 ? void 0 : place.state) === req.body.state) {
                 yield placeModel_1.Place.updateMany({ state: req.body.state }, req.body);
             }
@@ -290,7 +291,7 @@ const updatePlace = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
                 yield placeModel_1.Place.updateMany({ state: place === null || place === void 0 ? void 0 : place.state }, { $set: req.body });
             }
         }
-        else if (source === "Area") {
+        else if (source === 'Area') {
             if ((place === null || place === void 0 ? void 0 : place.area) === req.body.area) {
                 yield placeModel_1.Place.updateMany({ area: req.body.area }, req.body);
             }
@@ -301,7 +302,7 @@ const updatePlace = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
         const item = yield (0, query_1.queryData)(placeModel_1.Place, req);
         const { page, page_size, count, results } = item;
         res.status(200).json({
-            message: "Place was updated successfully",
+            message: 'Place was updated successfully',
             results,
             count,
             page,
@@ -317,18 +318,18 @@ const deletePlace = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
     const result = yield placeModel_1.Place.findById(req.params.id);
     const existingPlaces = yield placeModel_1.Place.find({
         country: result === null || result === void 0 ? void 0 : result.country,
-        $and: [{ countryFlag: { $ne: null } }, { countryFlag: { $ne: "" } }],
+        $and: [{ countryFlag: { $ne: null } }, { countryFlag: { $ne: '' } }],
     });
     if (existingPlaces.length > 1) {
-        yield (0, query_1.deleteItem)(req, res, placeModel_1.Place, [], "Place not found");
+        yield (0, query_1.deleteItem)(req, res, placeModel_1.Place, [], 'Place not found');
     }
     else {
-        yield (0, query_1.deleteItem)(req, res, placeModel_1.Place, ["countryFlag"], "Place not found");
+        yield (0, query_1.deleteItem)(req, res, placeModel_1.Place, ['countryFlag'], 'Place not found');
     }
 });
 exports.deletePlace = deletePlace;
 const deletePlaces = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    yield (0, query_1.deleteItems)(req, res, placeModel_1.Place, ["countryFlag"], "Place not found");
+    yield (0, query_1.deleteItems)(req, res, placeModel_1.Place, ['countryFlag'], 'Place not found');
 });
 exports.deletePlaces = deletePlaces;
 const searchPlace = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
@@ -336,7 +337,7 @@ const searchPlace = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
         const places = yield placeModel_1.Place.aggregate([
             {
                 $group: {
-                    _id: "$country",
+                    _id: '$country',
                 },
             },
         ]);
@@ -345,7 +346,7 @@ const searchPlace = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
         });
     }
     catch (error) {
-        console.error("Error fetching unique places:", error);
+        console.error('Error fetching unique places:', error);
         throw error;
     }
 });
@@ -356,27 +357,27 @@ const searchPlaces = (req, res) => __awaiter(void 0, void 0, void 0, function* (
         const places = yield placeModel_1.Place.aggregate([
             {
                 $match: {
-                    country: { $regex: country, $options: "i" },
+                    country: { $regex: country, $options: 'i' },
                 },
             },
             {
                 $group: {
-                    _id: "$country",
-                    countryFlag: { $first: "$countryFlag" },
-                    continent: { $first: "$continent" },
-                    countryCode: { $first: "$countryCode" },
-                    currency: { $first: "$currency" },
-                    currencySymbol: { $first: "$currencySymbol" },
-                    countrySymbol: { $first: "$countrySymbol" },
-                    state: { $first: "$state" },
-                    area: { $first: "$area" },
-                    id: { $first: "$_id" },
+                    _id: '$country',
+                    countryFlag: { $first: '$countryFlag' },
+                    continent: { $first: '$continent' },
+                    countryCode: { $first: '$countryCode' },
+                    currency: { $first: '$currency' },
+                    currencySymbol: { $first: '$currencySymbol' },
+                    countrySymbol: { $first: '$countrySymbol' },
+                    state: { $first: '$state' },
+                    area: { $first: '$area' },
+                    id: { $first: '$_id' },
                 },
             },
             {
                 $project: {
                     _id: 0,
-                    country: "$_id",
+                    country: '$_id',
                     countryFlag: 1,
                     continent: 1,
                     currency: 1,
@@ -394,7 +395,7 @@ const searchPlaces = (req, res) => __awaiter(void 0, void 0, void 0, function* (
         });
     }
     catch (error) {
-        console.error("Error fetching unique places:", error);
+        console.error('Error fetching unique places:', error);
         throw error;
     }
 });
@@ -404,21 +405,21 @@ const getUniquePlaces = (req, res) => __awaiter(void 0, void 0, void 0, function
         const field = String(req.query.field);
         const limit = parseInt(req.query.page_size) || 10;
         const page = parseInt(req.query.page) || 1;
-        const sortBy = req.query.sort || "country";
-        const order = req.query.order === "asc" ? -1 : 1;
+        const sortBy = req.query.sort || 'country';
+        const order = req.query.order === 'asc' ? -1 : 1;
         const skipValue = (page - 1) * limit;
         const country = req.query.country;
         const state = req.query.state;
         const area = req.query.area;
         const filters = {};
-        if (country) {
-            filters.country = { $regex: country, $options: "i" };
-        }
-        if (state) {
-            filters.state = { $regex: state, $options: "i" };
-        }
         if (area) {
-            filters.area = { $regex: area, $options: "i" };
+            filters.area = { $regex: area, $options: 'i' };
+        }
+        else if (state) {
+            filters.state = { $regex: state, $options: 'i' };
+        }
+        else {
+            filters.country = { $regex: country, $options: 'i' };
         }
         const matchStage = Object.keys(filters).length > 0 ? { $match: filters } : null;
         const aggregationPipeline = [];
@@ -427,24 +428,24 @@ const getUniquePlaces = (req, res) => __awaiter(void 0, void 0, void 0, function
         aggregationPipeline.push({
             $group: {
                 _id: `$${field}`,
-                countryFlag: { $first: "$countryFlag" },
-                continent: { $first: "$continent" },
-                country: { $first: "$country" },
-                countryCode: { $first: "$countryCode" },
-                currency: { $first: "$currency" },
-                currencySymbol: { $first: "$currencySymbol" },
-                countrySymbol: { $first: "$countrySymbol" },
-                state: { $first: "$state" },
-                stateCapital: { $first: "$stateCapital" },
-                stateLogo: { $first: "$stateLogo" },
-                area: { $first: "$area" },
-                zipCode: { $first: "$zipCode" },
-                id: { $first: "$_id" },
+                countryFlag: { $first: '$countryFlag' },
+                continent: { $first: '$continent' },
+                country: { $first: '$country' },
+                countryCode: { $first: '$countryCode' },
+                currency: { $first: '$currency' },
+                currencySymbol: { $first: '$currencySymbol' },
+                countrySymbol: { $first: '$countrySymbol' },
+                state: { $first: '$state' },
+                stateCapital: { $first: '$stateCapital' },
+                stateLogo: { $first: '$stateLogo' },
+                area: { $first: '$area' },
+                zipCode: { $first: '$zipCode' },
+                id: { $first: '$_id' },
             },
         }, {
             $project: {
                 _id: 0,
-                [field]: "$_id",
+                [field]: '$_id',
                 countryFlag: 1,
                 continent: 1,
                 countryCode: 1,
@@ -460,8 +461,8 @@ const getUniquePlaces = (req, res) => __awaiter(void 0, void 0, void 0, function
                 id: 1,
             },
         }, { $sort: { [sortBy]: order } }, { $skip: skipValue }, { $limit: limit });
-        const countPipeline = [...aggregationPipeline].filter((stage) => !("$limit" in stage || "$skip" in stage));
-        countPipeline.push({ $count: "totalCount" });
+        const countPipeline = [...aggregationPipeline].filter((stage) => !('$limit' in stage || '$skip' in stage));
+        countPipeline.push({ $count: 'totalCount' });
         const [places, totalCountResult] = yield Promise.all([
             placeModel_1.Place.aggregate(aggregationPipeline),
             placeModel_1.Place.aggregate(countPipeline),
@@ -470,14 +471,14 @@ const getUniquePlaces = (req, res) => __awaiter(void 0, void 0, void 0, function
             ? totalCountResult[0].totalCount
             : 0;
         res.status(200).json({
-            message: "Places fetched successfully",
+            message: 'Places fetched successfully',
             results: places,
             count: totalCount,
             page_size: limit,
         });
     }
     catch (error) {
-        console.error("Error fetching unique places:", error);
+        console.error('Error fetching unique places:', error);
         throw error;
     }
 });

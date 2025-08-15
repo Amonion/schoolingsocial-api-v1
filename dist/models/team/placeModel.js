@@ -33,72 +33,72 @@ var __importStar = (this && this.__importStar) || (function () {
     };
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.Document = exports.Bank = exports.Ad = exports.Place = void 0;
+exports.Document = exports.Bank = exports.AdCategory = exports.Place = void 0;
 const mongoose_1 = __importStar(require("mongoose"));
 const PlaceSchema = new mongoose_1.Schema({
-    landmark: { type: String, default: "" },
+    landmark: { type: String, default: '' },
     area: { type: String },
-    state: { type: String, default: "" },
-    country: { type: String, default: "" },
-    countryCapital: { type: String, default: "" },
-    stateCapital: { type: String, default: "" },
-    stateLogo: { type: String, default: "" },
-    continent: { type: String, default: "" },
-    countryFlag: { type: String, default: "" },
-    zipCode: { type: String, default: "" },
-    countryCode: { type: String, default: "" },
-    countrySymbol: { type: String, default: "" },
-    currency: { type: String, default: "" },
-    currencySymbol: { type: String, default: "" },
+    state: { type: String, default: '' },
+    country: { type: String, default: '' },
+    countryCapital: { type: String, default: '' },
+    stateCapital: { type: String, default: '' },
+    stateLogo: { type: String, default: '' },
+    continent: { type: String, default: '' },
+    countryFlag: { type: String, default: '' },
+    zipCode: { type: String, default: '' },
+    countryCode: { type: String, default: '' },
+    countrySymbol: { type: String, default: '' },
+    currency: { type: String, default: '' },
+    currencySymbol: { type: String, default: '' },
     createdAt: { type: Date, default: Date.now },
 }, {
     timestamps: true,
 });
-exports.Place = mongoose_1.default.model("Place", PlaceSchema);
-const AdSchema = new mongoose_1.Schema({
-    category: { type: String, default: "" },
-    picture: { type: String, default: "" },
-    name: { type: String, default: "" },
-    description: { type: String, default: "" },
+exports.Place = mongoose_1.default.model('Place', PlaceSchema);
+const AdCategorySchema = new mongoose_1.Schema({
+    category: { type: String, default: '' },
+    picture: { type: String, default: '' },
+    name: { type: String, default: '' },
+    description: { type: String, default: '' },
     price: { type: Number, default: 0 },
     duration: { type: Number, default: 0 },
     postNumber: { type: Number, default: 0 },
-    continent: { type: String, default: "" },
-    country: { type: String, default: "" },
-    currency: { type: String, default: "" },
-    currencySymbol: { type: String, default: "" },
-    countrySymbol: { type: String, default: "" },
-    placeId: { type: String, default: "" },
+    continent: { type: String, default: '' },
+    country: { type: String, default: '' },
+    currency: { type: String, default: '' },
+    currencySymbol: { type: String, default: '' },
+    countrySymbol: { type: String, default: '' },
+    placeId: { type: String, default: '' },
     createdAt: { type: Date, default: Date.now },
 }, {
     timestamps: true,
 });
-exports.Ad = mongoose_1.default.model("Ad", AdSchema);
+exports.AdCategory = mongoose_1.default.model('AdCategory', AdCategorySchema);
 const BankSchema = new mongoose_1.Schema({
-    category: { type: String, default: "" },
-    picture: { type: String, default: "" },
-    name: { type: String, default: "" },
-    description: { type: String, default: "" },
-    username: { type: String, default: "" },
-    continent: { type: String, default: "" },
-    country: { type: String, default: "" },
-    countryFlag: { type: String, default: "" },
-    placeId: { type: String, default: "" },
+    category: { type: String, default: '' },
+    picture: { type: String, default: '' },
+    name: { type: String, default: '' },
+    description: { type: String, default: '' },
+    username: { type: String, default: '' },
+    continent: { type: String, default: '' },
+    country: { type: String, default: '' },
+    countryFlag: { type: String, default: '' },
+    placeId: { type: String, default: '' },
     createdAt: { type: Date, default: Date.now },
 }, {
     timestamps: true,
 });
-exports.Bank = mongoose_1.default.model("Bank", BankSchema);
+exports.Bank = mongoose_1.default.model('Bank', BankSchema);
 const DocumentSchema = new mongoose_1.Schema({
-    name: { type: String, default: "" },
-    picture: { type: String, default: "" },
+    name: { type: String, default: '' },
+    picture: { type: String, default: '' },
     required: { type: Boolean, default: false },
-    country: { type: String, default: "" },
-    placeId: { type: String, default: "" },
-    countryFlag: { type: String, default: "" },
-    description: { type: String, default: "" },
+    country: { type: String, default: '' },
+    placeId: { type: String, default: '' },
+    countryFlag: { type: String, default: '' },
+    description: { type: String, default: '' },
     createdAt: { type: Date, default: Date.now },
 }, {
     timestamps: true,
 });
-exports.Document = mongoose_1.default.model("Document", DocumentSchema);
+exports.Document = mongoose_1.default.model('Document', DocumentSchema);

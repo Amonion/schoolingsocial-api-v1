@@ -13,6 +13,23 @@ export interface IAccount extends Document {
   isVerified: boolean
 }
 
+export interface IAd extends Document {
+  category: string
+  picture: string
+  name: string
+  description: string
+  price: number
+  duration: number
+  postNumber: number
+  continent: string
+  country: string
+  currency: string
+  currencySymbol: string
+  countrySymbol: string
+  placeId: string
+  isChecked?: boolean
+  isActive?: boolean
+}
 export interface IAttempt extends Document {
   username: string
   userId: string

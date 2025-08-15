@@ -51,7 +51,6 @@ router
   .get(getLeagueById)
   .patch(upload.any(), updateLeague)
 
-router.route('/exams/:id').get(getExamById).patch(upload.any(), updateExam)
 router.route('/dashboard').get(getPostStats)
 
 export default router

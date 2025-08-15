@@ -28,6 +28,5 @@ router
     .route('/leagues/:id')
     .get(competitionController_1.getLeagueById)
     .patch(upload.any(), competitionController_1.updateLeague);
-router.route('/exams/:id').get(competitionController_1.getExamById).patch(upload.any(), competitionController_1.updateExam);
 router.route('/dashboard').get(dashboardController_1.getPostStats);
 exports.default = router;

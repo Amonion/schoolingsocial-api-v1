@@ -14,22 +14,15 @@ export interface IAcademicLevel extends Document {
   createdAt: Date
 }
 
-export interface IAd extends Document {
-  category: string
-  picture: string
+export interface IAdCategory extends Document {
+  _id: string
   name: string
-  description: string
   price: number
+  distribution: string
+  picture: string
   duration: number
-  postNumber: number
-  continent: string
-  country: string
-  currency: string
-  currencySymbol: string
-  countrySymbol: string
-  placeId: string
-  isChecked?: boolean
-  isActive?: boolean
+  description: string
+  createdAt: number
 }
 
 export interface IBank extends Document {

@@ -14,6 +14,7 @@ import postRoutes from './routes/users/postRoutes'
 import schoolRoutes from './routes/team/schoolRoutes'
 import statRoutes from './routes/team/statRoutes'
 import utilityRoutes from './routes/utility/utilityRoutes'
+import adRoutes from './routes/utility/adRoutes'
 import userMessageRoutes from './routes/users/userMessageRoutes'
 import userCompetitionRoutes from './routes/users/userCompetitionRoutes'
 import userRoutes from './routes/users/userRoutes'
@@ -25,13 +26,21 @@ import {
 import { createPost } from './controllers/users/postController'
 import { getPresignedUrl, removeFile } from './utils/fileUpload'
 import { TeamSocket } from './routes/team/socketRoutes'
+import { geoipMiddleware } from './middlewares/geoipMiddleware'
 
 dotenv.config()
 
 const app: Application = express()
 const server = http.createServer(app)
+
+app.use(geoipMiddleware)
+
 const requestLogger: RequestHandler = (req, res, next) => {
-  console.log(`[${new Date().toISOString()}] ${req.method} ${req.url}`)
+  console.log(
+    `[${new Date().toISOString()}] ${req.method} ${req.url} from ${
+      (req as any).country
+    }`
+  )
   next()
 }
 
@@ -97,6 +106,7 @@ io.on('connection', (socket) => {
 app.use(bodyParser.json())
 app.use('/api/v1/s3-delete-file', removeFile)
 app.use('/api/v1/s3-presigned-url', getPresignedUrl)
+app.use('/api/v1/ads', adRoutes)
 app.use('/api/v1/competitions', competitionRoutes)
 app.use('/api/v1/company', companyRoutes)
 app.use('/api/v1/messages', messageRoutes)
