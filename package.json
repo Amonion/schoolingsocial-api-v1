@@ -4,7 +4,7 @@
   "main": "index.js",
   "scripts": {
     "start": "node --max-old-space-size=1024 dist/server.js",
-    "build": "tsc",
+    "build": "tsc && copy src\\utils\\GeoLite2-Country.mmdb dist\\utils\\",
     "copy-templates": "copy src\\utils\\emailTemplate.html dist\\utils\\",
     "dev": "ts-node-dev --respawn --transpile-only src/server.ts"
   },
