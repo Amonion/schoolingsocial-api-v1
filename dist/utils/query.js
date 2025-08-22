@@ -287,6 +287,7 @@ function buildSearchQuery(req) {
         'displayName',
         'firstName',
         'middleName',
+        'content',
         'lastName',
         'subtitle',
     ];
@@ -326,7 +327,7 @@ const search = (model, req, res) => __awaiter(void 0, void 0, void 0, function* 
             });
         }
         // console.log(results)
-        res.json(results);
+        res.json({ results });
     }
     catch (error) {
         (0, errorHandler_1.handleError)(res, undefined, undefined, error);
@@ -415,7 +416,7 @@ const getItemById = (req, res, model, message) => __awaiter(void 0, void 0, void
         if (!item) {
             return res.status(404).json({ message: message });
         }
-        res.status(200).json(item);
+        res.status(200).json({ data: item });
     }
     catch (error) {
         (0, errorHandler_1.handleError)(res, undefined, undefined, error);

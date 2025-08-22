@@ -1,8 +1,8 @@
-import express from "express";
-import multer from "multer";
-const upload = multer();
+import express from 'express'
+import multer from 'multer'
+const upload = multer()
 import {
-  getSchoolById,
+  getSchoolByUsername,
   getSchools,
   updateSchool,
   deleteSchool,
@@ -31,54 +31,54 @@ import {
   deleteFaculty,
   createFaculty,
   recordAll,
-} from "../../controllers/team/schoolController";
+} from '../../controllers/team/schoolController'
 
-const router = express.Router();
+const router = express.Router()
 
-router.route("/search").get(searchSchools);
-router.route("/find").get(searchSchool);
-router.route("/record-all").get(recordAll);
-router.route("/").get(getSchools).post(upload.any(), createSchool);
+router.route('/search').get(searchSchools)
+router.route('/find').get(searchSchool)
+router.route('/record-all').get(recordAll)
+router.route('/').get(getSchools).post(upload.any(), createSchool)
 router
-  .route("/payments")
+  .route('/payments')
   .get(getSchoolPayments)
-  .post(upload.any(), createSchoolPayment);
-router.route("/courses").get(getCourses).post(upload.any(), createCourse);
+  .post(upload.any(), createSchoolPayment)
+router.route('/courses').get(getCourses).post(upload.any(), createCourse)
 router
-  .route("/departments")
+  .route('/departments')
   .get(getDepartments)
-  .post(upload.any(), createDepartment);
-router.route("/faculties").get(getFaculties).post(upload.any(), createFaculty);
-router.route("/update-levels").post(upload.any(), updateLevels);
+  .post(upload.any(), createDepartment)
+router.route('/faculties').get(getFaculties).post(upload.any(), createFaculty)
+router.route('/update-levels').post(upload.any(), updateLevels)
 
 router
-  .route("/faculties/:id")
+  .route('/faculties/:id')
   .get(getFacultyById)
   .patch(upload.any(), updateFaculty)
-  .delete(deleteFaculty);
+  .delete(deleteFaculty)
 
 router
-  .route("/departments/:id")
+  .route('/departments/:id')
   .get(getDepartmentById)
   .patch(upload.any(), updateDepartment)
-  .delete(deleteDepartment);
+  .delete(deleteDepartment)
 
 router
-  .route("/courses/:id")
+  .route('/courses/:id')
   .get(getCourseById)
   .patch(upload.any(), updateCourse)
-  .delete(deleteCourse);
+  .delete(deleteCourse)
 
 router
-  .route("/payments/:id")
+  .route('/payments/:id')
   .get(getSchoolPaymentById)
   .patch(upload.any(), updateSchoolPayment)
-  .delete(deleteSchoolPayment);
+  .delete(deleteSchoolPayment)
 
 router
-  .route("/:id")
-  .get(getSchoolById)
+  .route('/:username')
+  .get(getSchoolByUsername)
   .patch(upload.any(), updateSchool)
-  .delete(deleteSchool);
+  .delete(deleteSchool)
 
-export default router;
+export default router

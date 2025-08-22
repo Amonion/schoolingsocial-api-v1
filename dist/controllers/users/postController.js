@@ -20,7 +20,7 @@ var __rest = (this && this.__rest) || function (s, e) {
     return t;
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.followUser = exports.searchPosts = exports.getPostStat = exports.updatePostViews = exports.updatePostStat = exports.deletePost = exports.updatePost = exports.getBookMarkedPosts = exports.getMutedUsers = exports.getBlockedUsers = exports.getFollowings = exports.getFollowingPosts = exports.getPosts = exports.getPostById = exports.repostPost = exports.muteUser = exports.blockUser = exports.pinPost = exports.updatePoll = exports.createPost = exports.makePost = exports.deleteAccount = exports.updateAccount = exports.getAccounts = exports.getAccountById = exports.createAccount = void 0;
+exports.followUser = exports.searchPosts = exports.getPostStat = exports.updatePostViews = exports.updatePostStat = exports.deletePost = exports.updatePost = exports.getBookMarkedPosts = exports.getMutedUsers = exports.getBlockedUsers = exports.getFollowers = exports.getFollowings = exports.getPosts = exports.getPostById = exports.repostPost = exports.muteUser = exports.blockUser = exports.pinPost = exports.updatePoll = exports.createPost = exports.makePost = exports.deleteAccount = exports.updateAccount = exports.getAccounts = exports.getAccountById = exports.createAccount = void 0;
 const postModel_1 = require("../../models/users/postModel");
 const fileUpload_1 = require("../../utils/fileUpload");
 const errorHandler_1 = require("../../utils/errorHandler");
@@ -385,7 +385,7 @@ const repostPost = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
         rest.followers = 0;
         rest.unfollowers = 0;
         rest.shares = 0;
-        rest.views = 0;
+        rest.views = 1;
         rest.likes = 0;
         rest.reposts = 0;
         rest.score = 0;
@@ -431,33 +431,84 @@ const getPosts = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     }
 });
 exports.getPosts = getPosts;
-const getFollowingPosts = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    try {
-        const followerId = String(req.query.myId);
-        const followers = yield postModel_1.Follower.find({ followerId: followerId });
-        const followersUserIds = followers.map((user) => user.userId);
-        delete req.query.myId;
-        const mongoQuery = Object.assign(Object.assign({}, req.query), { userId: { in: followersUserIds } });
-        req.query = mongoQuery;
-        delete req.query.myId;
-        const processedPosts = yield processFetchedPosts(req, followerId);
-        res.status(200).json(processedPosts);
-    }
-    catch (error) {
-        (0, errorHandler_1.handleError)(res, undefined, undefined, error);
-    }
-});
-exports.getFollowingPosts = getFollowingPosts;
 const getFollowings = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const result = yield (0, query_1.queryData)(postModel_1.Follower, req);
-        res.status(200).json(result);
+        const { followerId } = req.query;
+        // const result = await queryData<IFollower>(Follower, req)
+        const followingResponse = yield (0, query_1.queryData)(postModel_1.Follower, req);
+        const followings = followingResponse.results;
+        delete req.query.followerId;
+        req.query.userId = followerId;
+        const followersResponse = yield (0, query_1.queryData)(postModel_1.Follower, req);
+        const followers = followersResponse.results;
+        const updatedFollowers = [];
+        for (let i = 0; i < followings.length; i++) {
+            const el = followings[i];
+            for (let x = 0; x < followers.length; x++) {
+                const fl = followers[x];
+                if (fl.userId === el.followerId) {
+                    el.followed = true;
+                }
+            }
+            updatedFollowers.push(el);
+        }
+        res.status(200).json({
+            count: followersResponse.count,
+            page: followersResponse.page,
+            page_size: followersResponse.page_size,
+            results: updatedFollowers,
+        });
+        // const followerId = String(req.query.myId)
+        // const followers = await Follower.find({ followerId: followerId })
+        // const followersUserIds = followers.map((user) => user.userId)
+        // delete req.query.myId
+        // const mongoQuery = {
+        //   ...req.query,
+        //   userId: { in: followersUserIds },
+        // }
+        // req.query = mongoQuery
+        // delete req.query.myId
+        // const processedPosts = await processFetchedPosts(req, followerId)
+        // res.status(200).json(processedPosts)
     }
     catch (error) {
         (0, errorHandler_1.handleError)(res, undefined, undefined, error);
     }
 });
 exports.getFollowings = getFollowings;
+const getFollowers = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const { userId } = req.query;
+        // const result = await queryData<IFollower>(Follower, req)
+        const followersResponse = yield (0, query_1.queryData)(postModel_1.Follower, req);
+        const followers = followersResponse.results;
+        delete req.query.userId;
+        req.query.followerId = userId;
+        const followingsResponse = yield (0, query_1.queryData)(postModel_1.Follower, req);
+        const followings = followingsResponse.results;
+        const updatedFollowers = [];
+        for (let i = 0; i < followers.length; i++) {
+            const el = followers[i];
+            for (let x = 0; x < followings.length; x++) {
+                const fl = followings[x];
+                if (fl.userId === el.followerId) {
+                    el.followed = true;
+                }
+            }
+            updatedFollowers.push(el);
+        }
+        res.status(200).json({
+            count: followersResponse.count,
+            page: followersResponse.page,
+            page_size: followersResponse.page_size,
+            results: updatedFollowers,
+        });
+    }
+    catch (error) {
+        (0, errorHandler_1.handleError)(res, undefined, undefined, error);
+    }
+});
+exports.getFollowers = getFollowers;
 const getBlockedUsers = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const result = yield (0, query_1.queryData)(postModel_1.Block, req);
@@ -612,6 +663,7 @@ const updatePostStat = (req, res) => __awaiter(void 0, void 0, void 0, function*
         let hated = false;
         let bookmarked = false;
         const post = yield postModel_1.Post.findById(id);
+        console.log(userId, id, post);
         if (!post) {
             return res.status(404).json({ message: 'Post not found' });
         }
@@ -697,7 +749,7 @@ const updatePostStat = (req, res) => __awaiter(void 0, void 0, void 0, function*
             }
         }
         const score = (0, computation_1.postScore)(post.likes, post.replies, post.shares, post.bookmarks, post.reposts, post.views);
-        yield postModel_1.Post.updateOne({ _id: post.postId }, {
+        yield postModel_1.Post.updateOne({ _id: post._id }, {
             $set: { score: score },
         });
         if (Object.keys(updateQuery).length > 0) {

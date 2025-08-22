@@ -9,7 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getUniquePlaces = exports.searchPlaces = exports.searchPlace = exports.deletePlaces = exports.deletePlace = exports.updatePlace = exports.getAllPlaces = exports.getPlaces = exports.getPlaceById = exports.createPlace = exports.deleteBank = exports.getBankById = exports.getBanks = exports.updateBank = exports.createBank = exports.deleteDocument = exports.getDocumentById = exports.getDocuments = exports.updateDocument = exports.createDocument = exports.deleteAcademicLevel = exports.getAcademicLevels = exports.getAcademicLevelById = exports.updateAcademicLevel = exports.createAcademicLevel = exports.deleteAd = exports.updateAd = exports.getAds = exports.getAdById = exports.createAd = exports.deletePayment = exports.updatePayment = exports.getPayments = exports.getPaymentById = exports.createPayment = void 0;
+exports.getUniquePlaces = exports.searchPlaces = exports.searchPlace = exports.deletePlaces = exports.deletePlace = exports.updatePlace = exports.getAllPlaces = exports.getPlaces = exports.getPlaceById = exports.createPlace = exports.deleteBank = exports.getBankById = exports.getBanks = exports.updateBank = exports.createBank = exports.deleteDocument = exports.getDocumentById = exports.getDocuments = exports.updateDocument = exports.createDocument = exports.deleteAcademicLevel = exports.getAcademicLevels = exports.getAcademicLevelById = exports.updateAcademicLevel = exports.createAcademicLevel = exports.deleteAd = exports.updateAd = exports.getAds = exports.getAdById = exports.cleanPlaces = exports.createAd = exports.deletePayment = exports.updatePayment = exports.getPayments = exports.getPaymentById = exports.createPayment = void 0;
 const academicLevelModel_1 = require("../../models/team/academicLevelModel");
 const placeModel_1 = require("../../models/team/placeModel");
 const paymentModel_1 = require("../../models/team/paymentModel");
@@ -17,6 +17,9 @@ const errorHandler_1 = require("../../utils/errorHandler");
 const query_1 = require("../../utils/query");
 const fileUpload_1 = require("../../utils/fileUpload");
 const adModel_1 = require("../../models/utility/adModel");
+const competitionModel_1 = require("../../models/team/competitionModel");
+const newsModel_1 = require("../../models/team/newsModel");
+const schoolModel_1 = require("../../models/team/schoolModel");
 //--------------------PAYMENTS-----------------------//
 const createPayment = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     (0, query_1.createItem)(req, res, paymentModel_1.Payment, 'Payments was created successfully');
@@ -43,6 +46,84 @@ const createAd = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     (0, query_1.createItem)(req, res, adModel_1.Ad, 'Ads was created successfully');
 });
 exports.createAd = createAd;
+const cleanPlaces = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        yield placeModel_1.Place.updateMany({}, [
+            {
+                $set: {
+                    landmark: { $trim: { input: '$landmark' } },
+                    area: { $trim: { input: '$area' } },
+                    state: { $trim: { input: '$state' } },
+                    country: { $trim: { input: '$country' } },
+                    continent: { $trim: { input: '$continent' } },
+                },
+            },
+        ]);
+        yield placeModel_1.Document.updateMany({}, [
+            {
+                $set: {
+                    country: { $trim: { input: '$country' } },
+                },
+            },
+        ]);
+        yield schoolModel_1.School.updateMany({}, [
+            {
+                $set: {
+                    name: { $trim: { input: '$name' } },
+                    username: { $trim: { input: '$username' } },
+                    state: { $trim: { input: '$state' } },
+                    country: { $trim: { input: '$country' } },
+                    continent: { $trim: { input: '$continent' } },
+                },
+            },
+        ]);
+        yield newsModel_1.News.updateMany({}, [
+            {
+                $set: {
+                    state: { $trim: { input: '$state' } },
+                    country: { $trim: { input: '$country' } },
+                    continent: { $trim: { input: '$continent' } },
+                },
+            },
+        ]);
+        yield newsModel_1.News.updateMany({}, [
+            {
+                $set: {
+                    country: { $trim: { input: '$country' } },
+                    continent: { $trim: { input: '$continent' } },
+                },
+            },
+        ]);
+        yield competitionModel_1.Exam.updateMany({}, [
+            {
+                $set: {
+                    country: { $trim: { input: '$country' } },
+                    continent: { $trim: { input: '$continent' } },
+                },
+            },
+        ]);
+        yield placeModel_1.Bank.updateMany({}, [
+            {
+                $set: {
+                    country: { $trim: { input: '$country' } },
+                    continent: { $trim: { input: '$continent' } },
+                },
+            },
+        ]);
+        yield academicLevelModel_1.AcademicLevel.updateMany({}, [
+            {
+                $set: {
+                    country: { $trim: { input: '$country' } },
+                },
+            },
+        ]);
+        res.status(200).json({ message: 'Places updated successfully.' });
+    }
+    catch (error) {
+        (0, errorHandler_1.handleError)(res, undefined, undefined, error);
+    }
+});
+exports.cleanPlaces = cleanPlaces;
 const getAdById = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const result = yield adModel_1.Ad.findById(req.params.id);

@@ -332,6 +332,7 @@ function buildSearchQuery<T>(req: any): FilterQuery<T> {
     'displayName',
     'firstName',
     'middleName',
+    'content',
     'lastName',
     'subtitle',
   ]
@@ -391,7 +392,7 @@ export const search = async <T>(
 
     // console.log(results)
 
-    res.json(results)
+    res.json({ results })
   } catch (error) {
     handleError(res, undefined, undefined, error)
   }
@@ -490,7 +491,7 @@ export const getItemById = async <T extends Document>(
     if (!item) {
       return res.status(404).json({ message: message })
     }
-    res.status(200).json(item)
+    res.status(200).json({ data: item })
   } catch (error) {
     handleError(res, undefined, undefined, error)
   }

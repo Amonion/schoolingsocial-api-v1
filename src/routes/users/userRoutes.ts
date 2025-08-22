@@ -76,6 +76,7 @@ router
   .route('/userinfo-app/:id')
   .get(getUserInfo)
   .patch(upload.any(), updateUserInfoApp)
+  .post(upload.any(), updateUserInfoApp)
 
 router
   .route('/settings/:id')

@@ -13,11 +13,12 @@ import placeRoutes from './routes/team/placeRoutes'
 import postRoutes from './routes/users/postRoutes'
 import schoolRoutes from './routes/team/schoolRoutes'
 import statRoutes from './routes/team/statRoutes'
-import utilityRoutes from './routes/utility/utilityRoutes'
 import adRoutes from './routes/utility/adRoutes'
 import userMessageRoutes from './routes/users/userMessageRoutes'
 import userCompetitionRoutes from './routes/users/userCompetitionRoutes'
 import userRoutes from './routes/users/userRoutes'
+import transactionRoutes from './routes/utility/transactionRoutes'
+import utilityRoutes from './routes/utility/utilityRoutes'
 import {
   createChat,
   deleteChat,
@@ -119,6 +120,7 @@ app.use('/api/v1/user-competitions', userCompetitionRoutes)
 app.use('/api/v1/user-messages', userMessageRoutes)
 app.use('/api/v1/user-stats', statRoutes)
 app.use('/api/v1/users', userRoutes)
+app.use('/api/v1/transactions', transactionRoutes)
 app.get('/api/v1/user-ip', (req, res) => {
   let ip: string | undefined
 

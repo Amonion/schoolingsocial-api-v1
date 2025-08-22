@@ -19,7 +19,6 @@ import {
   updatePostStat,
   getPostStat,
   followUser,
-  getFollowingPosts,
   getBookMarkedPosts,
   searchPosts,
   updatePostViews,
@@ -31,6 +30,7 @@ import {
   getBlockedUsers,
   getMutedUsers,
   updatePoll,
+  getFollowers,
   // checkNudeMedia,
 } from '../../controllers/users/postController'
 
@@ -46,7 +46,7 @@ import {
 const router = express.Router()
 router.route('/follow/:id').patch(upload.any(), followUser)
 router.route('/poll/:id').post(upload.any(), updatePoll)
-router.route('/followers').get(getFollowings)
+router.route('/followers').get(getFollowers)
 router.route('/uploads').get(getUploads).post(upload.any(), createUpload)
 router.route('/accounts').get(getAccounts).post(upload.any(), createAccount)
 router.route('/stats').get(getPostStat).patch(upload.any(), updatePostStat)
@@ -60,7 +60,7 @@ router.route('/view').patch(updatePostViews)
 router.route('/general').get(multiSearch)
 router.route('/').get(getPosts).post(upload.any(), createPost)
 router.route('/create').get(getPosts).post(upload.any(), makePost)
-router.route('/following').get(getFollowingPosts)
+router.route('/following').get(getFollowings)
 router.route('/bookmarks').get(getBookMarkedPosts)
 router.route('/search').get(searchPosts)
 // router.route('/check-nsfw').post(uploadFile.single('file'), checkNudeMedia)

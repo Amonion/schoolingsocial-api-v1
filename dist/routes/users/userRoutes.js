@@ -43,7 +43,8 @@ router
 router
     .route('/userinfo-app/:id')
     .get(userController_1.getUserInfo)
-    .patch(upload.any(), userController_1.updateUserInfoApp);
+    .patch(upload.any(), userController_1.updateUserInfoApp)
+    .post(upload.any(), userController_1.updateUserInfoApp);
 router
     .route('/settings/:id')
     .get(userController_1.getUserSettings)

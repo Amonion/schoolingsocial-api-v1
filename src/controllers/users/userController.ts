@@ -21,6 +21,8 @@ import { UserStatus } from '../../models/users/usersStatMode'
 import { Expo } from 'expo-server-sdk'
 import { Bookmark, Like, Repost, View } from '../../models/users/statModel'
 import { UserNotification } from '../../models/team/emailModel'
+import { Place } from '../../models/team/placeModel'
+import { Wallet } from '../../models/users/walletModel'
 const expo = new Expo()
 
 export const createUser = async (
@@ -28,39 +30,52 @@ export const createUser = async (
   res: Response
 ): Promise<void> => {
   try {
-    const { email, signupIp, password, operatingSystem } = req.body
+    // Run once to remove trailing/leading spaces in all documents
+    // await Place.updateMany({}, [
+    //   { $set: { country: { $trim: { input: '$country' } } } },
+    // ])
+    const country = (req as any).country
+    const newCountry = country ? country : 'Nigeria'
 
-    const userBio = new UserInfo({ email, signupIp, operatingSystem })
+    const signupCountry = await Place.findOne({
+      country: new RegExp(`^${newCountry.trim()}\\s*$`, 'i'),
+    })
+
+    const { email, signupIp, password, operatingSystem } = req.body
+    const userBio = new UserInfo({
+      email,
+      signupIp,
+      operatingSystem,
+      residentCountry: signupCountry,
+    })
     await userBio.save()
     await UserSchoolInfo.create({ userId: userBio._id })
     await UserFinanceInfo.create({ userId: userBio._id })
+
+    console.log('country is: ', signupCountry)
 
     const newUser = new User({
       userId: userBio._id,
       email,
       signupIp,
+      country: signupCountry?.country.trim(),
+      signupCountry: signupCountry?.country.trim(),
+      signupCountryFlag: signupCountry?.countryFlag.trim(),
+      signupCountrySymbol: signupCountry?.countrySymbol.trim(),
       password: await bcrypt.hash(password, 10),
     })
 
     await newUser.save()
-    await UserInfo.updateOne(
-      { _id: userBio._id },
-      {
-        $push: {
-          userAccounts: {
-            _id: newUser._id,
-            email: newUser.email,
-            username: newUser.username,
-            displayName: newUser.displayName,
-            phone: newUser.phone,
-            picture: newUser.picture,
-            following: 0,
-            followers: 0,
-            posts: 0,
-          },
-        },
-      }
-    )
+
+    await Wallet.create({
+      userId: newUser._id,
+      bioId: userBio._id,
+      country: signupCountry?.country.trim(),
+      countryFlag: signupCountry?.countryFlag,
+      countrySymbol: signupCountry?.countrySymbol.trim(),
+      currency: signupCountry?.currency.trim(),
+      currencySymbol: signupCountry?.currencySymbol.trim(),
+    })
 
     await sendEmail('', email, 'welcome')
 

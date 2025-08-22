@@ -181,6 +181,7 @@ const FollowerSchema = new mongoose_1.Schema({
     followerPicture: { type: String },
     followerDisplayName: { type: String },
     followerIsVerified: { type: Boolean },
+    followed: { type: Boolean, default: false },
     postId: { type: String },
     createdAt: { type: Date, default: Date.now },
 }, {

@@ -33,22 +33,48 @@ var __importStar = (this && this.__importStar) || (function () {
     };
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.Payment = void 0;
+exports.Transaction = exports.Payment = void 0;
 const mongoose_1 = __importStar(require("mongoose"));
 const PaymentSchema = new mongoose_1.Schema({
     amount: { type: Number, default: 0.0 },
     charge: { type: Number, default: 0.0 },
     logo: { type: String },
-    name: { type: String, default: "" },
-    country: { type: String, default: "" },
-    placeId: { type: String, default: "" },
-    countryFlag: { type: String, default: "" },
-    description: { type: String, default: "" },
-    countrySymbol: { type: String, default: "" },
-    currency: { type: String, default: "" },
-    currencySymbol: { type: String, default: "" },
+    name: { type: String, default: '' },
+    title: { type: String, default: '' },
+    durationName: { type: String, default: '' },
+    duration: { type: Number, default: 0 },
+    country: { type: String, default: '' },
+    placeId: { type: String, default: '' },
+    countryFlag: { type: String, default: '' },
+    description: { type: String, default: '' },
+    countrySymbol: { type: String, default: '' },
+    currency: { type: String, default: '' },
+    currencySymbol: { type: String, default: '' },
     createdAt: { type: Date, default: Date.now },
 }, {
     timestamps: true,
 });
-exports.Payment = mongoose_1.default.model("Payment", PaymentSchema);
+exports.Payment = mongoose_1.default.model('Payment', PaymentSchema);
+const TransactionSchema = new mongoose_1.Schema({
+    amount: { type: Number, default: 0.0 },
+    charge: { type: Number, default: 0.0 },
+    logo: { type: String },
+    username: { type: String, default: '' },
+    status: { type: Boolean, default: false },
+    received: { type: Boolean, default: false },
+    email: { type: String, default: '' },
+    picture: { type: String, default: '' },
+    name: { type: String, default: '' },
+    reference: { type: String, default: '' },
+    title: { type: String, default: '' },
+    country: { type: String, default: '' },
+    countryFlag: { type: String, default: '' },
+    description: { type: String, default: '' },
+    countrySymbol: { type: String, default: '' },
+    currency: { type: String, default: '' },
+    currencySymbol: { type: String, default: '' },
+    createdAt: { type: Date, default: Date.now },
+}, {
+    timestamps: true,
+});
+exports.Transaction = mongoose_1.default.model('Transaction', TransactionSchema);

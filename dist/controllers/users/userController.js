@@ -30,35 +30,50 @@ const usersStatMode_1 = require("../../models/users/usersStatMode");
 const expo_server_sdk_1 = require("expo-server-sdk");
 const statModel_1 = require("../../models/users/statModel");
 const emailModel_1 = require("../../models/team/emailModel");
+const placeModel_1 = require("../../models/team/placeModel");
+const walletModel_1 = require("../../models/users/walletModel");
 const expo = new expo_server_sdk_1.Expo();
 const createUser = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
+        // Run once to remove trailing/leading spaces in all documents
+        // await Place.updateMany({}, [
+        //   { $set: { country: { $trim: { input: '$country' } } } },
+        // ])
+        const country = req.country;
+        const newCountry = country ? country : 'Nigeria';
+        const signupCountry = yield placeModel_1.Place.findOne({
+            country: new RegExp(`^${newCountry.trim()}\\s*$`, 'i'),
+        });
         const { email, signupIp, password, operatingSystem } = req.body;
-        const userBio = new userInfoModel_1.UserInfo({ email, signupIp, operatingSystem });
+        const userBio = new userInfoModel_1.UserInfo({
+            email,
+            signupIp,
+            operatingSystem,
+            residentCountry: signupCountry,
+        });
         yield userBio.save();
         yield userInfoModel_1.UserSchoolInfo.create({ userId: userBio._id });
         yield userInfoModel_1.UserFinanceInfo.create({ userId: userBio._id });
+        console.log('country is: ', signupCountry);
         const newUser = new userModel_1.User({
             userId: userBio._id,
             email,
             signupIp,
+            country: signupCountry === null || signupCountry === void 0 ? void 0 : signupCountry.country.trim(),
+            signupCountry: signupCountry === null || signupCountry === void 0 ? void 0 : signupCountry.country.trim(),
+            signupCountryFlag: signupCountry === null || signupCountry === void 0 ? void 0 : signupCountry.countryFlag.trim(),
+            signupCountrySymbol: signupCountry === null || signupCountry === void 0 ? void 0 : signupCountry.countrySymbol.trim(),
             password: yield bcryptjs_1.default.hash(password, 10),
         });
         yield newUser.save();
-        yield userInfoModel_1.UserInfo.updateOne({ _id: userBio._id }, {
-            $push: {
-                userAccounts: {
-                    _id: newUser._id,
-                    email: newUser.email,
-                    username: newUser.username,
-                    displayName: newUser.displayName,
-                    phone: newUser.phone,
-                    picture: newUser.picture,
-                    following: 0,
-                    followers: 0,
-                    posts: 0,
-                },
-            },
+        yield walletModel_1.Wallet.create({
+            userId: newUser._id,
+            bioId: userBio._id,
+            country: signupCountry === null || signupCountry === void 0 ? void 0 : signupCountry.country.trim(),
+            countryFlag: signupCountry === null || signupCountry === void 0 ? void 0 : signupCountry.countryFlag,
+            countrySymbol: signupCountry === null || signupCountry === void 0 ? void 0 : signupCountry.countrySymbol.trim(),
+            currency: signupCountry === null || signupCountry === void 0 ? void 0 : signupCountry.currency.trim(),
+            currencySymbol: signupCountry === null || signupCountry === void 0 ? void 0 : signupCountry.currencySymbol.trim(),
         });
         yield (0, sendEmail_1.sendEmail)('', email, 'welcome');
         res.status(200).json({

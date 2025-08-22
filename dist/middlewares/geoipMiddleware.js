@@ -11,7 +11,7 @@ const dbPath = path_1.default.join(__dirname, '../utils/GeoLite2-Country.mmdb');
 const dbBuffer = fs_1.default.readFileSync(dbPath);
 const reader = geoip2_node_1.Reader.openBuffer(dbBuffer);
 function geoipMiddleware(req, res, next) {
-    var _a, _b;
+    var _a, _b, _c;
     let ip;
     const forwarded = req.headers['x-forwarded-for'];
     console.log(`Forwarded is: ${forwarded}`);
@@ -30,11 +30,11 @@ function geoipMiddleware(req, res, next) {
     console.log(`IP is: ${ip}`);
     try {
         const response = reader.country(ip || '');
-        req.country = ((_b = response.country) === null || _b === void 0 ? void 0 : _b.isoCode) || null;
+        req.country = ((_c = (_b = response.country) === null || _b === void 0 ? void 0 : _b.names) === null || _c === void 0 ? void 0 : _c.en) || 'Nigeria';
     }
-    catch (_c) {
+    catch (_d) {
         ;
-        req.country = null;
+        req.country = 'Nigeria';
     }
     next();
 }

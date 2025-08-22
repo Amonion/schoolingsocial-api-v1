@@ -31,9 +31,9 @@ export function geoipMiddleware(
 
   try {
     const response = reader.country(ip || '')
-    ;(req as any).country = response.country?.isoCode || null
+    ;(req as any).country = response.country?.names?.en || 'Nigeria'
   } catch {
-    ;(req as any).country = null
+    ;(req as any).country = 'Nigeria'
   }
 
   next()

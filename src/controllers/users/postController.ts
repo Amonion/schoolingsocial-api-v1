@@ -495,7 +495,7 @@ export const repostPost = async (req: Request, res: Response) => {
     rest.followers = 0
     rest.unfollowers = 0
     rest.shares = 0
-    rest.views = 0
+    rest.views = 1
     rest.likes = 0
     rest.reposts = 0
     rest.score = 0
@@ -551,33 +551,89 @@ export const getPosts = async (req: Request, res: Response) => {
   }
 }
 
-export const getFollowingPosts = async (req: Request, res: Response) => {
+export const getFollowings = async (req: Request, res: Response) => {
   try {
-    const followerId = String(req.query.myId)
-    const followers = await Follower.find({ followerId: followerId })
-    const followersUserIds = followers.map((user) => user.userId)
-    delete req.query.myId
+    const { followerId } = req.query
+    // const result = await queryData<IFollower>(Follower, req)
+    const followingResponse = await queryData(Follower, req)
+    const followings = followingResponse.results
 
-    const mongoQuery = {
-      ...req.query,
-      userId: { in: followersUserIds },
+    delete req.query.followerId
+    req.query.userId = followerId
+
+    const followersResponse = await queryData(Follower, req)
+    const followers = followersResponse.results
+
+    const updatedFollowers = []
+    for (let i = 0; i < followings.length; i++) {
+      const el = followings[i]
+      for (let x = 0; x < followers.length; x++) {
+        const fl = followers[x]
+        if (fl.userId === el.followerId) {
+          el.followed = true
+        }
+      }
+      updatedFollowers.push(el)
     }
-    req.query = mongoQuery
-    delete req.query.myId
+    res.status(200).json({
+      count: followersResponse.count,
+      page: followersResponse.page,
+      page_size: followersResponse.page_size,
+      results: updatedFollowers,
+    })
 
-    const processedPosts = await processFetchedPosts(req, followerId)
+    // const followerId = String(req.query.myId)
+    // const followers = await Follower.find({ followerId: followerId })
+    // const followersUserIds = followers.map((user) => user.userId)
+    // delete req.query.myId
 
-    res.status(200).json(processedPosts)
+    // const mongoQuery = {
+    //   ...req.query,
+    //   userId: { in: followersUserIds },
+    // }
+    // req.query = mongoQuery
+    // delete req.query.myId
+
+    // const processedPosts = await processFetchedPosts(req, followerId)
+
+    // res.status(200).json(processedPosts)
   } catch (error) {
     handleError(res, undefined, undefined, error)
   }
 }
 
-export const getFollowings = async (req: Request, res: Response) => {
+export const getFollowers = async (req: Request, res: Response) => {
   try {
-    const result = await queryData<IFollower>(Follower, req)
+    const { userId } = req.query
+    // const result = await queryData<IFollower>(Follower, req)
+    const followersResponse = await queryData(Follower, req)
+    const followers = followersResponse.results
 
-    res.status(200).json(result)
+    delete req.query.userId
+    req.query.followerId = userId
+
+    const followingsResponse = await queryData(Follower, req)
+    const followings = followingsResponse.results
+
+    const updatedFollowers = []
+
+    for (let i = 0; i < followers.length; i++) {
+      const el = followers[i]
+      for (let x = 0; x < followings.length; x++) {
+        const fl = followings[x]
+        if (fl.userId === el.followerId) {
+          el.followed = true
+        }
+      }
+      updatedFollowers.push(el)
+    }
+
+    res.status(200).json({
+      count: followersResponse.count,
+      page: followersResponse.page,
+      page_size: followersResponse.page_size,
+      results: updatedFollowers,
+    })
   } catch (error) {
     handleError(res, undefined, undefined, error)
   }
@@ -770,6 +826,8 @@ export const updatePostStat = async (req: Request, res: Response) => {
 
     const post = await Post.findById(id)
 
+    console.log(userId, id, post)
+
     if (!post) {
       return res.status(404).json({ message: 'Post not found' })
     }
@@ -867,7 +925,7 @@ export const updatePostStat = async (req: Request, res: Response) => {
     )
 
     await Post.updateOne(
-      { _id: post.postId },
+      { _id: post._id },
       {
         $set: { score: score },
       }

@@ -1,12 +1,12 @@
-import { Request, Response } from "express";
-import { handleError } from "../../utils/errorHandler";
+import { Request, Response } from 'express'
+import { handleError } from '../../utils/errorHandler'
 import {
   School,
   SchoolPayment,
   Faculty,
   Department,
   Course,
-} from "../../models/team/schoolModel";
+} from '../../models/team/schoolModel'
 import {
   ISchool,
   ISchoolPayment,
@@ -14,161 +14,156 @@ import {
   IDepartment,
   ICourse,
   IAcademicLevel,
-} from "../../utils/teamInterface";
+} from '../../utils/teamInterface'
 import {
   queryData,
   deleteItem,
   updateItem,
   createItem,
   search,
-} from "../../utils/query";
+} from '../../utils/query'
 
 interface SchoolLevels {
-  id: string;
-  institution: string;
+  id: string
+  institution: string
 }
 
 export const createSchool = async (
   req: Request,
   res: Response
 ): Promise<void> => {
-  const levels: SchoolLevels[] = JSON.parse(req.body.levels);
-  const institutions = levels.map((item) => item.institution);
-  req.body.levels = levels;
-  req.body.institutions = institutions;
-  req.body.isRecorded = true;
-  createItem(req, res, School, "School was created successfully");
-};
+  const levels: SchoolLevels[] = JSON.parse(req.body.levels)
+  const institutions = levels.map((item) => item.institution)
+  req.body.levels = levels
+  req.body.institutions = institutions
+  req.body.isRecorded = true
+  createItem(req, res, School, 'School was created successfully')
+}
 
-export const getSchoolById = async (
+export const getSchoolByUsername = async (
   req: Request,
   res: Response
 ): Promise<Response | void> => {
   try {
-    const item = await School.findById(req.params.id);
+    const item = await School.findOne({ username: req.params.username })
     if (!item) {
-      return res.status(404).json({ message: "School not found" });
+      return res.status(404).json({ message: 'School not found' })
     }
-    res.status(200).json(item);
+    res.status(200).json(item)
   } catch (error) {
-    handleError(res, undefined, undefined, error);
+    handleError(res, undefined, undefined, error)
   }
-};
+}
 
 export const getSchools = async (req: Request, res: Response) => {
   try {
-    const result = await queryData<ISchool>(School, req);
-    res.status(200).json(result);
+    const result = await queryData<ISchool>(School, req)
+    res.status(200).json(result)
   } catch (error) {
-    handleError(res, undefined, undefined, error);
+    handleError(res, undefined, undefined, error)
   }
-};
+}
 
 export const updateSchool = async (req: Request, res: Response) => {
   try {
-    const levels: SchoolLevels[] = JSON.parse(req.body.levels);
-    const institutions = levels.map((item) => item.institution);
-    req.body.levels = levels;
-    req.body.institutions = institutions;
+    const levels: SchoolLevels[] = JSON.parse(req.body.levels)
+    const institutions = levels.map((item) => item.institution)
+    req.body.levels = levels
+    req.body.institutions = institutions
     updateItem(
       req,
       res,
       School,
-      ["logo", "media", "picture"],
-      ["School not found", "School was updated successfully"]
-    );
+      ['logo', 'media', 'picture'],
+      ['School not found', 'School was updated successfully']
+    )
   } catch (error) {
-    handleError(res, undefined, undefined, error);
+    handleError(res, undefined, undefined, error)
   }
-};
+}
 
 export const recordAll = async (req: Request, res: Response) => {
   try {
     const response = await School.updateMany(
       {}, // No filter — update all documents
       { $set: { isRecorded: true } }
-    );
-    res.status(200).json({ response });
+    )
+    res.status(200).json({ response })
   } catch (error) {
-    handleError(res, undefined, undefined, error);
+    handleError(res, undefined, undefined, error)
   }
-};
+}
 
 export const deleteSchool = async (req: Request, res: Response) => {
   await deleteItem(
     req,
     res,
     School,
-    ["logo", "media", "picture"],
-    "School not found"
-  );
-};
+    ['logo', 'media', 'picture'],
+    'School not found'
+  )
+}
 
 export const searchSchool = (req: Request, res: Response) => {
-  search(School, req, res);
-};
+  search(School, req, res)
+}
 
 export const updateLevels = async (req: Request, res: Response) => {
   try {
-    const items = await School.find();
+    const items = await School.find()
     for (let i = 0; i < items.length; i++) {
-      const el = items[i];
+      const el = items[i]
       if (
         el.levelNames.length === 0 ||
         el.levelNames[i] === null ||
         el.levelNames === null ||
         el.levelNames === undefined
       ) {
-        const levels: IAcademicLevel[] = JSON.parse(el.levels);
-        const arr = [];
+        const levels: IAcademicLevel[] = JSON.parse(el.levels)
+        const arr = []
         for (let x = 0; x < levels.length; x++) {
-          const elm = levels[x];
-          arr.push(elm.levelName);
+          const elm = levels[x]
+          arr.push(elm.levelName)
         }
-        await School.findByIdAndUpdate(el._id, { levelNames: arr });
+        await School.findByIdAndUpdate(el._id, { levelNames: arr })
       }
     }
-    return res.status(200).json({ message: "Schools updated successfully." });
+    return res.status(200).json({ message: 'Schools updated successfully.' })
   } catch (error) {
-    handleError(res, undefined, undefined, error);
+    handleError(res, undefined, undefined, error)
   }
-};
+}
 //-----------------PAYMENT--------------------//
 export const createSchoolPayment = async (
   req: Request,
   res: Response
 ): Promise<void> => {
-  createItem(
-    req,
-    res,
-    SchoolPayment,
-    "School payment was created successfully"
-  );
-};
+  createItem(req, res, SchoolPayment, 'School payment was created successfully')
+}
 
 export const getSchoolPaymentById = async (
   req: Request,
   res: Response
 ): Promise<Response | void> => {
   try {
-    const item = await SchoolPayment.findById(req.params.id);
+    const item = await SchoolPayment.findById(req.params.id)
     if (!item) {
-      return res.status(404).json({ message: "School payment not found" });
+      return res.status(404).json({ message: 'School payment not found' })
     }
-    res.status(200).json(item);
+    res.status(200).json(item)
   } catch (error) {
-    handleError(res, undefined, undefined, error);
+    handleError(res, undefined, undefined, error)
   }
-};
+}
 
 export const getSchoolPayments = async (req: Request, res: Response) => {
   try {
-    const result = await queryData<ISchoolPayment>(SchoolPayment, req);
-    res.status(200).json(result);
+    const result = await queryData<ISchoolPayment>(SchoolPayment, req)
+    res.status(200).json(result)
   } catch (error) {
-    handleError(res, undefined, undefined, error);
+    handleError(res, undefined, undefined, error)
   }
-};
+}
 
 export const updateSchoolPayment = async (req: Request, res: Response) => {
   try {
@@ -177,28 +172,28 @@ export const updateSchoolPayment = async (req: Request, res: Response) => {
       res,
       SchoolPayment,
       [],
-      ["School payment not found", "School payment was updated successfully"]
-    );
+      ['School payment not found', 'School payment was updated successfully']
+    )
   } catch (error) {
-    handleError(res, undefined, undefined, error);
+    handleError(res, undefined, undefined, error)
   }
-};
+}
 
 export const deleteSchoolPayment = async (req: Request, res: Response) => {
-  await deleteItem(req, res, SchoolPayment, [], "School payment not found");
-};
+  await deleteItem(req, res, SchoolPayment, [], 'School payment not found')
+}
 
 export const searchSchools = async (req: Request, res: Response) => {
   try {
-    const name = req.query.name as string;
-    const skip = parseInt(req.query.page as string) || 1;
-    const limit = parseInt(req.query.page_size as string) || 10;
+    const name = req.query.name as string
+    const skip = parseInt(req.query.page as string) || 1
+    const limit = parseInt(req.query.page_size as string) || 10
 
     const schools = await School.aggregate([
       {
         $group: {
-          _id: name ? `$${name}` : "$name",
-          place: { $first: "$$ROOT" },
+          _id: name ? `$${name}` : '$name',
+          place: { $first: '$$ROOT' },
         },
       },
       {
@@ -211,50 +206,50 @@ export const searchSchools = async (req: Request, res: Response) => {
         $limit: limit,
       },
       {
-        $replaceRoot: { newRoot: "$place" },
+        $replaceRoot: { newRoot: '$place' },
       },
-    ]);
+    ])
 
     res.status(200).json({
       results: schools,
-    });
+    })
   } catch (error) {
-    console.error("Error fetching unique places:", error);
-    res.status(500).json({ error: "Internal server error" });
+    console.error('Error fetching unique places:', error)
+    res.status(500).json({ error: 'Internal server error' })
   }
-};
+}
 
 //-----------------COURSES--------------------//
 export const createCourse = async (
   req: Request,
   res: Response
 ): Promise<void> => {
-  createItem(req, res, Course, "Course was created successfully");
-};
+  createItem(req, res, Course, 'Course was created successfully')
+}
 
 export const getCourseById = async (
   req: Request,
   res: Response
 ): Promise<Response | void> => {
   try {
-    const item = await Course.findById(req.params.id);
+    const item = await Course.findById(req.params.id)
     if (!item) {
-      return res.status(404).json({ message: "Course not found" });
+      return res.status(404).json({ message: 'Course not found' })
     }
-    res.status(200).json(item);
+    res.status(200).json(item)
   } catch (error) {
-    handleError(res, undefined, undefined, error);
+    handleError(res, undefined, undefined, error)
   }
-};
+}
 
 export const getCourses = async (req: Request, res: Response) => {
   try {
-    const result = await queryData<ICourse>(Course, req);
-    res.status(200).json(result);
+    const result = await queryData<ICourse>(Course, req)
+    res.status(200).json(result)
   } catch (error) {
-    handleError(res, undefined, undefined, error);
+    handleError(res, undefined, undefined, error)
   }
-};
+}
 
 export const updateCourse = async (req: Request, res: Response) => {
   try {
@@ -262,49 +257,49 @@ export const updateCourse = async (req: Request, res: Response) => {
       req,
       res,
       Course,
-      ["media", "picture"],
-      ["Course not found", "Course was updated successfully"]
-    );
+      ['media', 'picture'],
+      ['Course not found', 'Course was updated successfully']
+    )
   } catch (error) {
-    handleError(res, undefined, undefined, error);
+    handleError(res, undefined, undefined, error)
   }
-};
+}
 
 export const deleteCourse = async (req: Request, res: Response) => {
-  await deleteItem(req, res, Course, ["media", "picture"], "Course not found");
-};
+  await deleteItem(req, res, Course, ['media', 'picture'], 'Course not found')
+}
 
 //-----------------DEPARTMENTS--------------------//
 export const createDepartment = async (
   req: Request,
   res: Response
 ): Promise<void> => {
-  createItem(req, res, Department, "Department was created successfully");
-};
+  createItem(req, res, Department, 'Department was created successfully')
+}
 
 export const getDepartmentById = async (
   req: Request,
   res: Response
 ): Promise<Response | void> => {
   try {
-    const item = await Department.findById(req.params.id);
+    const item = await Department.findById(req.params.id)
     if (!item) {
-      return res.status(404).json({ message: "Department not found" });
+      return res.status(404).json({ message: 'Department not found' })
     }
-    res.status(200).json(item);
+    res.status(200).json(item)
   } catch (error) {
-    handleError(res, undefined, undefined, error);
+    handleError(res, undefined, undefined, error)
   }
-};
+}
 
 export const getDepartments = async (req: Request, res: Response) => {
   try {
-    const result = await queryData<IDepartment>(Department, req);
-    res.status(200).json(result);
+    const result = await queryData<IDepartment>(Department, req)
+    res.status(200).json(result)
   } catch (error) {
-    handleError(res, undefined, undefined, error);
+    handleError(res, undefined, undefined, error)
   }
-};
+}
 
 export const updateDepartment = async (req: Request, res: Response) => {
   try {
@@ -312,55 +307,55 @@ export const updateDepartment = async (req: Request, res: Response) => {
       req,
       res,
       Department,
-      ["media", "picture"],
-      ["Department not found", "Department was updated successfully"]
-    );
+      ['media', 'picture'],
+      ['Department not found', 'Department was updated successfully']
+    )
   } catch (error) {
-    handleError(res, undefined, undefined, error);
+    handleError(res, undefined, undefined, error)
   }
-};
+}
 
 export const deleteDepartment = async (req: Request, res: Response) => {
   await deleteItem(
     req,
     res,
     Department,
-    ["media", "picture"],
-    "Department not found"
-  );
-};
+    ['media', 'picture'],
+    'Department not found'
+  )
+}
 
 //-----------------FACULTY--------------------//
 export const createFaculty = async (
   req: Request,
   res: Response
 ): Promise<void> => {
-  createItem(req, res, Faculty, "Faculty was created successfully");
-};
+  createItem(req, res, Faculty, 'Faculty was created successfully')
+}
 
 export const getFacultyById = async (
   req: Request,
   res: Response
 ): Promise<Response | void> => {
   try {
-    const item = await Faculty.findById(req.params.id);
+    const item = await Faculty.findById(req.params.id)
     if (!item) {
-      return res.status(404).json({ message: "Faculty not found" });
+      return res.status(404).json({ message: 'Faculty not found' })
     }
-    res.status(200).json(item);
+    res.status(200).json(item)
   } catch (error) {
-    handleError(res, undefined, undefined, error);
+    handleError(res, undefined, undefined, error)
   }
-};
+}
 
 export const getFaculties = async (req: Request, res: Response) => {
   try {
-    const result = await queryData<IFaculty>(Faculty, req);
-    res.status(200).json(result);
+    const result = await queryData<IFaculty>(Faculty, req)
+    res.status(200).json(result)
   } catch (error) {
-    handleError(res, undefined, undefined, error);
+    handleError(res, undefined, undefined, error)
   }
-};
+}
 
 export const updateFaculty = async (req: Request, res: Response) => {
   try {
@@ -368,20 +363,14 @@ export const updateFaculty = async (req: Request, res: Response) => {
       req,
       res,
       Faculty,
-      ["media", "picture"],
-      ["Faculty not found", "Faculty was updated successfully"]
-    );
+      ['media', 'picture'],
+      ['Faculty not found', 'Faculty was updated successfully']
+    )
   } catch (error) {
-    handleError(res, undefined, undefined, error);
+    handleError(res, undefined, undefined, error)
   }
-};
+}
 
 export const deleteFaculty = async (req: Request, res: Response) => {
-  await deleteItem(
-    req,
-    res,
-    Faculty,
-    ["media", "picture"],
-    "Faculty not found"
-  );
-};
+  await deleteItem(req, res, Faculty, ['media', 'picture'], 'Faculty not found')
+}

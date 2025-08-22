@@ -18,6 +18,9 @@ import {
 import { uploadFilesToS3 } from '../../utils/fileUpload'
 import { Ad } from '../../models/utility/adModel'
 import { IAd } from '../../utils/userInterface'
+import { Exam } from '../../models/team/competitionModel'
+import { News } from '../../models/team/newsModel'
+import { School } from '../../models/team/schoolModel'
 
 //--------------------PAYMENTS-----------------------//
 export const createPayment = async (
@@ -55,6 +58,93 @@ export const deletePayment = async (req: Request, res: Response) => {
 //--------------------ADS-----------------------//
 export const createAd = async (req: Request, res: Response): Promise<void> => {
   createItem(req, res, Ad, 'Ads was created successfully')
+}
+
+export const cleanPlaces = async (
+  req: Request,
+  res: Response
+): Promise<Response | void> => {
+  try {
+    await Place.updateMany({}, [
+      {
+        $set: {
+          landmark: { $trim: { input: '$landmark' } },
+          area: { $trim: { input: '$area' } },
+          state: { $trim: { input: '$state' } },
+          country: { $trim: { input: '$country' } },
+          continent: { $trim: { input: '$continent' } },
+        },
+      },
+    ])
+
+    await Document.updateMany({}, [
+      {
+        $set: {
+          country: { $trim: { input: '$country' } },
+        },
+      },
+    ])
+
+    await School.updateMany({}, [
+      {
+        $set: {
+          name: { $trim: { input: '$name' } },
+          username: { $trim: { input: '$username' } },
+          state: { $trim: { input: '$state' } },
+          country: { $trim: { input: '$country' } },
+          continent: { $trim: { input: '$continent' } },
+        },
+      },
+    ])
+    await News.updateMany({}, [
+      {
+        $set: {
+          state: { $trim: { input: '$state' } },
+          country: { $trim: { input: '$country' } },
+          continent: { $trim: { input: '$continent' } },
+        },
+      },
+    ])
+
+    await News.updateMany({}, [
+      {
+        $set: {
+          country: { $trim: { input: '$country' } },
+          continent: { $trim: { input: '$continent' } },
+        },
+      },
+    ])
+
+    await Exam.updateMany({}, [
+      {
+        $set: {
+          country: { $trim: { input: '$country' } },
+          continent: { $trim: { input: '$continent' } },
+        },
+      },
+    ])
+
+    await Bank.updateMany({}, [
+      {
+        $set: {
+          country: { $trim: { input: '$country' } },
+          continent: { $trim: { input: '$continent' } },
+        },
+      },
+    ])
+
+    await AcademicLevel.updateMany({}, [
+      {
+        $set: {
+          country: { $trim: { input: '$country' } },
+        },
+      },
+    ])
+
+    res.status(200).json({ message: 'Places updated successfully.' })
+  } catch (error) {
+    handleError(res, undefined, undefined, error)
+  }
 }
 
 export const getAdById = async (

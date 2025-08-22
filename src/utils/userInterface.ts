@@ -27,9 +27,10 @@ export interface IAd extends Document {
   currencySymbol: string
   countrySymbol: string
   placeId: string
-  isChecked?: boolean
-  isActive?: boolean
+  onReview: boolean
+  online: boolean
 }
+
 export interface IAttempt extends Document {
   username: string
   userId: string
@@ -118,6 +119,7 @@ export interface IFollower extends Document {
   followerUsername: string
   followerPicture: string
   followerIsVerified: boolean
+  followed: boolean
   postId: string
 }
 
@@ -548,4 +550,20 @@ export interface Socket {
   createdAt: Date
   media: File[]
   types: string[]
+}
+export interface IWallet extends Document {
+  username: string
+  userId: string
+  bioId: string
+  picture: string
+  balance: number
+  spent: number
+  received: number
+
+  country: string
+  countryFlag: string
+  countrySymbol: string
+  currency: string
+  currencySymbol: string
+  createdAt: Date
 }

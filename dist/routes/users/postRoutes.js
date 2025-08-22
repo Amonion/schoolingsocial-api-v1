@@ -11,7 +11,7 @@ const uploadController_1 = require("../../controllers/users/uploadController");
 const router = express_1.default.Router();
 router.route('/follow/:id').patch(upload.any(), postController_1.followUser);
 router.route('/poll/:id').post(upload.any(), postController_1.updatePoll);
-router.route('/followers').get(postController_1.getFollowings);
+router.route('/followers').get(postController_1.getFollowers);
 router.route('/uploads').get(uploadController_1.getUploads).post(upload.any(), uploadController_1.createUpload);
 router.route('/accounts').get(postController_1.getAccounts).post(upload.any(), postController_1.createAccount);
 router.route('/stats').get(postController_1.getPostStat).patch(upload.any(), postController_1.updatePostStat);
@@ -25,7 +25,7 @@ router.route('/view').patch(postController_1.updatePostViews);
 router.route('/general').get(uploadController_1.multiSearch);
 router.route('/').get(postController_1.getPosts).post(upload.any(), postController_1.createPost);
 router.route('/create').get(postController_1.getPosts).post(upload.any(), postController_1.makePost);
-router.route('/following').get(postController_1.getFollowingPosts);
+router.route('/following').get(postController_1.getFollowings);
 router.route('/bookmarks').get(postController_1.getBookMarkedPosts);
 router.route('/search').get(postController_1.searchPosts);
 // router.route('/check-nsfw').post(uploadFile.single('file'), checkNudeMedia)

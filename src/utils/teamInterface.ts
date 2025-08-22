@@ -288,6 +288,21 @@ export interface IPosition extends Document {
   createdAt: Date
 }
 
+export interface ITransaction extends Document {
+  name: string
+  title: string
+  amount: number
+  charge: number
+  logo: string
+  description: string
+  country: string
+  countryFlag: string
+  countrySymbol: string
+  currency: string
+  currencySymbol: string
+  createdAt: Date
+}
+
 export interface ISocketData {
   to: string
   action: string
