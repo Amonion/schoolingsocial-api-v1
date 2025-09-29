@@ -34,43 +34,43 @@ export const createUser = async (
     // await Place.updateMany({}, [
     //   { $set: { country: { $trim: { input: '$country' } } } },
     // ])
-    const signupCountry = (req as any).country
-    const signupIp = (req as any).ipAddress
+    // const signupCountry = (req as any).country
+    // const signupIp = (req as any).ipAddress
 
-    const bioUser = new BioUser({ ...req.body, signupCountry, signupIp })
-    await bioUser.save()
+    // const bioUser = new BioUser({ ...req.body, signupCountry, signupIp })
+    // await bioUser.save()
 
-    await BioUserSchoolInfo.create({ bioUserId: bioUser._id })
-    await BioUserSettings.create({ bioUserId: bioUser._id })
-    await BioUserState.create({ bioUserId: bioUser._id })
-    await BioUserBank.create({ bioUserId: bioUser._id })
+    // await BioUserSchoolInfo.create({ bioUserId: bioUser._id })
+    // await BioUserSettings.create({ bioUserId: bioUser._id })
+    // await BioUserState.create({ bioUserId: bioUser._id })
+    // await BioUserBank.create({ bioUserId: bioUser._id })
 
-    const place = await Place.findOne({
-      country: new RegExp(`^${signupCountry.trim()}\\s*$`, 'i'),
-    })
-    const newUser = new User({
-      bioUserId: bioUser._id,
-      email: req.body.email,
-      signupIp,
-      signupCountry: place?.country.trim(),
-      signupCountryFlag: place?.countryFlag.trim(),
-      signupCountrySymbol: place?.countrySymbol.trim(),
-      password: await bcrypt.hash(req.body.password, 10),
-    })
+    // const place = await Place.findOne({
+    //   country: new RegExp(`^${signupCountry.trim()}\\s*$`, 'i'),
+    // })
+    // const newUser = new User({
+    //   bioUserId: bioUser._id,
+    //   email: req.body.email,
+    //   signupIp,
+    //   signupCountry: place?.country.trim(),
+    //   signupCountryFlag: place?.countryFlag.trim(),
+    //   signupCountrySymbol: place?.countrySymbol.trim(),
+    //   password: await bcrypt.hash(req.body.password, 10),
+    // })
 
-    await newUser.save()
+    // await newUser.save()
 
-    await Wallet.create({
-      userId: newUser._id,
-      bioUserId: bioUser._id,
-      country: place?.country.trim(),
-      countryFlag: place?.countryFlag,
-      countrySymbol: place?.countrySymbol.trim(),
-      currency: place?.currency.trim(),
-      currencySymbol: place?.currencySymbol.trim(),
-    })
+    // await Wallet.create({
+    //   userId: newUser._id,
+    //   bioUserId: bioUser._id,
+    //   country: place?.country.trim(),
+    //   countryFlag: place?.countryFlag,
+    //   countrySymbol: place?.countrySymbol.trim(),
+    //   currency: place?.currency.trim(),
+    //   currencySymbol: place?.currencySymbol.trim(),
+    // })
 
-    await sendEmail('', req.body.email, 'welcome')
+    // await sendEmail('', req.body.email, 'welcome')
 
     res.status(200).json({
       message: 'User created successfully',
