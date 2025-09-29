@@ -12,12 +12,11 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.sendNotification = void 0;
 exports.sendEmail = sendEmail;
 const nodemailer_1 = __importDefault(require("nodemailer"));
 const fs_1 = require("fs");
 const path_1 = __importDefault(require("path"));
-const emailModel_1 = require("../models/team/emailModel");
+const emailModel_1 = require("../models/message/emailModel");
 const companyModel_1 = require("../models/team/companyModel");
 function sendEmail(username, userEmail, emailName, data) {
     return __awaiter(this, void 0, void 0, function* () {
@@ -80,29 +79,3 @@ function sendEmail(username, userEmail, emailName, data) {
         }
     });
 }
-const sendNotification = (templateName, data) => __awaiter(void 0, void 0, void 0, function* () {
-    const notificationTemp = yield emailModel_1.Notification.findOne({ name: templateName });
-    if (!notificationTemp) {
-        throw new Error(`Notification template '${templateName}' not found.`);
-    }
-    const click_here = templateName === 'friend_request'
-        ? `<a href="/home/chat/${data.from}/${data.username}" class="text-[var(--custom)]">click here</a>`
-        : '';
-    const content = notificationTemp.content
-        .replace('{{sender_username}}', data.username)
-        .replace('{{click_here}}', click_here);
-    const newNotification = yield emailModel_1.UserNotification.create({
-        greetings: notificationTemp.greetings,
-        name: notificationTemp.name,
-        title: notificationTemp.title,
-        username: data.receiverUsername,
-        userId: data.userId,
-        content,
-    });
-    const count = yield emailModel_1.UserNotification.countDocuments({
-        username: data.receiverUsername,
-        unread: true,
-    });
-    return { data: newNotification, count };
-});
-exports.sendNotification = sendNotification;

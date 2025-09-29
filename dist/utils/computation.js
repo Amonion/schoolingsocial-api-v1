@@ -1,13 +1,25 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.getPeriodRange = exports.calculateTrendingScore = exports.postScore = void 0;
-const postScore = (likes, comments, shares, bookmarks, reposts, views) => {
-    return (likes * 2 +
-        comments * 3 +
-        shares * 4 +
-        bookmarks * 5 +
-        reposts * 6 +
-        views * 0.5);
+const postScore = (reaction, score) => {
+    if (reaction === 'reposts') {
+        return score + 6;
+    }
+    else if (reaction === 'bookmarks') {
+        return score + 5;
+    }
+    else if (reaction === 'shares') {
+        return score + 4;
+    }
+    else if (reaction === 'comments') {
+        return score + 3;
+    }
+    else if (reaction === 'likes') {
+        return score + 2;
+    }
+    else {
+        return score + 0.5;
+    }
 };
 exports.postScore = postScore;
 const calculateTrendingScore = (post) => {

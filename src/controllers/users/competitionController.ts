@@ -22,7 +22,7 @@ import {
 } from '../../models/users/competitionModel'
 import { IUserTest, IUserTestExam } from '../../utils/userInterface'
 import { UserInfo } from '../../models/users/userInfoModel'
-import { User } from '../../models/users/userModel'
+import { User } from '../../models/users/user'
 
 export const createWeekend = async (
   req: Request,

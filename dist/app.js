@@ -22,23 +22,31 @@ const dotenv_1 = __importDefault(require("dotenv"));
 const errorHandler_1 = require("./utils/errorHandler");
 const competitionRoutes_1 = __importDefault(require("./routes/team/competitionRoutes"));
 const companyRoutes_1 = __importDefault(require("./routes/team/companyRoutes"));
-const messageRoutes_1 = __importDefault(require("./routes/team/messageRoutes"));
+const messageRoutes_1 = __importDefault(require("./routes/message/messageRoutes"));
 const newsRoutes_1 = __importDefault(require("./routes/team/newsRoutes"));
-const placeRoutes_1 = __importDefault(require("./routes/team/placeRoutes"));
-const postRoutes_1 = __importDefault(require("./routes/users/postRoutes"));
-const schoolRoutes_1 = __importDefault(require("./routes/team/schoolRoutes"));
+const placeRoutes_1 = __importDefault(require("./routes/place/placeRoutes"));
+const postRoutes_1 = __importDefault(require("./routes/post/postRoutes"));
+const courseRoutes_1 = __importDefault(require("./routes/school/courseRoutes"));
+const departmentRoutes_1 = __importDefault(require("./routes/school/departmentRoutes"));
+const facultyRoutes_1 = __importDefault(require("./routes/school/facultyRoutes"));
+const schoolRoutes_1 = __importDefault(require("./routes/school/schoolRoutes"));
 const statRoutes_1 = __importDefault(require("./routes/team/statRoutes"));
-const adRoutes_1 = __importDefault(require("./routes/utility/adRoutes"));
-const userMessageRoutes_1 = __importDefault(require("./routes/users/userMessageRoutes"));
+const adsRoutes_1 = __importDefault(require("./routes/place/adsRoutes"));
+const academicLevelRoutes_1 = __importDefault(require("./routes/place/academicLevelRoutes"));
+const bankRoutes_1 = __importDefault(require("./routes/place/bankRoutes"));
+const officeRoutes_1 = __importDefault(require("./routes/utility/officeRoutes"));
+const placeDocumentRoutes_1 = __importDefault(require("./routes/place/placeDocumentRoutes"));
+const placePaymentRoutes_1 = __importDefault(require("./routes/place/placePaymentRoutes"));
+const notificationRoutes_1 = __importDefault(require("./routes/message/notificationRoutes"));
 const userCompetitionRoutes_1 = __importDefault(require("./routes/users/userCompetitionRoutes"));
 const userRoutes_1 = __importDefault(require("./routes/users/userRoutes"));
-const transactionRoutes_1 = __importDefault(require("./routes/utility/transactionRoutes"));
+const transactionRoutes_1 = __importDefault(require("./routes/finance/transactionRoutes"));
 const utilityRoutes_1 = __importDefault(require("./routes/utility/utilityRoutes"));
 const chatController_1 = require("./controllers/users/chatController");
-const postController_1 = require("./controllers/users/postController");
+const postController_1 = require("./controllers/post/postController");
 const fileUpload_1 = require("./utils/fileUpload");
-const socketRoutes_1 = require("./routes/team/socketRoutes");
 const geoipMiddleware_1 = require("./middlewares/geoipMiddleware");
+const usersSocket_1 = require("./routes/socket/usersSocket");
 dotenv_1.default.config();
 const app = (0, express_1.default)();
 exports.app = app;
@@ -87,11 +95,11 @@ io.on('connection', (socket) => {
             case 'deleteChat':
                 (0, chatController_1.deleteChat)(data);
                 break;
-            case 'users':
+            case 'post':
                 (0, postController_1.createPost)(data);
                 break;
-            case 'team':
-                yield (0, socketRoutes_1.TeamSocket)(data);
+            case 'users':
+                yield (0, usersSocket_1.UsersSocket)(data);
                 break;
             default:
                 break;
@@ -104,17 +112,25 @@ io.on('connection', (socket) => {
 app.use(body_parser_1.default.json());
 app.use('/api/v1/s3-delete-file', fileUpload_1.removeFile);
 app.use('/api/v1/s3-presigned-url', fileUpload_1.getPresignedUrl);
-app.use('/api/v1/ads', adRoutes_1.default);
+app.use('/api/v1/academic-levels', academicLevelRoutes_1.default);
+app.use('/api/v1/ads', adsRoutes_1.default);
+app.use('/api/v1/banks', bankRoutes_1.default);
 app.use('/api/v1/competitions', competitionRoutes_1.default);
+app.use('/api/v1/courses', courseRoutes_1.default);
 app.use('/api/v1/company', companyRoutes_1.default);
+app.use('/api/v1/documents', placeDocumentRoutes_1.default);
 app.use('/api/v1/messages', messageRoutes_1.default);
 app.use('/api/v1/news', newsRoutes_1.default);
+app.use('/api/v1/offices', officeRoutes_1.default);
+app.use('/api/v1/payments', placePaymentRoutes_1.default);
 app.use('/api/v1/places', placeRoutes_1.default);
 app.use('/api/v1/posts', postRoutes_1.default);
+app.use('/api/v1/departments', departmentRoutes_1.default);
+app.use('/api/v1/faculties', facultyRoutes_1.default);
 app.use('/api/v1/schools', schoolRoutes_1.default);
 app.use('/api/v1/utilities', utilityRoutes_1.default);
 app.use('/api/v1/user-competitions', userCompetitionRoutes_1.default);
-app.use('/api/v1/user-messages', userMessageRoutes_1.default);
+app.use('/api/v1/notifications', notificationRoutes_1.default);
 app.use('/api/v1/user-stats', statRoutes_1.default);
 app.use('/api/v1/users', userRoutes_1.default);
 app.use('/api/v1/transactions', transactionRoutes_1.default);
@@ -135,14 +151,6 @@ app.get('/api/v1/user-ip', (req, res) => {
         ip = ip.replace('::ffff:', '');
     }
     res.json({ ip });
-});
-app.get('/api/v1/network', (req, res) => {
-    try {
-        res.status(200).json({ message: `network` });
-    }
-    catch (error) {
-        res.status(400).json({ message: `no network` });
-    }
 });
 app.use((req, res, next) => {
     (0, errorHandler_1.handleError)(res, 404, `Request not found: ${req.method} ${req.originalUrl}`);

@@ -7,27 +7,35 @@ import dotenv from 'dotenv'
 import { handleError } from './utils/errorHandler'
 import competitionRoutes from './routes/team/competitionRoutes'
 import companyRoutes from './routes/team/companyRoutes'
-import messageRoutes from './routes/team/messageRoutes'
+import messageRoutes from './routes/message/messageRoutes'
 import newsRoutes from './routes/team/newsRoutes'
-import placeRoutes from './routes/team/placeRoutes'
-import postRoutes from './routes/users/postRoutes'
-import schoolRoutes from './routes/team/schoolRoutes'
+import placeRoutes from './routes/place/placeRoutes'
+import postRoutes from './routes/post/postRoutes'
+import courseRoutes from './routes/school/courseRoutes'
+import departmentRoutes from './routes/school/departmentRoutes'
+import facultyRoutes from './routes/school/facultyRoutes'
+import schoolRoutes from './routes/school/schoolRoutes'
 import statRoutes from './routes/team/statRoutes'
-import adRoutes from './routes/utility/adRoutes'
-import userMessageRoutes from './routes/users/userMessageRoutes'
+import adsRoutes from './routes/place/adsRoutes'
+import academicLevelRoutes from './routes/place/academicLevelRoutes'
+import bankRoutes from './routes/place/bankRoutes'
+import officeRoutes from './routes/utility/officeRoutes'
+import placeDocumentRoutes from './routes/place/placeDocumentRoutes'
+import placePaymentRoutes from './routes/place/placePaymentRoutes'
+import notificationRoutes from './routes/message/notificationRoutes'
 import userCompetitionRoutes from './routes/users/userCompetitionRoutes'
 import userRoutes from './routes/users/userRoutes'
-import transactionRoutes from './routes/utility/transactionRoutes'
+import transactionRoutes from './routes/finance/transactionRoutes'
 import utilityRoutes from './routes/utility/utilityRoutes'
 import {
   createChat,
   deleteChat,
   readChats,
 } from './controllers/users/chatController'
-import { createPost } from './controllers/users/postController'
+import { createPost } from './controllers/post/postController'
 import { getPresignedUrl, removeFile } from './utils/fileUpload'
-import { TeamSocket } from './routes/team/socketRoutes'
 import { geoipMiddleware } from './middlewares/geoipMiddleware'
+import { UsersSocket } from './routes/socket/usersSocket'
 
 dotenv.config()
 
@@ -88,11 +96,11 @@ io.on('connection', (socket) => {
       case 'deleteChat':
         deleteChat(data)
         break
-      case 'users':
+      case 'post':
         createPost(data)
         break
-      case 'team':
-        await TeamSocket(data)
+      case 'users':
+        await UsersSocket(data)
         break
       default:
         break
@@ -107,25 +115,31 @@ io.on('connection', (socket) => {
 app.use(bodyParser.json())
 app.use('/api/v1/s3-delete-file', removeFile)
 app.use('/api/v1/s3-presigned-url', getPresignedUrl)
-app.use('/api/v1/ads', adRoutes)
+app.use('/api/v1/academic-levels', academicLevelRoutes)
+app.use('/api/v1/ads', adsRoutes)
+app.use('/api/v1/banks', bankRoutes)
 app.use('/api/v1/competitions', competitionRoutes)
+app.use('/api/v1/courses', courseRoutes)
 app.use('/api/v1/company', companyRoutes)
+app.use('/api/v1/documents', placeDocumentRoutes)
 app.use('/api/v1/messages', messageRoutes)
 app.use('/api/v1/news', newsRoutes)
+app.use('/api/v1/offices', officeRoutes)
+app.use('/api/v1/payments', placePaymentRoutes)
 app.use('/api/v1/places', placeRoutes)
 app.use('/api/v1/posts', postRoutes)
+app.use('/api/v1/departments', departmentRoutes)
+app.use('/api/v1/faculties', facultyRoutes)
 app.use('/api/v1/schools', schoolRoutes)
 app.use('/api/v1/utilities', utilityRoutes)
 app.use('/api/v1/user-competitions', userCompetitionRoutes)
-app.use('/api/v1/user-messages', userMessageRoutes)
+app.use('/api/v1/notifications', notificationRoutes)
 app.use('/api/v1/user-stats', statRoutes)
 app.use('/api/v1/users', userRoutes)
 app.use('/api/v1/transactions', transactionRoutes)
 app.get('/api/v1/user-ip', (req, res) => {
   let ip: string | undefined
-
   const forwarded = req.headers['x-forwarded-for']
-
   if (typeof forwarded === 'string') {
     ip = forwarded.split(',')[0]
   } else if (Array.isArray(forwarded)) {
@@ -137,13 +151,6 @@ app.get('/api/v1/user-ip', (req, res) => {
     ip = ip.replace('::ffff:', '')
   }
   res.json({ ip })
-})
-app.get('/api/v1/network', (req, res) => {
-  try {
-    res.status(200).json({ message: `network` })
-  } catch (error) {
-    res.status(400).json({ message: `no network` })
-  }
 })
 
 app.use((req, res, next) => {

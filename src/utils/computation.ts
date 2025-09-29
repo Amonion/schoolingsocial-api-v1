@@ -1,19 +1,17 @@
-export const postScore = (
-  likes: number,
-  comments: number,
-  shares: number,
-  bookmarks: number,
-  reposts: number,
-  views: number
-) => {
-  return (
-    likes * 2 +
-    comments * 3 +
-    shares * 4 +
-    bookmarks * 5 +
-    reposts * 6 +
-    views * 0.5
-  )
+export const postScore = (reaction: string, score: number) => {
+  if (reaction === 'reposts') {
+    return score + 6
+  } else if (reaction === 'bookmarks') {
+    return score + 5
+  } else if (reaction === 'shares') {
+    return score + 4
+  } else if (reaction === 'comments') {
+    return score + 3
+  } else if (reaction === 'likes') {
+    return score + 2
+  } else {
+    return score + 0.5
+  }
 }
 
 export const calculateTrendingScore = (post: {

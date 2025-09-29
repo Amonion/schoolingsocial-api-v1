@@ -1,15 +1,14 @@
 import { Request, Response } from 'express'
-import { Chat } from '../../models/users/chatModel'
+import { Chat, IChat } from '../../models/message/chatModel'
 import { handleError } from '../../utils/errorHandler'
-import { IChat } from '../../utils/userInterface'
 import { queryData } from '../../utils/query'
 import { deleteFileFromS3 } from '../../utils/fileUpload'
 import { io } from '../../app'
-import { sendNotification } from '../../utils/sendEmail'
 import { UserInfo } from '../../models/users/userInfoModel'
 import { UserStat, UserStatus } from '../../models/users/usersStatMode'
 import { Expo } from 'expo-server-sdk'
-import { User } from '../../models/users/userModel'
+import { User } from '../../models/users/user'
+import { sendPersonalNotification } from '../../utils/sendNotification'
 const expo = new Expo()
 
 const setConnectionKey = (id1: string, id2: string) => {
@@ -119,7 +118,7 @@ export const createChat = async (data: IChat) => {
         const user = await User.findOne({
           username: data.receiverUsername,
         })
-        const userInfo = await UserInfo.findById(user?.userId)
+        const userInfo = await UserInfo.findById(user?.bioUserId)
         if (!userInfo) return
         sendChatPushNotification({
           username: post.username,
@@ -145,15 +144,15 @@ export const createChat = async (data: IChat) => {
     } else {
       const post = await Chat.create(data)
       sendCreatedChat(post, false)
-      const newNotification = await sendNotification('friend_request', data)
-      const onlineUser = await UserStat.findOne({
-        username: data.receiverUsername,
-      })
-      if (onlineUser?.online) {
-        io.emit(data.receiverUsername, newNotification)
-      } else {
-        io.emit(data.receiverUsername, newNotification)
-      }
+      // const newNotification = await sendNotification('friend_request', data)
+      // const onlineUser = await UserStat.findOne({
+      //   username: data.receiverUsername,
+      // })
+      // if (onlineUser?.online) {
+      //   io.emit(data.receiverUsername, newNotification)
+      // } else {
+      //   io.emit(data.receiverUsername, newNotification)
+      // }
     }
   } catch (error) {
     console.log(error)
@@ -244,7 +243,10 @@ export const createChatMobile = async (req: Request, res: Response) => {
     } else {
       post = await Chat.create(data)
       sendCreatedChat(post, false)
-      const newNotification = await sendNotification('friend_request', data)
+      const newNotification = await sendPersonalNotification(
+        'friend_request',
+        data
+      )
       const onlineUser = await UserStat.findOne({
         username: data.receiverUsername,
       })

@@ -31,10 +31,12 @@ function geoipMiddleware(req, res, next) {
     try {
         const response = reader.country(ip || '');
         req.country = ((_c = (_b = response.country) === null || _b === void 0 ? void 0 : _b.names) === null || _c === void 0 ? void 0 : _c.en) || 'Nigeria';
+        req.ipAddress = ip || '';
     }
     catch (_d) {
         ;
         req.country = 'Nigeria';
+        req.ipAddress = ip || '';
     }
     next();
 }

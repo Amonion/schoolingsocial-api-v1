@@ -25,7 +25,7 @@ const UserStatusSchema: Schema = new Schema(
     countryCode: { type: String },
     ips: { type: [String], default: [] },
     username: { type: String },
-    bioId: { type: String },
+    bioUserId: { type: String },
     online: { type: Boolean, default: false },
     leftAt: { type: Date, default: Date.now },
     visitedAt: { type: Date, default: Date.now },

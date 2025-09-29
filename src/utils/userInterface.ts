@@ -54,44 +54,6 @@ export interface IBlock extends Document {
   accountIsVerified: boolean
 }
 
-export interface IChat extends Document {
-  _id: string
-  from: string
-  content: string
-  userId: string
-  isReadUsernames: string[]
-  isSavedUsernames: string[]
-  action: string
-  username: string
-  picture: string
-  media: [
-    {
-      source: string
-      name: string
-      duration: number
-      size: number
-    }
-  ]
-  message: string
-  connection: string
-  deletedUsername: string
-  senderTime: Date
-  receiverTime: Date
-  createdAt: Date
-  time: number
-  unreadUser: number
-  unreadReceiver: number
-  receiverUsername: string
-  receiverPicture: string
-  receiverId: string
-  repliedChat: IRepliedChatContent
-  isPinned: boolean
-  isRead: boolean
-  isFriends: boolean
-  isSent: boolean
-  senderId: string
-}
-
 export interface IChatData extends Document {
   to: string
   action: string
@@ -240,27 +202,6 @@ export interface IPost extends Document {
   reposts: number
 }
 
-export interface IRepliedChatContent extends Document {
-  _id: string
-  content: string
-  received: boolean
-  userId: string
-  username: string
-  picture: string
-  media: [
-    {
-      source: string
-      name: string
-      duration: number
-      size: number
-    }
-  ]
-  receiverUsername: string
-  receiverPicture: string
-  receiverId: string
-  createdAt: Date | null
-}
-
 export interface IStat extends Document {
   userId: string
   postId: string
@@ -322,9 +263,11 @@ export interface IUser extends Document {
   signupCountryFlag?: string
   level: number
   totalAttempts: number
+  officeNum: number
   mutes: number
   isDocument: boolean
   isOrigin: boolean
+  processingOffice: boolean
   isContact: boolean
   isBio: boolean
   isRelated: boolean
@@ -462,16 +405,6 @@ export interface IUserFinanceInfo extends Document {
   createdAt: Date
 }
 
-export interface IUserNotification extends Document {
-  _id: string
-  content: string
-  title: string
-  username: string
-  userId: string
-  unread: boolean
-  createdAt: Date
-}
-
 export interface IUserInterest extends Document {
   userId: string
   interests: string[]
@@ -499,7 +432,7 @@ export interface IUserSettings {
 export interface IUserStat extends Document {
   online: boolean
   userId: string
-  bioId: string
+  bioUserId: string
   country: string
   countryCode: string
   ips: string[]

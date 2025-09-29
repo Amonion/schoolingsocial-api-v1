@@ -16,14 +16,14 @@ const query_1 = require("../../utils/query");
 const competitionModel_2 = require("../../models/users/competitionModel");
 const fileUpload_1 = require("../../utils/fileUpload");
 const createWeekend = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    (0, query_1.createItem)(req, res, competitionModel_1.Weekend, "Weekend was created successfully");
+    (0, query_1.createItem)(req, res, competitionModel_1.Weekend, 'Weekend was created successfully');
 });
 exports.createWeekend = createWeekend;
 const getWeekendById = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const item = yield competitionModel_1.Weekend.findById(req.params.id);
         if (!item) {
-            return res.status(404).json({ message: "Weekend not found" });
+            return res.status(404).json({ message: 'Weekend not found' });
         }
         res.status(200).json(item);
     }
@@ -44,7 +44,7 @@ const getWeekends = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
 exports.getWeekends = getWeekends;
 const updateWeekend = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        (0, query_1.updateItem)(req, res, competitionModel_1.Weekend, ["video", "picture"], ["Weekend not found", "Weekend was updated successfully"]);
+        (0, query_1.updateItem)(req, res, competitionModel_1.Weekend, ['video', 'picture'], ['Weekend not found', 'Weekend was updated successfully']);
     }
     catch (error) {
         (0, errorHandler_1.handleError)(res, undefined, undefined, error);
@@ -91,7 +91,7 @@ const createExam = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
         const item = yield (0, query_1.queryData)(competitionModel_1.Exam, req);
         const { page, page_size, count, results } = item;
         res.status(200).json({
-            message: "Exam was created successfully",
+            message: 'Exam was created successfully',
             results,
             count,
             page,
@@ -111,7 +111,7 @@ const getExamById = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
             userId: req.query.userId,
         });
         if (!item) {
-            return res.status(404).json({ message: "Exam not found" });
+            return res.status(404).json({ message: 'Exam not found' });
         }
         res.status(200).json({ exam: item, attempt: attempt === null || attempt === void 0 ? void 0 : attempt.attempts });
     }
@@ -132,7 +132,7 @@ const getExams = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
 exports.getExams = getExams;
 const updateExam = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        (0, query_1.updateItem)(req, res, competitionModel_1.Exam, [], ["Exam not found", "Exam was updated successfully"]);
+        (0, query_1.updateItem)(req, res, competitionModel_1.Exam, [], ['Exam not found', 'Exam was updated successfully']);
     }
     catch (error) {
         (0, errorHandler_1.handleError)(res, undefined, undefined, error);
@@ -141,14 +141,14 @@ const updateExam = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
 exports.updateExam = updateExam;
 //-------------------LEAGUE--------------------//
 const createLeague = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    (0, query_1.createItem)(req, res, competitionModel_1.League, "League was created successfully");
+    (0, query_1.createItem)(req, res, competitionModel_1.League, 'League was created successfully');
 });
 exports.createLeague = createLeague;
 const getLeagueById = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const item = yield competitionModel_1.League.findById(req.params.id);
         if (!item) {
-            return res.status(404).json({ message: "League not found" });
+            return res.status(404).json({ message: 'League not found' });
         }
         res.status(200).json(item);
     }
@@ -169,7 +169,7 @@ const getLeagues = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
 exports.getLeagues = getLeagues;
 const updateLeague = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        (0, query_1.updateItem)(req, res, competitionModel_1.Paper, ["media", "picture"], ["Paper not found", "Paper was updated successfully"]);
+        (0, query_1.updateItem)(req, res, competitionModel_1.Paper, ['media', 'picture'], ['Paper not found', 'Paper was updated successfully']);
     }
     catch (error) {
         (0, errorHandler_1.handleError)(res, undefined, undefined, error);
@@ -178,14 +178,14 @@ const updateLeague = (req, res) => __awaiter(void 0, void 0, void 0, function* (
 exports.updateLeague = updateLeague;
 //-----------------PAPER--------------------//
 const createPaper = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    (0, query_1.createItem)(req, res, competitionModel_1.Paper, "Paper was created successfully");
+    (0, query_1.createItem)(req, res, competitionModel_1.Paper, 'Paper was created successfully');
 });
 exports.createPaper = createPaper;
 const getPaperById = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const item = yield competitionModel_1.Paper.findById(req.params.id);
         if (!item) {
-            return res.status(404).json({ message: "Paper not found" });
+            return res.status(404).json({ message: 'Paper not found' });
         }
         res.status(200).json(item);
     }
@@ -206,7 +206,7 @@ const getPapers = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
 exports.getPapers = getPapers;
 const updatePaper = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        (0, query_1.updateItem)(req, res, competitionModel_1.Paper, [], ["Paper not found", "Paper was updated successfully"]);
+        (0, query_1.updateItem)(req, res, competitionModel_1.Paper, [], ['Paper not found', 'Paper was updated successfully']);
     }
     catch (error) {
         (0, errorHandler_1.handleError)(res, undefined, undefined, error);
@@ -223,7 +223,7 @@ const createObjective = (req, res) => __awaiter(void 0, void 0, void 0, function
     }
     for (let i = 0; i < questions.length; i++) {
         const el = questions[i];
-        if (el._id !== undefined && el._id !== "") {
+        if (el._id !== undefined && el._id !== '') {
             yield competitionModel_1.Objective.findByIdAndUpdate(el._id, {
                 $set: {
                     question: el.question,
@@ -247,7 +247,7 @@ const createObjective = (req, res) => __awaiter(void 0, void 0, void 0, function
         questions: result.count,
     });
     res.status(200).json({
-        message: "The question was saved successfully",
+        message: 'The question was saved successfully',
         count: result.count,
         results: result.results,
         page_size: result.page_size,

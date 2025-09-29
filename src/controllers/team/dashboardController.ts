@@ -1,7 +1,7 @@
 import { Request, Response } from 'express'
 import { handleError } from '../../utils/errorHandler'
 import { getPeriodRange } from '../../utils/computation'
-import { Ad } from '../../models/utility/adModel'
+import { Ad } from '../../models/place/adModel'
 
 export const getAdStats = async (
   req: Request,

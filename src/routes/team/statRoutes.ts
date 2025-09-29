@@ -1,12 +1,12 @@
-import express from "express";
+import express from 'express'
 import {
   getSchoolStat,
   getUsersStat,
-} from "../../controllers/team/statController";
+} from '../../controllers/users/userStatController'
 
-const router = express.Router();
+const router = express.Router()
 
-router.route("/").get(getUsersStat);
-router.route("/schools").get(getSchoolStat);
+router.route('/').get(getUsersStat)
+router.route('/schools').get(getSchoolStat)
 
-export default router;
+export default router

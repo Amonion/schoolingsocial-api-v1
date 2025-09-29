@@ -1,19 +1,3 @@
-export interface IAcademicLevel extends Document {
-  country: string
-  countryFlag: string
-  placeId: string
-  level: number
-  maxLevel: number
-  levelName: string
-  section: string
-  subsection: string
-  institution: string
-  certificate: string
-  certificateName: string
-  description: string
-  createdAt: Date
-}
-
 export interface IAdCategory extends Document {
   _id: string
   name: string
@@ -51,23 +35,6 @@ export interface ICompany extends Document {
   createdAt: Date
 }
 
-export interface ICourse extends Document {
-  schoolId: string
-  facultyId: string
-  level: number
-  semester: number
-  courseCode: string
-  load: number
-  departmentId: number
-  department: string
-  name: string
-  picture: string
-  media: string
-  description: string
-  isChecked?: boolean
-  isActive?: boolean
-}
-
 export interface IDepartment extends Document {
   period: number
   facultyId: number
@@ -89,16 +56,6 @@ export interface IDocument extends Document {
   countryFlag: string
   placeId: string
   required: boolean
-  createdAt: Date
-}
-
-export interface IEmail extends Document {
-  content: string
-  picture: string
-  title: string
-  greetings: string
-  name: string
-  note: string
   createdAt: Date
 }
 
@@ -199,14 +156,6 @@ export interface INews extends Document {
   seoDescription: string
 }
 
-export interface INotification extends Document {
-  content: string
-  greetings: string
-  title: string
-  name: string
-  createdAt: Date
-}
-
 export interface IObjective extends Document {
   _id: string
   index: number
@@ -216,6 +165,22 @@ export interface IObjective extends Document {
   question: string
   options: IOption[]
   createdAt: Date
+}
+export interface IOffice extends Document {
+  name: string
+  username: string
+  type: string
+  levels: []
+  owenrName: string
+  ownerUsername: string
+  ownerPicture: string
+  email: string
+  phone: string
+  userId: string
+  bioId: string
+  country: string
+  state: string
+  area: string
 }
 
 export interface IOption {
@@ -315,28 +280,6 @@ export interface ISocketData {
   types: string[]
 }
 
-export interface ISchool extends Document {
-  country: string
-  state: string
-  area: string
-  name: string
-  levels: string
-  levelNames: []
-  username: string
-  type: string
-  logo: string
-  media: string
-  picture: string
-  continent: string
-  landmark: string
-  countryFlag: string
-  longitude: number
-  latitude: number
-  isVerified: boolean
-  isNew: boolean
-  isRecorded: boolean
-}
-
 export interface ISchoolPayment extends Document {
   name: string
   amount: number
@@ -351,12 +294,6 @@ export interface ISchoolPayment extends Document {
   countrySymbol: string
   currency: string
   currencySymbol: string
-  createdAt: Date
-}
-
-export interface ISms extends Document {
-  content: string
-  name: string
   createdAt: Date
 }
 
@@ -381,7 +318,7 @@ export interface IStaff extends Document {
 
 export interface IUserData {
   ip: string
-  bioId: string
+  bioUserId: string
   country: string
   countryCode: string
   online: boolean

@@ -10,16 +10,16 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.deleteChats = exports.deleteChat = exports.addSearchedChats = exports.unSaveChats = exports.pinChats = exports.saveChats = exports.getSaveChats = exports.readChats = exports.getUserChats = exports.friendsChats = exports.searchFavChats = exports.searchChats = exports.createChatMobile = exports.createChat = exports.sendChatPushNotification = void 0;
-const chatModel_1 = require("../../models/users/chatModel");
+const chatModel_1 = require("../../models/message/chatModel");
 const errorHandler_1 = require("../../utils/errorHandler");
 const query_1 = require("../../utils/query");
 const fileUpload_1 = require("../../utils/fileUpload");
 const app_1 = require("../../app");
-const sendEmail_1 = require("../../utils/sendEmail");
 const userInfoModel_1 = require("../../models/users/userInfoModel");
 const usersStatMode_1 = require("../../models/users/usersStatMode");
 const expo_server_sdk_1 = require("expo-server-sdk");
-const userModel_1 = require("../../models/users/userModel");
+const user_1 = require("../../models/users/user");
+const sendNotification_1 = require("../../utils/sendNotification");
 const expo = new expo_server_sdk_1.Expo();
 const setConnectionKey = (id1, id2) => {
     const participants = [id1, id2].sort();
@@ -96,10 +96,10 @@ const createChat = (data) => __awaiter(void 0, void 0, void 0, function* () {
                 username: data.receiverUsername,
             });
             if (!(onlineUser === null || onlineUser === void 0 ? void 0 : onlineUser.online)) {
-                const user = yield userModel_1.User.findOne({
+                const user = yield user_1.User.findOne({
                     username: data.receiverUsername,
                 });
-                const userInfo = yield userInfoModel_1.UserInfo.findById(user === null || user === void 0 ? void 0 : user.userId);
+                const userInfo = yield userInfoModel_1.UserInfo.findById(user === null || user === void 0 ? void 0 : user.bioUserId);
                 if (!userInfo)
                     return;
                 (0, exports.sendChatPushNotification)({
@@ -126,16 +126,15 @@ const createChat = (data) => __awaiter(void 0, void 0, void 0, function* () {
         else {
             const post = yield chatModel_1.Chat.create(data);
             sendCreatedChat(post, false);
-            const newNotification = yield (0, sendEmail_1.sendNotification)('friend_request', data);
-            const onlineUser = yield usersStatMode_1.UserStat.findOne({
-                username: data.receiverUsername,
-            });
-            if (onlineUser === null || onlineUser === void 0 ? void 0 : onlineUser.online) {
-                app_1.io.emit(data.receiverUsername, newNotification);
-            }
-            else {
-                app_1.io.emit(data.receiverUsername, newNotification);
-            }
+            // const newNotification = await sendNotification('friend_request', data)
+            // const onlineUser = await UserStat.findOne({
+            //   username: data.receiverUsername,
+            // })
+            // if (onlineUser?.online) {
+            //   io.emit(data.receiverUsername, newNotification)
+            // } else {
+            //   io.emit(data.receiverUsername, newNotification)
+            // }
         }
     }
     catch (error) {
@@ -210,7 +209,7 @@ const createChatMobile = (req, res) => __awaiter(void 0, void 0, void 0, functio
         else {
             post = yield chatModel_1.Chat.create(data);
             sendCreatedChat(post, false);
-            const newNotification = yield (0, sendEmail_1.sendNotification)('friend_request', data);
+            const newNotification = yield (0, sendNotification_1.sendPersonalNotification)('friend_request', data);
             const onlineUser = yield usersStatMode_1.UserStat.findOne({
                 username: data.receiverUsername,
             });

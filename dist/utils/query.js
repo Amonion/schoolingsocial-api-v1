@@ -12,8 +12,8 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.deleteItems = exports.deleteItem = exports.updateItem = exports.getItems = exports.getItemById = exports.followAccount = exports.createItem = exports.search = exports.generalSearchQuery = exports.queryData = void 0;
 const fileUpload_1 = require("./fileUpload");
 const errorHandler_1 = require("./errorHandler");
-const postModel_1 = require("../models/users/postModel");
-const userModel_1 = require("../models/users/userModel");
+const postModel_1 = require("../models/post/postModel");
+const user_1 = require("../models/users/user");
 const buildFilterQuery = (req) => {
     const filters = {};
     const operators = {
@@ -72,7 +72,7 @@ const buildFilterQuery = (req) => {
         else {
             const value = Array.isArray(rawValue) ? rawValue : [rawValue];
             const normalizedValue = value[0];
-            if (key === 'levelName') {
+            if (key === 'levelName' && !req.baseUrl.includes('/api/v1/courses')) {
                 const namesArray = normalizedValue
                     .split(',')
                     .map((name) => name.trim());
@@ -93,12 +93,19 @@ const buildFilterQuery = (req) => {
             else if (!isNaN(Number(normalizedValue))) {
                 filters[key] = Number(normalizedValue);
             }
-            // else if (typeof normalizedValue === 'string') {
-            //   filters[key] = { $regex: normalizedValue, $options: 'i' }
-            // }
             else if (typeof normalizedValue === 'string') {
                 if (key === 'username' && req.baseUrl.includes('/api/v1/posts')) {
                     filters[key] = normalizedValue; // exact match
+                }
+                else if ((req.originalUrl.includes('/api/v1/notifications') ||
+                    req.originalUrl.includes('/api/v1/messages')) &&
+                    req.query.receiverUsername &&
+                    req.query.senderUsername) {
+                    // Only apply OR filter if BOTH are present
+                    filters['$or'] = [
+                        { receiverUsername: normalizedValue },
+                        { senderUsername: normalizedValue },
+                    ];
                 }
                 else {
                     filters[key] = { $regex: normalizedValue, $options: 'i' }; // partial match
@@ -111,6 +118,142 @@ const buildFilterQuery = (req) => {
     }
     return filters;
 };
+// const buildFilterQuery = (req: Request): Record<string, any> => {
+//   const filters: Record<string, any> = {}
+//   const orFilters: any[] = []
+//   const operators: Record<string, string> = {
+//     lt: '$lt',
+//     lte: '$lte',
+//     gt: '$gt',
+//     gte: '$gte',
+//     ne: '$ne',
+//     in: '$in',
+//     nin: '$nin',
+//   }
+//   const flattenQuery = (query: any): Record<string, any> => {
+//     const flat: Record<string, any> = {}
+//     for (const key in query) {
+//       const value = query[key]
+//       if (typeof value === 'object' && !Array.isArray(value)) {
+//         for (const subKey in value) {
+//           flat[`${key}[${subKey}]`] = value[subKey]
+//         }
+//       } else {
+//         flat[key] = value
+//       }
+//     }
+//     return flat
+//   }
+//   const flatQuery = flattenQuery(req.query)
+//   let countryValue: string | null = null
+//   let stateValue: string | null = null
+//   let stateOrValues: string[] = []
+//   for (const [key, rawValue] of Object.entries(flatQuery)) {
+//     if (key === 'page' || key === 'page_size' || key === 'ordering') continue
+//     const match = key.match(/^(.+)\[(.+)\]$/)
+//     if (match) {
+//       const field = match[1]
+//       const op = match[2]
+//       if (op === 'or') {
+//         const values = Array.isArray(rawValue) ? rawValue : [rawValue]
+//         values.forEach((val) => {
+//           if (field === 'state') {
+//             // capture state[or] values for special handling
+//             stateOrValues.push(val)
+//           } else {
+//             if (val === 'true') orFilters.push({ [field]: true })
+//             else if (val === 'false') orFilters.push({ [field]: false })
+//             else if (!isNaN(Number(val)))
+//               orFilters.push({ [field]: Number(val) })
+//             else orFilters.push({ [field]: { $regex: val, $options: 'i' } })
+//           }
+//         })
+//       } else if (operators[op]) {
+//         const mongoOp = operators[op]
+//         const value = Array.isArray(rawValue) ? rawValue : [rawValue]
+//         const finalValues = value.map((v) => {
+//           if (typeof v === 'string' && v.includes(',')) {
+//             return v.split(',').map((s) => s.trim())
+//           }
+//           if (v === 'true') return true
+//           if (v === 'false') return false
+//           if (!isNaN(Number(v))) return Number(v)
+//           return v
+//         })
+//         if (!filters[field]) filters[field] = {}
+//         filters[field][mongoOp] =
+//           finalValues.length === 1 ? finalValues[0] : finalValues.flat()
+//       }
+//     } else {
+//       const value = Array.isArray(rawValue) ? rawValue : [rawValue]
+//       const normalizedValue = value[0]
+//       if (key === 'country') {
+//         countryValue = normalizedValue
+//       } else if (key === 'state') {
+//         stateValue = normalizedValue
+//       } else if (key === 'levelName') {
+//         const namesArray = normalizedValue
+//           .split(',')
+//           .map((name: string) => name.trim())
+//         filters['levelName'] = { $in: namesArray }
+//       } else if (key === 'usernames') {
+//         const namesArray = normalizedValue
+//           .split(',')
+//           .map((name: string) => name.trim())
+//         filters['username'] = { $in: namesArray }
+//       } else if (normalizedValue === '') {
+//         filters[key] = { $exists: false }
+//       } else if (normalizedValue === 'true' || normalizedValue === 'false') {
+//         filters[key] = normalizedValue === 'true'
+//       } else if (!isNaN(Number(normalizedValue))) {
+//         filters[key] = Number(normalizedValue)
+//       } else if (typeof normalizedValue === 'string') {
+//         if (key === 'username' && req.baseUrl.includes('/api/v1/posts')) {
+//           filters[key] = normalizedValue
+//         } else {
+//           filters[key] = { $regex: normalizedValue, $options: 'i' }
+//         }
+//       } else {
+//         filters[key] = normalizedValue
+//       }
+//     }
+//   }
+//   // --- Special case: country + state[or] ---
+//   if (countryValue && stateOrValues.length > 0) {
+//     const countryCond = { country: { $regex: countryValue, $options: 'i' } }
+//     const orBlock = [
+//       ...stateOrValues.map((val) => ({
+//         ...countryCond,
+//         state: { $regex: val, $options: 'i' },
+//       })),
+//       { ...countryCond, state: { $exists: false } },
+//     ]
+//     return { $or: orBlock }
+//   }
+//   // --- Special case: country + state (non-or) ---
+//   if (countryValue && stateValue) {
+//     const countryCond = { country: { $regex: countryValue, $options: 'i' } }
+//     const stateCond = { state: { $regex: stateValue, $options: 'i' } }
+//     const noStateCond = { state: { $exists: false } }
+//     return {
+//       $or: [
+//         { ...countryCond, ...stateCond },
+//         { ...countryCond, ...noStateCond },
+//       ],
+//     }
+//   }
+//   if (countryValue) {
+//     filters['country'] = { $regex: countryValue, $options: 'i' }
+//   }
+//   if (orFilters.length > 0) {
+//     if (Object.keys(filters).length > 0) {
+//       return { $and: [filters, { $or: orFilters }] }
+//     } else {
+//       return { $or: orFilters }
+//     }
+//   }
+//   return filters
+// }
 const buildSortingQuery = (req) => {
     const sort = {};
     if (req.query.ordering) {
@@ -177,61 +320,6 @@ const generalSearchQuery = (req) => {
     return { filter, page, page_size, userId };
 };
 exports.generalSearchQuery = generalSearchQuery;
-// function buildSearchQuery<T>(req: any): FilterQuery<T> {
-//   const cleanedQuery = req.query;
-//   let searchQuery: FilterQuery<T> = {} as FilterQuery<T>;
-//   const applyInFilter = (field: string) => {
-//     if (cleanedQuery[field]) {
-//       Object.assign(searchQuery, {
-//         [field]: { $in: cleanedQuery[field].split(",") },
-//       });
-//     }
-//   };
-//   applyInFilter("country");
-//   applyInFilter("state");
-//   applyInFilter("area");
-//   applyInFilter("gender");
-//   applyInFilter("currentSchoolCountry");
-//   applyInFilter("currentSchoolName");
-//   applyInFilter("currentAcademicLevelName");
-//   applyInFilter("schoolCountry");
-//   applyInFilter("schoolState");
-//   applyInFilter("schoolArea");
-//   applyInFilter("schoolLevelName");
-//   applyInFilter("examCountries");
-//   applyInFilter("examStates");
-//   if (cleanedQuery.publishedAt) {
-//     let [startDate, endDate] = cleanedQuery.publishedAt.split(",");
-//     if (!startDate || startDate === "undefined") startDate = undefined;
-//     if (!endDate || endDate === "undefined") endDate = undefined;
-//     const dateFilter: any = {};
-//     if (startDate) dateFilter.$gte = new Date(startDate);
-//     if (endDate) dateFilter.$lte = new Date(endDate);
-//     if (Object.keys(dateFilter).length > 0) {
-//       Object.assign(searchQuery, { publishedAt: dateFilter });
-//     }
-//   }
-//   const textFields = [
-//     "title",
-//     "name",
-//     "instruction",
-//     "username",
-//     "displayName",
-//     "firstName",
-//     "middleName",
-//     "lastName",
-//     "subtitle",
-//   ];
-//   const regexConditions: FilterQuery<T>[] = textFields
-//     .filter((field) => cleanedQuery[field])
-//     .map((field) => ({
-//       [field]: { $regex: cleanedQuery[field], $options: "i" },
-//     })) as FilterQuery<T>[];
-//   return {
-//     ...searchQuery,
-//     ...(regexConditions.length ? { $or: regexConditions } : {}),
-//   } as FilterQuery<T>;
-// }
 function buildSearchQuery(req) {
     const cleanedQuery = req.query;
     let searchQuery = {};
@@ -264,6 +352,7 @@ function buildSearchQuery(req) {
     applyInFilter('examStates');
     applyInFilter('isVerified');
     applyInFilter('postType');
+    applyInFilter('userType');
     if (cleanedQuery.publishedAt) {
         let [startDate, endDate] = cleanedQuery.publishedAt.split(',');
         if (!startDate || startDate === 'undefined')
@@ -285,6 +374,8 @@ function buildSearchQuery(req) {
         'instruction',
         'username',
         'displayName',
+        'bioUserDisplayName',
+        'bioUserUsername',
         'firstName',
         'middleName',
         'content',
@@ -299,6 +390,11 @@ function buildSearchQuery(req) {
     if (cleanedQuery.userId) {
         Object.assign(searchQuery, {
             userId: { $ne: cleanedQuery.userId },
+        });
+    }
+    if (cleanedQuery.bioUserId) {
+        Object.assign(searchQuery, {
+            bioUserId: { $ne: cleanedQuery.bioUserId },
         });
     }
     return Object.assign(Object.assign({}, searchQuery), (regexConditions.length ? { $or: regexConditions } : {}));
@@ -357,8 +453,8 @@ const createItem = (req, res, model, message) => __awaiter(void 0, void 0, void 
 });
 exports.createItem = createItem;
 const followAccount = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const user = yield userModel_1.User.findById(req.params.id);
-    const follower = yield userModel_1.User.findById(req.body.followerId);
+    const user = yield user_1.User.findById(req.params.id);
+    const follower = yield user_1.User.findById(req.body.followerId);
     const post = req.body.post;
     const follow = yield postModel_1.Follower.findOne({
         userId: user === null || user === void 0 ? void 0 : user._id,
@@ -366,8 +462,8 @@ const followAccount = (req, res) => __awaiter(void 0, void 0, void 0, function* 
     });
     if (follow) {
         yield postModel_1.Follower.findByIdAndDelete(follow._id);
-        yield userModel_1.User.findByIdAndUpdate(req.params.id, { $inc: { followers: -1 } });
-        yield userModel_1.User.findByIdAndUpdate(follower === null || follower === void 0 ? void 0 : follower._id, { $inc: { following: -1 } });
+        yield user_1.User.findByIdAndUpdate(req.params.id, { $inc: { followers: -1 } });
+        yield user_1.User.findByIdAndUpdate(follower === null || follower === void 0 ? void 0 : follower._id, { $inc: { following: -1 } });
         if (post) {
             yield postModel_1.Post.findByIdAndUpdate(post._id, {
                 $inc: { unfollowers: 1 },
@@ -393,8 +489,8 @@ const followAccount = (req, res) => __awaiter(void 0, void 0, void 0, function* 
             followerIsVerified: follower === null || follower === void 0 ? void 0 : follower.isVerified,
             postId: post ? post._id : undefined,
         });
-        yield userModel_1.User.findByIdAndUpdate(req.params.id, { $inc: { followers: 1 } });
-        yield userModel_1.User.findByIdAndUpdate(follower === null || follower === void 0 ? void 0 : follower._id, { $inc: { following: 1 } });
+        yield user_1.User.findByIdAndUpdate(req.params.id, { $inc: { followers: 1 } });
+        yield user_1.User.findByIdAndUpdate(follower === null || follower === void 0 ? void 0 : follower._id, { $inc: { following: 1 } });
         if (post) {
             yield postModel_1.Post.findByIdAndUpdate(post._id, {
                 $inc: { followers: 1 },

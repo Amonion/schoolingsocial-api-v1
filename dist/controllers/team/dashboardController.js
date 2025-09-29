@@ -12,7 +12,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.getAdStats = void 0;
 const errorHandler_1 = require("../../utils/errorHandler");
 const computation_1 = require("../../utils/computation");
-const adModel_1 = require("../../models/utility/adModel");
+const adModel_1 = require("../../models/place/adModel");
 const getAdStats = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     var _a, _b, _c, _d, _e, _f, _g, _h;
     try {

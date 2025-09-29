@@ -25,7 +25,7 @@ import {
   createObjective,
   initExam,
 } from '../../controllers/users/competitionController'
-import { getPostStats } from '../../controllers/utility/dashboardController'
+import { getPostStats } from '../../controllers/post/postStatController'
 
 const router = express.Router()
 

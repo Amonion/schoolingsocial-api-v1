@@ -1,4 +1,4 @@
-import { updateVisit } from '../../controllers/team/statController'
+import { updateVisit } from '../../controllers/users/userStatController'
 import { ISocketData } from '../../utils/teamInterface'
 
 export const TeamSocket = async (data: ISocketData) => {

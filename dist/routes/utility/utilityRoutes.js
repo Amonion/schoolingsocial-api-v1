@@ -7,7 +7,7 @@ const express_1 = __importDefault(require("express"));
 const multer_1 = __importDefault(require("multer"));
 const upload = (0, multer_1.default)();
 const competitionController_1 = require("../../controllers/users/competitionController");
-const dashboardController_1 = require("../../controllers/utility/dashboardController");
+const postStatController_1 = require("../../controllers/post/postStatController");
 const router = express_1.default.Router();
 router.route('/').get(competitionController_1.getWeekends).post(upload.any(), competitionController_1.createWeekend);
 router.route('/leagues/papers').get(competitionController_1.getPapers).post(upload.any(), competitionController_1.createPaper);
@@ -28,5 +28,5 @@ router
     .route('/leagues/:id')
     .get(competitionController_1.getLeagueById)
     .patch(upload.any(), competitionController_1.updateLeague);
-router.route('/dashboard').get(dashboardController_1.getPostStats);
+router.route('/dashboard').get(postStatController_1.getPostStats);
 exports.default = router;

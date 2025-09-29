@@ -15,7 +15,7 @@ const competitionModel_1 = require("../../models/team/competitionModel");
 const query_1 = require("../../utils/query");
 const competitionModel_2 = require("../../models/users/competitionModel");
 const userInfoModel_1 = require("../../models/users/userInfoModel");
-const userModel_1 = require("../../models/users/userModel");
+const user_1 = require("../../models/users/user");
 const createWeekend = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     (0, query_1.createItem)(req, res, competitionModel_1.Weekend, 'Weekend was created successfully');
 });
@@ -138,7 +138,7 @@ const createExam = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
             upsert: true,
         });
         const user = yield userInfoModel_1.UserInfo.findByIdAndUpdate(userId, { $inc: { examAttempts: (paper === null || paper === void 0 ? void 0 : paper.isFirstTime) ? 0 : 1 } }, { new: true, upsert: true });
-        yield userModel_1.User.updateMany({ userId: userId }, { $inc: { totalAttempts: (paper === null || paper === void 0 ? void 0 : paper.isFirstTime) ? 0 : 1 } });
+        yield user_1.User.updateMany({ userId: userId }, { $inc: { totalAttempts: (paper === null || paper === void 0 ? void 0 : paper.isFirstTime) ? 0 : 1 } });
         yield competitionModel_2.UserTest.deleteMany({ userId: userId, paperId: paperId });
         yield competitionModel_2.UserTest.insertMany(updatedQuestions);
         if (!paper) {
@@ -204,7 +204,7 @@ const initExam = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
             },
         });
         yield userInfoModel_1.UserInfo.findByIdAndUpdate(userId, { $inc: { examAttempts: 1 } }, { new: true, upsert: true });
-        yield userModel_1.User.updateMany({ userId: userId }, { $inc: { totalAttempts: 1 } });
+        yield user_1.User.updateMany({ userId: userId }, { $inc: { totalAttempts: 1 } });
         res.status(200).json({ message: 'Exam is initialized' });
     }
     catch (error) {
