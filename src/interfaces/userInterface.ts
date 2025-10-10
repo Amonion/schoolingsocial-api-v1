@@ -31,23 +31,6 @@ export interface IAuthUser extends Document {
   status: string
 }
 
-export interface IBioUserBank extends Document {
-  accountName: string
-  accountNumber: string
-  bankId: string
-  bankName: string
-  bankLogo: string
-  bankUsername: string
-  bioUserDisplayName: string
-  bioUserId: string
-  bioUserIntro: string
-  bioUserMedia: string
-  bioUserPicture: string
-  bioUserUsername: string
-  bvn: string
-  createdAt: Date
-}
-
 export interface IUserWallet extends Document {
   balance: 0
   bioUserId: string

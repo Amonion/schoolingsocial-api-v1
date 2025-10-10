@@ -57,7 +57,7 @@
 // }
 
 import { Request, Response } from 'express'
-import { Place } from '../../models/team/placeModel'
+import { Place } from '../../models/place/placeModel'
 import { handleError } from '../../utils/errorHandler'
 import { queryData, deleteItems, createItem } from '../../utils/query'
 import { Ad } from '../../models/place/adModel'

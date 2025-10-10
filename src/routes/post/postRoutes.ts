@@ -6,7 +6,6 @@ const upload = multer()
 
 import {
   getPosts,
-  makePost,
   createPost,
   getPostById,
   deletePost,
@@ -26,6 +25,7 @@ import {
   getMutedUsers,
   updatePoll,
   getFollowers,
+  getUserPosts,
   // checkNudeMedia,
 } from '../../controllers/post/postController'
 
@@ -35,8 +35,11 @@ import {
   updateUpload,
   deleteUpload,
   createUpload,
-  multiSearch,
 } from '../../controllers/users/uploadController'
+import {
+  createComment,
+  getComments,
+} from '../../controllers/post/commentController'
 
 const router = express.Router()
 router.route('/follow/:id').patch(upload.any(), followUser)
@@ -51,13 +54,14 @@ router.route('/blocks').get(getBlockedUsers)
 router.route('/mutes').get(getMutedUsers)
 router.route('/mute/:id').patch(upload.any(), muteUser)
 router.route('/view').patch(updatePostViews)
-router.route('/general').get(multiSearch)
+router.route('/user').get(getUserPosts)
 router.route('/').get(getPosts).post(upload.any(), createPost)
-router.route('/create').get(getPosts).post(upload.any(), makePost)
 router.route('/following').get(getFollowings)
 router.route('/bookmarks').get(getBookMarkedPosts)
 router.route('/search').get(searchPosts)
 // router.route('/check-nsfw').post(uploadFile.single('file'), checkNudeMedia)
+
+router.route('/comments').get(getComments).post(upload.any(), createComment)
 
 router
   .route('/uploads/:id')

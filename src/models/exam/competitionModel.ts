@@ -1,11 +1,5 @@
 import mongoose, { Schema } from 'mongoose'
-import {
-  IWeekend,
-  IExam,
-  ILeague,
-  IPaper,
-  IObjective,
-} from '../../utils/teamInterface'
+import { IWeekend, IExam, ILeague, IPaper } from '../../utils/teamInterface'
 
 const WeekendSchema: Schema = new Schema(
   {
@@ -32,26 +26,6 @@ const WeekendSchema: Schema = new Schema(
   }
 )
 export const Weekend = mongoose.model<IWeekend>('Weekend', WeekendSchema)
-
-const ObjectiveSchema: Schema = new Schema(
-  {
-    index: { type: Number },
-    paperId: { type: String },
-    leagueId: { type: String },
-    question: { type: String },
-    options: { type: Array },
-    isSelected: { type: Boolean, default: false },
-    isClicked: { type: Boolean, default: false },
-    createdAt: { type: Date, default: Date.now },
-  },
-  {
-    timestamps: true,
-  }
-)
-export const Objective = mongoose.model<IObjective>(
-  'Objective',
-  ObjectiveSchema
-)
 
 const PaperSchema: Schema = new Schema(
   {

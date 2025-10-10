@@ -1,6 +1,7 @@
 import mongoose, { Schema } from 'mongoose'
 
 export interface IUser extends Document {
+  _id: string
   active: string
   bioUserId: string
   comments: number
@@ -23,23 +24,26 @@ export interface IUser extends Document {
   phone: string
   picture: string
   posts: number
-  signupCountry: string
+  country: string
+  state: string
   signupIp: string
-  signupLocation: object
+  lat: number
+  lng: number
   username: string
   staffPositions: string[]
   staffRanking: number
+  postMedia: number
   status: string
 }
 
 const UserSchema: Schema = new Schema(
   {
-    active: { type: Boolean, default: false },
-    bioUserId: { type: String, default: '' },
-    bioUserUsername: { type: String, default: '' },
-    comments: { type: Number, default: 0 },
+    active: { type: Boolean },
+    bioUserId: { type: String },
+    bioUserUsername: { type: String },
+    comments: { type: Number },
     createdAt: { type: Date, default: Date.now },
-    displayName: { type: String, default: '' },
+    displayName: { type: String },
     email: {
       type: String,
       required: [true, 'Email is required'],
@@ -47,14 +51,14 @@ const UserSchema: Schema = new Schema(
       match: [/\S+@\S+\.\S+/, 'Please use a valid email address'],
       lowercase: true,
     },
-    exams: { type: Number, default: 0 },
-    followers: { type: Number, default: 0 },
-    followings: { type: Number, default: 0 },
-    intro: { type: String, default: '' },
+    exams: { type: Number },
+    followers: { type: Number },
+    followings: { type: Number },
+    intro: { type: String },
     isFirstTime: { type: Boolean, default: true },
-    isVerified: { type: Boolean, default: false },
-    media: { type: String, default: '' },
-    officeNum: { type: Number, default: 0 },
+    isVerified: { type: Boolean },
+    media: { type: String },
+    officeNum: { type: Number },
     online: { type: Boolean, default: true },
     password: {
       type: String,
@@ -64,15 +68,18 @@ const UserSchema: Schema = new Schema(
     },
     passwordExpiresAt: { type: Date, default: null },
     passwordResetToken: { type: String, default: null },
-    phone: { type: String, default: '' },
-    picture: { type: String, default: '' },
-    posts: { type: Number, default: 0 },
-    signupCountry: { type: String, default: '' },
-    signupIp: { type: String, default: '' },
-    signupLocation: { type: Object, default: {} },
+    phone: { type: String },
+    picture: { type: String },
+    posts: { type: Number },
+    postMedia: { type: Number },
+    country: { type: String },
+    state: { type: String },
+    signupIp: { type: String },
+    lng: { type: Number },
+    lat: { type: Number },
     username: { type: String },
     staffPositions: { type: Array, default: [] },
-    staffRanking: { type: Number, default: 0 },
+    staffRanking: { type: Number },
     status: { type: String, default: 'User' },
   },
   {

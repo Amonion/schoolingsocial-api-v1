@@ -1,4 +1,4 @@
-export const postScore = (reaction: string, score: number) => {
+export const postScore = (reaction: string, score: number = 0) => {
   if (reaction === 'reposts') {
     return score + 6
   } else if (reaction === 'bookmarks') {

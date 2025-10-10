@@ -2,10 +2,12 @@ import { Model, FilterQuery } from 'mongoose'
 import { Request, Response } from 'express'
 import { deleteFilesFromS3, uploadFilesToS3 } from './fileUpload'
 import { handleError } from './errorHandler'
-import { Follower, Post } from '../models/post/postModel'
+import { Post } from '../models/post/postModel'
 import { User } from '../models/users/user'
+import { redisClient } from '../server'
+import { Follower } from '../models/post/postStateModel'
 
-interface PaginationResult<T> {
+export interface PaginationResult<T> {
   count: number // Total number of records
   results: T[] // Fetched rows
   page: number // Current page
@@ -74,7 +76,11 @@ const buildFilterQuery = (req: Request): Record<string, any> => {
       const value = Array.isArray(rawValue) ? rawValue : [rawValue]
       const normalizedValue = value[0]
 
-      if (key === 'levelName' && !req.baseUrl.includes('/api/v1/courses')) {
+      if (
+        key === 'levelName' &&
+        !req.baseUrl.includes('/api/v1/courses') &&
+        !req.baseUrl.includes('/api/v1/questions')
+      ) {
         const namesArray = normalizedValue
           .split(',')
           .map((name: string) => name.trim())
@@ -288,6 +294,31 @@ const buildSortingQuery = (req: Request): Record<string, any> => {
   return sort
 }
 
+// export const queryData = async <T>(
+//   model: Model<T>,
+//   req: Request
+// ): Promise<PaginationResult<T>> => {
+//   const page_size = parseInt(req.query.page_size as string, 10) || 10
+//   const page = parseInt(req.query.page as string, 10) || 1
+
+//   const filters = buildFilterQuery(req)
+//   const sort = buildSortingQuery(req)
+
+//   const count = await model.countDocuments(filters)
+//   const results = await model
+//     .find(filters)
+//     .skip((page - 1) * page_size)
+//     .limit(page_size)
+//     .sort(sort)
+
+//   return {
+//     count,
+//     results,
+//     page,
+//     page_size,
+//   }
+// }
+
 export const queryData = async <T>(
   model: Model<T>,
   req: Request
@@ -305,12 +336,14 @@ export const queryData = async <T>(
     .limit(page_size)
     .sort(sort)
 
-  return {
+  const payload: PaginationResult<T> = {
     count,
     results,
     page,
     page_size,
   }
+
+  return payload
 }
 
 export const generalSearchQuery = <T>(
@@ -432,6 +465,7 @@ function buildSearchQuery<T>(req: any): FilterQuery<T> {
     'firstName',
     'middleName',
     'content',
+    'author',
     'lastName',
     'subtitle',
   ]
@@ -467,7 +501,6 @@ export const search = async <T>(
   try {
     const newSearchQuery = buildSearchQuery(req)
 
-    console.log(newSearchQuery)
     const page = parseInt(req.query.page as string) || 1
     const limit = parseInt(req.query.limit as string) || 20
     const skip = (page - 1) * limit
@@ -493,9 +526,6 @@ export const search = async <T>(
         return obj
       })
     }
-
-    // console.log(results)
-
     res.json({ results })
   } catch (error) {
     handleError(res, undefined, undefined, error)
@@ -632,6 +662,7 @@ export const updateItem = async <T extends Document>(
       new: true,
       runValidators: true,
     })
+
     if (!result) {
       return res.status(404).json({ message: messages[0] })
     }

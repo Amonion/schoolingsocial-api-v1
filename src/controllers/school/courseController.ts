@@ -5,6 +5,7 @@ import {
   deleteItem,
   updateItem,
   createItem,
+  search,
 } from '../../utils/query'
 import {
   Course,
@@ -165,4 +166,8 @@ export const updateSubject = async (req: Request, res: Response) => {
 
 export const deleteSubject = async (req: Request, res: Response) => {
   await deleteItem(req, res, Subject, ['media', 'picture'], 'Subject not found')
+}
+
+export const searchSubject = (req: Request, res: Response) => {
+  return search(Subject, req, res)
 }

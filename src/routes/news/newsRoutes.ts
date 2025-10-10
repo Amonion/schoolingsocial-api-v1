@@ -8,15 +8,17 @@ import {
   updateNews,
   deleteNews,
   createNews,
-  updateExams,
-  updateExamQuestions,
-} from '../../controllers/team/newsController'
+  getHomeFeed,
+  searchNews,
+  massDeleteNews,
+} from '../../controllers/news/newsController'
 
 const router = express.Router()
 
+router.route('/mass-delete').patch(massDeleteNews)
+router.route('/search').get(searchNews)
+router.route('/feed').get(getHomeFeed).post(upload.any(), createNews)
 router.route('/').get(getNews).post(upload.any(), createNews)
-router.route('/update-exams').patch(upload.any(), updateExams)
-router.route('/update-exam-questions').patch(upload.any(), updateExamQuestions)
 router
   .route('/:id')
   .get(getNewsById)

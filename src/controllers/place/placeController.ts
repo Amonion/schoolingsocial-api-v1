@@ -1,5 +1,5 @@
 import { Request, Response } from 'express'
-import { Place, Bank, Document } from '../../models/team/placeModel'
+import { Place, Bank, Document } from '../../models/place/placeModel'
 import { IPlace } from '../../utils/teamInterface'
 import { handleError } from '../../utils/errorHandler'
 import {
@@ -9,8 +9,8 @@ import {
   createItem,
 } from '../../utils/query'
 import { uploadFilesToS3 } from '../../utils/fileUpload'
-import { Exam } from '../../models/team/competitionModel'
-import { News } from '../../models/team/newsModel'
+import { Exam } from '../../models/exam/competitionModel'
+import { News } from '../../models/place/newsModel'
 import { AcademicLevel } from '../../models/school/academicLevelModel'
 import { School } from '../../models/school/schoolModel'
 

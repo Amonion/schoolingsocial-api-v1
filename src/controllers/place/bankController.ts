@@ -1,5 +1,5 @@
 import { Request, Response } from 'express'
-import { Bank } from '../../models/team/placeModel'
+import { Bank } from '../../models/place/placeModel'
 import { IBank } from '../../utils/teamInterface'
 import { handleError } from '../../utils/errorHandler'
 import {

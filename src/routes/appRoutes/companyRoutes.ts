@@ -4,9 +4,8 @@ const upload = multer()
 
 import {
   getCompanyById,
-  getCompanies,
+  getCompany,
   updateCompany,
-  createCompany,
   getExpensesById,
   getExpenses,
   updateExpenses,
@@ -15,9 +14,6 @@ import {
   getPositions,
   updatePosition,
   createPosition,
-  getInterests,
-  updateInterest,
-  createInterest,
   createPolicy,
   getPolcies,
   updatePolicy,
@@ -27,13 +23,10 @@ import {
 
 const router = express.Router()
 
-router.route('/').get(getCompanies).post(upload.any(), createCompany)
+router.route('/').get(getCompany).patch(upload.any(), updateCompany)
 router.route('/policy').get(getPolcies).post(upload.any(), createPolicy)
 router.route('/expenses').get(getExpenses).post(upload.any(), createExpenses)
 router.route('/positions').get(getPositions).post(upload.any(), createPosition)
-router.route('/interests').get(getInterests).post(upload.any(), createInterest)
-
-router.route('/interests/:id').patch(upload.any(), updatePosition)
 
 router
   .route('/positions/:id')
@@ -49,7 +42,5 @@ router
   .route('/expenses/:id')
   .get(getExpensesById)
   .patch(upload.any(), updateExpenses)
-
-router.route('/:id').get(getCompanyById).patch(upload.any(), updateCompany)
 
 export default router

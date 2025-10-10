@@ -9,6 +9,8 @@ import { BioUserState } from '../../models/users/bioUserState'
 import { BioUserSettings } from '../../models/users/bioUserSettings'
 import { Office } from '../../models/utility/officeModel'
 import { BioUserSchoolInfo } from '../../models/users/bioUserSchoolInfo'
+import { Interest } from '../../models/post/interestModel'
+import { getFilteredPosts } from '../post/postController'
 dotenv.config()
 
 export const loginUser = async (req: Request, res: Response): Promise<void> => {
@@ -52,6 +54,16 @@ export const loginUser = async (req: Request, res: Response): Promise<void> => {
       Office.find({ bioUserId: user.bioUserId, isUserActive: true }),
     ])
 
+    const interest = await Interest.findById(user._id)
+    const postResult = await getFilteredPosts({
+      topics: interest ? interest.topics : [],
+      countries: interest ? interest.countries : [],
+      page: 1,
+      limit: 20,
+      followerId: user._id,
+      source: 'post',
+    })
+
     user.password = undefined
 
     res.status(200).json({
@@ -64,6 +76,7 @@ export const loginUser = async (req: Request, res: Response): Promise<void> => {
       activeOffice,
       userOffices,
       token,
+      posts: postResult.results,
     })
   } catch (error: unknown) {
     handleError(res, undefined, undefined, error)

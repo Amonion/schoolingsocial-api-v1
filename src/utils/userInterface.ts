@@ -38,22 +38,6 @@ export interface IAttempt extends Document {
   attempts: number
 }
 
-export interface IBlock extends Document {
-  userId: string
-  username: string
-  picture: string
-  displayName: string
-  bioId: string
-  isVerified: string
-  postId: string
-  accountUsername: string
-  accountUserId: string
-  accountDisplayName: string
-  accountPicture: string
-  accountBioId: string
-  accountIsVerified: boolean
-}
-
 export interface IChatData extends Document {
   to: string
   action: string
@@ -67,22 +51,6 @@ export interface IDeletedUser extends Document {
   displayName: string
   picture: string
   userId: string
-}
-
-export interface IFollower extends Document {
-  userId: string
-  bioId: string
-  displayName: string
-  isVerified: boolean
-  followerDisplayName: string
-  username: string
-  picture: string
-  followerId: string
-  followerUsername: string
-  followerPicture: string
-  followerIsVerified: boolean
-  followed: boolean
-  postId: string
 }
 
 export interface IGeneral {
@@ -104,32 +72,11 @@ export interface IGeneral {
   countrySymbol: string
 }
 
-export interface IMute extends Document {
-  userId: string
-  postId: string
-  accountUsername: string
-  accountUserId: string
-}
-
-interface Media {
-  source: string
-  type: string
-}
-
 interface Option {
   index: number
   value: string
   isSelected: boolean
   isClicked: boolean
-}
-
-interface Poll {
-  picture: string
-  text: string
-  userId: string
-  index: number
-  percent: number
-  isSelected: boolean
 }
 
 export interface IParticipant extends Document {
@@ -141,65 +88,12 @@ export interface IParticipant extends Document {
   options: Option[]
 }
 
-export interface IPin extends Document {
-  userId: string
-  postId: string
-  createdAt: Date
-}
-
 export interface IPoll extends Document {
   userId: string
   postId: string
   username: string
   pollIndex: number
   createdAt: Date
-}
-
-export interface IPost extends Document {
-  _id: string
-  postId: string
-  createdAt: Date
-  pinnedAt: Date
-  username: string
-  repostedUsername: string
-  userId: string
-  sender: IUser
-  postType: string
-  replyToId: string
-  displayName: string
-  content: string
-  postCountry: string
-  mutes: number
-  hates: number
-  blocks: number
-  totalVotes: number
-  media: Media[]
-  polls: Poll[]
-  users: string[]
-  picture: string
-  country: string
-  isSelected: boolean
-  status: boolean
-  followed: boolean
-  muted: boolean
-  liked: boolean
-  hated: boolean
-  bookmarked: boolean
-  isPinned: boolean
-  viewed: boolean
-  reposted: boolean
-  blocked: boolean
-  isVerified: boolean
-  shares: number
-  followers: number
-  unfollowers: number
-  replies: number
-  score: number
-  trendScore: number
-  views: number
-  bookmarks: number
-  likes: number
-  reposts: number
 }
 
 export interface IStat extends Document {

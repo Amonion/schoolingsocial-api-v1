@@ -5,19 +5,13 @@ import {
   Exam,
   League,
   Paper,
-  Objective,
-} from '../../models/team/competitionModel'
-import {
-  IWeekend,
-  IExam,
-  ILeague,
-  IPaper,
-  IObjective,
-} from '../../utils/teamInterface'
+} from '../../models/exam/competitionModel'
+import { IWeekend, IExam, ILeague, IPaper } from '../../utils/teamInterface'
 import { queryData, updateItem, createItem, search } from '../../utils/query'
 import { Attempt } from '../../models/users/competitionModel'
 import { uploadFilesToS3 } from '../../utils/fileUpload'
 import { Post } from '../../models/post/postModel'
+import { IObjective, Objective } from '../../models/exam/objectiveModel'
 
 export const createWeekend = async (
   req: Request,

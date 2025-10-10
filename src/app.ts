@@ -5,10 +5,11 @@ import cors from 'cors'
 import bodyParser from 'body-parser'
 import dotenv from 'dotenv'
 import { handleError } from './utils/errorHandler'
-import competitionRoutes from './routes/team/competitionRoutes'
-import companyRoutes from './routes/team/companyRoutes'
+import competitionRoutes from './routes/exam/competitionRoutes'
+import companyRoutes from './routes/appRoutes/companyRoutes'
+import questionRoutes from './routes/exam/questionRoutes'
 import messageRoutes from './routes/message/messageRoutes'
-import newsRoutes from './routes/team/newsRoutes'
+import newsRoutes from './routes/news/newsRoutes'
 import placeRoutes from './routes/place/placeRoutes'
 import postRoutes from './routes/post/postRoutes'
 import courseRoutes from './routes/school/courseRoutes'
@@ -27,6 +28,7 @@ import userCompetitionRoutes from './routes/users/userCompetitionRoutes'
 import userRoutes from './routes/users/userRoutes'
 import transactionRoutes from './routes/finance/transactionRoutes'
 import utilityRoutes from './routes/utility/utilityRoutes'
+import aiRoutes from './routes/utility/aiRoutes'
 import {
   createChat,
   deleteChat,
@@ -116,9 +118,11 @@ app.use(bodyParser.json())
 app.use('/api/v1/s3-delete-file', removeFile)
 app.use('/api/v1/s3-presigned-url', getPresignedUrl)
 app.use('/api/v1/academic-levels', academicLevelRoutes)
+app.use('/api/v1/intelligence', aiRoutes)
 app.use('/api/v1/ads', adsRoutes)
 app.use('/api/v1/banks', bankRoutes)
 app.use('/api/v1/competitions', competitionRoutes)
+app.use('/api/v1/questions', questionRoutes)
 app.use('/api/v1/courses', courseRoutes)
 app.use('/api/v1/company', companyRoutes)
 app.use('/api/v1/documents', placeDocumentRoutes)

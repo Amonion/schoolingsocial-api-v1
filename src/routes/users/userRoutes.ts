@@ -37,6 +37,7 @@ import {
   getBioUserSchoolByUsername,
   getBioUsersState,
   searchBioUserSchoolInfo,
+  searchBioUsersSchool,
   updateBioUser,
   updateBioUserBank,
   updateBioUserSchool,
@@ -57,6 +58,7 @@ router
   .patch(upload.any(), updateBioUser)
 
 router.route('/bio-user/username/:username').get(getBioUserByUsername)
+router.route('/biouser-school/search').get(searchBioUsersSchool)
 router.route('/biouser-school/:username').get(getBioUserSchoolByUsername)
 router.route('/biouser-school').get(searchBioUserSchoolInfo)
 router.route('/bio-user/:id').get(getBioUser).patch(upload.any(), updateBioUser)

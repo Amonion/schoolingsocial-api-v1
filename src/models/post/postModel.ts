@@ -1,61 +1,115 @@
 import mongoose, { Schema } from 'mongoose'
-import {
-  IAccount,
-  IPost,
-  IPoll,
-  IUserInterest,
-  IFollower,
-  IPin,
-  IMute,
-  IBlock,
-} from '../../utils/userInterface'
+import { IPoll } from '../../utils/userInterface'
+import { IUser } from '../users/user'
+
+interface Media {
+  source: string
+  type: string
+}
+
+interface Poll {
+  picture: string
+  text: string
+  userId: string
+  index: number
+  percent: number
+  isSelected: boolean
+}
+
+export interface IPost extends Document {
+  _id: string
+  postId: string
+  createdAt: Date
+  pinnedAt: Date
+  username: string
+  repostedUsername: string
+  userId: string
+  sender: IUser
+  postType: string
+  replyToId: string
+  displayName: string
+  content: string
+  commentMedia: string
+  mutes: number
+  hates: number
+  blocks: number
+  totalVotes: number
+  media: Media[]
+  polls: Poll[]
+  users: string[]
+  picture: string
+  country: string
+  isSelected: boolean
+  status: boolean
+  followed: boolean
+  muted: boolean
+  liked: boolean
+  hated: boolean
+  bookmarked: boolean
+  isPinned: boolean
+  viewed: boolean
+  reposted: boolean
+  blocked: boolean
+  isVerified: boolean
+  shares: number
+  followers: number
+  unfollowers: number
+  replies: number
+  score: number
+  trendScore: number
+  views: number
+  bookmarks: number
+  likes: number
+  reposts: number
+}
 
 const PostSchema: Schema = new Schema(
   {
     displayName: { type: String },
     username: { type: String },
     bioUserId: { type: String },
-    picture: { type: String, default: '' },
-    media: { type: Array, default: [] },
-    polls: { type: Array, default: [] },
-    users: { type: Array, default: [] },
-    comments: { type: Array, default: [] },
-    content: { type: String, default: '' },
-    postCountry: { type: String, default: '' },
-    user: { type: String, default: '' },
-    replyTo: { type: String, default: '' },
+    picture: { type: String },
+    commentMedia: { type: String },
+    media: { type: Array },
+    polls: { type: Array },
+    users: { type: Array },
+    comments: { type: Array },
+    content: { type: String },
+    country: { type: String },
+    user: { type: String },
+    replyTo: { type: String },
     postType: { type: String, default: 'main' },
-    repostedUsername: { type: String, default: '' },
-    uniqueId: { type: String, default: '' },
-    postId: { type: String, default: '' },
-    replyToId: { type: String, default: '' },
-    isVerified: { type: Boolean, default: false },
-    isSelected: { type: Boolean, default: false },
-    replies: { type: Number, default: 0 },
-    level: { type: Number, default: 0 },
-    bookmarks: { type: Number, default: 0 },
-    followers: { type: Number, default: 0 },
-    unfollowers: { type: Number, default: 0 },
-    shares: { type: Number, default: 0 },
-    totalVotes: { type: Number, default: 0 },
-    likes: { type: Number, default: 0 },
-    hates: { type: Number, default: 0 },
-    followed: { type: Boolean, default: false },
-    muted: { type: Boolean, default: false },
-    blocked: { type: Boolean, default: false },
-    liked: { type: Boolean, default: false },
-    hated: { type: Boolean, default: false },
-    bookmarked: { type: Boolean, default: false },
-    viewed: { type: Boolean, default: false },
-    isPinned: { type: Boolean, default: false },
-    reposted: { type: Boolean, default: false },
+    repostedUsername: { type: String },
+    uniqueId: { type: String },
+    postId: { type: String },
+    replyToId: { type: String },
+    isVerified: { type: Boolean },
+    isSelected: { type: Boolean },
+    replies: { type: Number },
+    level: { type: Number },
+    bookmarks: { type: Number },
+    followers: { type: Number },
+    unfollowers: { type: Number },
+    shares: { type: Number },
+    totalVotes: { type: Number },
+    likes: { type: Number },
+    hates: { type: Number },
+    followed: { type: Boolean },
+    muted: { type: Boolean },
+    blocked: { type: Boolean },
+    liked: { type: Boolean },
+    hated: { type: Boolean },
+    bookmarked: { type: Boolean },
+    viewed: { type: Boolean },
+    isPinned: { type: Boolean },
+    reposted: { type: Boolean },
     views: { type: Number, default: 1 },
-    blocks: { type: Number, default: 1 },
-    reposts: { type: Number, default: 0 },
-    mutes: { type: Number, default: 0 },
-    score: { type: Number, default: 0 },
+    blocks: { type: Number },
+    reposts: { type: Number },
+    mutes: { type: Number },
+    score: { type: Number },
     status: { type: Boolean, default: true },
-    trendSscore: { type: Number, default: 0 },
+    trendSscore: { type: Number },
     pinnedAt: { type: Date, default: null },
     createdAt: { type: Date, default: Date.now },
   },
@@ -63,30 +117,12 @@ const PostSchema: Schema = new Schema(
     timestamps: true,
   }
 )
-export const Post = mongoose.model<IPost>('Post', PostSchema)
 
-const AccountSchema: Schema = new Schema(
-  {
-    displayName: { type: String },
-    username: { type: String },
-    userId: { type: String },
-    picture: { type: String, default: '' },
-    media: { type: String, default: null },
-    description: { type: String, default: '' },
-    type: { type: String, default: 'Original' },
-    isVerified: { type: Boolean, default: false },
-    verificationLevel: { type: Number, default: 0 },
-    posts: { type: Number, default: 0 },
-    replies: { type: Number, default: 0 },
-    followers: { type: Number, default: 0 },
-    following: { type: Number, default: 0 },
-    createdAt: { type: Date, default: Date.now },
-  },
-  {
-    timestamps: true,
-  }
-)
-export const Account = mongoose.model<IAccount>('Account', AccountSchema)
+PostSchema.index({ country: 1 })
+PostSchema.index({ createdAt: -1 })
+PostSchema.index({ score: -1 })
+PostSchema.index({ country: 1, score: -1, createdAt: -1 })
+export const Post = mongoose.model<IPost>('Post', PostSchema)
 
 const PollSchema: Schema = new Schema(
   {
@@ -101,99 +137,3 @@ const PollSchema: Schema = new Schema(
   }
 )
 export const Poll = mongoose.model<IPoll>('Poll', PollSchema)
-
-const PinSchema: Schema = new Schema(
-  {
-    userId: { type: String },
-    postId: { type: String },
-    createdAt: { type: Date, default: Date.now },
-  },
-  {
-    timestamps: true,
-  }
-)
-export const Pin = mongoose.model<IPin>('Pin', PinSchema)
-
-const BlockSchema: Schema = new Schema(
-  {
-    userId: { type: String },
-    postId: { type: String },
-    accountUsername: { type: String },
-    accountPicture: { type: String },
-    accountUserId: { type: String },
-    accountBioId: { type: String },
-    accountDisplayName: { type: String },
-    accountIsVerified: { type: Boolean },
-    bioId: { type: String },
-    username: { type: String },
-    picture: { type: String },
-    displayName: { type: String },
-    isVerified: { type: String },
-    createdAt: { type: Date, default: Date.now },
-  },
-  {
-    timestamps: true,
-  }
-)
-export const Block = mongoose.model<IBlock>('Block', BlockSchema)
-
-const MuteSchema: Schema = new Schema(
-  {
-    userId: { type: String },
-    postId: { type: String },
-    accountUsername: { type: String },
-    accountPicture: { type: String },
-    accountUserId: { type: String },
-    accountBioId: { type: String },
-    accountDisplayName: { type: String },
-    accountIsVerified: { type: Boolean },
-    bioId: { type: String },
-    username: { type: String },
-    picture: { type: String },
-    displayName: { type: String },
-    isVerified: { type: String },
-    createdAt: { type: Date, default: Date.now },
-  },
-  {
-    timestamps: true,
-  }
-)
-export const Mute = mongoose.model<IMute>('Mute', MuteSchema)
-
-const UserInterestSchema: Schema = new Schema(
-  {
-    userId: { type: String },
-    interests: { type: Array },
-    createdAt: { type: Date, default: Date.now },
-  },
-  {
-    timestamps: true,
-  }
-)
-export const UserInterest = mongoose.model<IUserInterest>(
-  'UserInterest',
-  UserInterestSchema
-)
-
-const FollowerSchema: Schema = new Schema(
-  {
-    userId: { type: String },
-    bioId: { type: String },
-    username: { type: String },
-    displayName: { type: String },
-    isVerified: { type: Boolean },
-    picture: { type: String },
-    followerId: { type: String },
-    followerUsername: { type: String },
-    followerPicture: { type: String },
-    followerDisplayName: { type: String },
-    followerIsVerified: { type: Boolean },
-    followed: { type: Boolean, default: false },
-    postId: { type: String },
-    createdAt: { type: Date, default: Date.now },
-  },
-  {
-    timestamps: true,
-  }
-)
-export const Follower = mongoose.model<IFollower>('Follower', FollowerSchema)

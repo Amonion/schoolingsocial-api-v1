@@ -1,5 +1,5 @@
 import { Request, Response } from 'express'
-import { Document } from '../../models/team/placeModel'
+import { Document } from '../../models/place/placeModel'
 import { IDocument } from '../../utils/teamInterface'
 import { handleError } from '../../utils/errorHandler'
 import {

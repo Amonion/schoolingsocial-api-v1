@@ -15,7 +15,7 @@ import { Department } from '../../models/school/departmentModel'
 import { User } from '../../models/users/user'
 import { Post } from '../../models/post/postModel'
 import { sendPersonalNotification } from '../../utils/sendNotification'
-import { Place } from '../../models/team/placeModel'
+import { Place } from '../../models/place/placeModel'
 import { Office } from '../../models/utility/officeModel'
 
 export const updateBioUser = async (
@@ -556,6 +556,9 @@ export const getBioUsers = async (
   } catch (error) {
     handleError(res, undefined, undefined, error)
   }
+}
+export const searchBioUsersSchool = async (req: Request, res: Response) => {
+  return search(BioUserSchoolInfo, req, res)
 }
 
 export const getBioUserByUsername = async (

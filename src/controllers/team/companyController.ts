@@ -4,16 +4,9 @@ import {
   Company,
   Expenses,
   Position,
-  Interest,
   Policy,
 } from '../../models/team/companyModel'
-import {
-  ICompany,
-  IExpenses,
-  IPosition,
-  IInterest,
-  IPolicy,
-} from '../../utils/teamInterface'
+import { IExpenses, IPosition, IPolicy } from '../../utils/teamInterface'
 import {
   queryData,
   updateItem,
@@ -21,11 +14,24 @@ import {
   deleteItem,
 } from '../../utils/query'
 
-export const createCompany = async (
+export const updateCompany = async (
   req: Request,
   res: Response
 ): Promise<void> => {
-  createItem(req, res, Company, 'Company was created successfully')
+  try {
+    if (req.body.id) {
+      const company = await Company.findByIdAndUpdate(req.body.id, req.body, {
+        upsert: true,
+        new: true,
+      })
+      res.status(200).json({ company })
+    } else {
+      const company = await Company.create(req.body)
+      res.status(200).json({ company })
+    }
+  } catch (error) {
+    console.log(error)
+  }
 }
 
 export const getCompanyById = async (
@@ -43,24 +49,10 @@ export const getCompanyById = async (
   }
 }
 
-export const getCompanies = async (req: Request, res: Response) => {
+export const getCompany = async (req: Request, res: Response) => {
   try {
-    const result = await queryData<ICompany>(Company, req)
-    res.status(200).json(result)
-  } catch (error) {
-    handleError(res, undefined, undefined, error)
-  }
-}
-
-export const updateCompany = async (req: Request, res: Response) => {
-  try {
-    updateItem(
-      req,
-      res,
-      Company,
-      [],
-      ['Company not found', 'Company was updated successfully']
-    )
+    const company = await Company.findOne()
+    res.status(200).json({ company })
   } catch (error) {
     handleError(res, undefined, undefined, error)
   }
@@ -218,35 +210,3 @@ export const updatePosition = async (req: Request, res: Response) => {
     handleError(res, undefined, undefined, error)
   }
 }
-
-//-----------------INTEREST--------------------//
-export const createInterest = async (
-  req: Request,
-  res: Response
-): Promise<void> => {
-  createItem(req, res, Interest, 'Interest was created successfully')
-}
-
-export const getInterests = async (req: Request, res: Response) => {
-  try {
-    const result = await queryData<IInterest>(Interest, req)
-    res.status(200).json(result)
-  } catch (error) {
-    handleError(res, undefined, undefined, error)
-  }
-}
-
-export const updateInterest = async (req: Request, res: Response) => {
-  try {
-    updateItem(
-      req,
-      res,
-      Interest,
-      ['receipt'],
-      ['Interest not found', 'Interest was updated successfully']
-    )
-  } catch (error) {
-    handleError(res, undefined, undefined, error)
-  }
-}
-//-----------------FACULTY--------------------//

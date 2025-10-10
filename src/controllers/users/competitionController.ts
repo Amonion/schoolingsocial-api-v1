@@ -6,7 +6,7 @@ import {
   League,
   Paper,
   Objective,
-} from '../../models/team/competitionModel'
+} from '../../models/exam/competitionModel'
 import {
   IWeekend,
   IExam,

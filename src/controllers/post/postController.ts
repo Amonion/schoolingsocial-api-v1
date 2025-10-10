@@ -1,12 +1,5 @@
 import { Request, Response } from 'express'
-import {
-  Block,
-  Follower,
-  Mute,
-  Pin,
-  Poll,
-  Post,
-} from '../../models/post/postModel'
+import { IPost, Poll, Post } from '../../models/post/postModel'
 import { deleteFileFromS3, uploadFilesToS3 } from '../../utils/fileUpload'
 import { handleError } from '../../utils/errorHandler'
 import {
@@ -14,91 +7,29 @@ import {
   queryData,
   followAccount,
   search,
+  PaginationResult,
 } from '../../utils/query'
-import { IBlock, IFollower, IMute, IPost } from '../../utils/userInterface'
 import { Bookmark, Like, View, Hate } from '../../models/users/statModel'
 import { postScore } from '../../utils/computation'
 import { io } from '../../app'
 import { User } from '../../models/users/user'
+import { Interest } from '../../models/post/interestModel'
+import {
+  Block,
+  Follower,
+  IBlock,
+  IMute,
+  Mute,
+  Pin,
+} from '../../models/post/postStateModel'
 
-/////////////////////////////// POST /////////////////////////////////
-export const makePost = async (req: Request, res: Response) => {
-  try {
-    const sender = req.body.sender
-    const data = { ...req.body }
-    if (data._id) {
-      delete data._id
-    }
-
-    const form = {
-      picture: sender.picture,
-      username: sender.username,
-      displayName: sender.displayName,
-      polls: data.polls,
-      users: data.users,
-      replyTo: data.replyTo,
-      uniqueId: data.uniqueId,
-      userId: sender._id,
-      postId: data.postId,
-      level: data.level,
-      replyToId: data.replyToId,
-      postType: data.postType,
-      content: data.content,
-      createdAt: data.createdAt,
-      media: data.media,
-      score: 0.5,
-      status: data.status,
-      isVerified: sender.isVerified,
-    }
-
-    const post = await Post.findById(data.postId)
-    const comment = await Post.create(form)
-
-    if (data.postType === 'comment') {
-      await User.updateOne(
-        { _id: sender._id },
-        {
-          $inc: { comments: 1 },
-        }
-      )
-      const score = postScore('comments', post.score)
-      if (data.replyToId) {
-        await Post.updateOne(
-          { _id: data.replyToId },
-          {
-            $inc: { replies: 1, score: 3 },
-          }
-        )
-      } else if (data.replyToId !== data.postId) {
-        await Post.findByIdAndUpdate(data.postId, {
-          $inc: { replies: 1 },
-          $set: { score: score },
-        })
-      }
-    } else {
-      await User.updateOne(
-        { _id: sender._id },
-        {
-          $inc: { posts: 1 },
-        }
-      )
-    }
-    await View.create({
-      postId: post._id,
-      userId: sender._id,
-    })
-
-    res.status(200).json({
-      message:
-        data.postType === 'comment'
-          ? null
-          : 'Your content is posted successfully',
-      data: post,
-    })
-  } catch (error) {
-    console.log(error)
-    handleError(res, undefined, undefined, error)
-  }
+interface PostInterest {
+  followerId: string
+  topics: string[]
+  countries: string[]
+  page: number
+  limit?: number
+  source?: string
 }
 
 export const createPost = async (data: IPost) => {
@@ -115,36 +46,20 @@ export const createPost = async (data: IPost) => {
       postType: data.postType,
       status: data.status,
       content: data.content,
+      country: data.country,
       createdAt: data.createdAt,
       media: data.media,
       isVerified: sender.isVerified,
     }
 
     const post = await Post.create(form)
+    await User.updateOne(
+      { _id: sender._id },
+      {
+        $inc: { posts: 1, postMedia: data.media.length },
+      }
+    )
 
-    if (data.postType === 'comment') {
-      const score = postScore('comments', post.score)
-      await User.updateOne(
-        { _id: sender._id },
-        {
-          $inc: { comments: 1 },
-        }
-      )
-      await Post.updateOne(
-        { _id: data.postId },
-        {
-          $inc: { replies: 1 },
-          $set: { score: score },
-        }
-      )
-    } else {
-      await User.updateOne(
-        { _id: sender._id },
-        {
-          $inc: { posts: 1 },
-        }
-      )
-    }
     await View.create({
       postId: post._id,
       userId: sender._id,
@@ -439,16 +354,94 @@ export const getPostById = async (
   getItemById(req, res, Post, 'Post not found')
 }
 
-export const getPosts = async (req: Request, res: Response) => {
+export const getUserPosts = async (req: Request, res: Response) => {
   try {
     const followerId = String(req.query.myId)
     delete req.query.myId
-    delete req.query.following
-    const processedPosts = await processFetchedPosts(req, followerId)
-
-    res.status(200).json(processedPosts)
+    const response = await queryData(Post, req)
+    const results = await processPosts(response.results, followerId, 'user')
+    res.status(200).json({ results, count: response.count })
   } catch (error) {
     handleError(res, undefined, undefined, error)
+  }
+}
+
+export const getPosts = async (req: Request, res: Response) => {
+  try {
+    const followerId = String(req.query.myId)
+    const page = parseInt(req.query.page as string, 10) || 1
+    const source = String(req.query.source)
+    const interest = await Interest.findById(followerId)
+    const result = await getFilteredPosts({
+      followerId: followerId,
+      countries: interest ? interest.countries : [],
+      topics: interest ? interest.topics : [],
+      page: page,
+      source: source,
+    })
+    res.status(200).json(result)
+  } catch (error) {
+    handleError(res, undefined, undefined, error)
+  }
+}
+
+export const getFilteredPosts = async (
+  interest: PostInterest
+): Promise<PaginationResult<IPost>> => {
+  try {
+    const {
+      countries = [],
+      topics = [],
+      page = 1,
+      limit = 20,
+      followerId,
+    } = interest
+
+    const filter: any = {}
+
+    if (countries.length > 0) {
+      filter.country = { $in: countries }
+    }
+
+    if (topics.length > 0) {
+      const escaped = topics.map((t) =>
+        t.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+      )
+      const pattern = escaped.join('|')
+      filter.content = { $regex: pattern, $options: 'i' }
+    }
+
+    const threeDaysAgo = new Date()
+    threeDaysAgo.setDate(
+      topics.length + countries.length === 0
+        ? threeDaysAgo.getDate() - 100
+        : threeDaysAgo.getDate() - 3
+    )
+    filter.createdAt = { $gte: threeDaysAgo }
+    filter.postType = 'main'
+    const sortOptions: Record<string, 1 | -1> = { score: -1, createdAt: -1 }
+    const skip = (page - 1) * limit
+
+    const [posts, total] = await Promise.all([
+      Post.find(filter)
+        .sort(sortOptions)
+        .skip(skip)
+        .limit(limit)
+        .lean<IPost[]>(),
+      Post.countDocuments(filter),
+    ])
+
+    const results = await processPosts(posts, followerId, 'post')
+
+    return {
+      count: total,
+      page,
+      page_size: limit,
+      results,
+    }
+  } catch (err) {
+    console.error('Error fetching filtered posts:', err)
+    throw err
   }
 }
 
@@ -476,28 +469,13 @@ export const getFollowings = async (req: Request, res: Response) => {
       }
       updatedFollowers.push(el)
     }
+
     res.status(200).json({
       count: followersResponse.count,
       page: followersResponse.page,
       page_size: followersResponse.page_size,
       results: updatedFollowers,
     })
-
-    // const followerId = String(req.query.myId)
-    // const followers = await Follower.find({ followerId: followerId })
-    // const followersUserIds = followers.map((user) => user.userId)
-    // delete req.query.myId
-
-    // const mongoQuery = {
-    //   ...req.query,
-    //   userId: { in: followersUserIds },
-    // }
-    // req.query = mongoQuery
-    // delete req.query.myId
-
-    // const processedPosts = await processFetchedPosts(req, followerId)
-
-    // res.status(200).json(processedPosts)
   } catch (error) {
     handleError(res, undefined, undefined, error)
   }
@@ -1076,4 +1054,159 @@ const processFetchedPosts = async (req: Request, followerId: string) => {
     page_size: response.page_size,
     results: source === 'user' ? finalPosts : updatedPosts,
   }
+}
+
+const processPosts = async (
+  posts: IPost[],
+  followerId: string,
+  source: string
+) => {
+  const postIds = posts.map((post) => post._id)
+  const postUserIds = posts.map((post) => post.userId)
+
+  const userIds = [...new Set(posts.map((post) => post.userId))]
+  const userObjects = userIds.map((userId) => ({ userId, followerId }))
+
+  const queryConditions = userObjects.map(({ userId, followerId }) => ({
+    userId,
+    followerId,
+  }))
+
+  const follows = await Follower.find(
+    { $or: queryConditions },
+    { userId: 1, _id: 0 }
+  )
+  const followedUserIds = new Set(follows.map((user) => user.userId))
+
+  posts.map((post) => {
+    if (followedUserIds.has(post.userId)) {
+      post.followed = true
+    }
+    return post
+  })
+
+  const blockedUsers = await Block.find({
+    userId: followerId,
+    accountUserId: { $in: postUserIds },
+  }).select('accountUserId')
+
+  const mutedUsers = await Mute.find({
+    userId: followerId,
+    accountUserId: { $in: postUserIds },
+  }).select('accountUserId')
+
+  const pinnedPosts = await Pin.find({
+    userId: followerId,
+    postId: { $in: postIds },
+  }).select('postId createdAt')
+
+  const polledPosts = await Poll.find({
+    userId: followerId,
+    postId: { $in: postIds },
+  }).select('postId pollIndex')
+
+  const likedPosts = await Like.find({
+    userId: followerId,
+    postId: { $in: postIds },
+  }).select('postId')
+
+  const hatedPosts = await Hate.find({
+    userId: followerId,
+    postId: { $in: postIds },
+  }).select('postId')
+
+  const bookmarkedPosts = await Bookmark.find({
+    bookmarkUserId: followerId,
+    postId: { $in: postIds },
+  }).select('postId')
+
+  const viewedPosts = await View.find({
+    userId: followerId,
+    postId: { $in: postIds },
+  }).select('postId')
+
+  const blockedPostIds = blockedUsers.map((block) =>
+    block.accountUserId.toString()
+  )
+
+  const polledList = polledPosts.map((poll) => ({
+    postId: poll.postId.toString(),
+    pollIndex: poll.pollIndex,
+  }))
+
+  const mutedUserIds = mutedUsers.map((mute) => mute.accountUserId.toString())
+
+  const likedPostIds = likedPosts.map((like) => like.postId.toString())
+  const hatedPostIds = hatedPosts.map((hate) => hate.postId.toString())
+
+  const bookmarkedPostIds = bookmarkedPosts.map((bookmark) =>
+    bookmark.postId.toString()
+  )
+
+  const viewedPostIds = viewedPosts.map((view) => view.postId.toString())
+
+  const updatedPosts = []
+
+  const pinnedMap = new Map(
+    pinnedPosts.map((pin) => [pin.postId.toString(), pin.createdAt])
+  )
+
+  for (let i = 0; i < posts.length; i++) {
+    const el = posts[i]
+    const postIdStr = el._id.toString()
+    const pinnedAtValue = pinnedMap.get(postIdStr)
+    const userIdStr = el.userId?.toString()
+
+    if (mutedUsers.length > 0 && mutedUserIds.includes(userIdStr)) {
+      continue
+    }
+
+    if (pinnedAtValue !== undefined) {
+      el.isPinned = true
+      el.pinnedAt = pinnedAtValue
+    }
+
+    if (
+      blockedPostIds.length > 0 &&
+      blockedPostIds.includes(el.userId.toString())
+    ) {
+      el.blocked = true
+    }
+
+    for (let x = 0; x < polledList.length; x++) {
+      const poll = polledList[x]
+      if (postIdStr.includes(poll.postId)) {
+        el.polls[poll.pollIndex].userId = followerId
+        el.isSelected = true
+      }
+    }
+
+    if (likedPostIds && likedPostIds.includes(el._id.toString())) {
+      el.liked = true
+    }
+
+    if (hatedPostIds && hatedPostIds.includes(el._id.toString())) {
+      el.hated = true
+    }
+
+    if (bookmarkedPostIds && bookmarkedPostIds.includes(el._id.toString())) {
+      el.bookmarked = true
+    }
+
+    if (viewedPostIds && viewedPostIds.includes(el._id.toString())) {
+      el.viewed = true
+    }
+    updatedPosts.push(el)
+  }
+
+  const pinned = updatedPosts.filter((post) => post.isPinned)
+  const unpinned = updatedPosts.filter((post) => !post.isPinned)
+
+  pinned.sort(
+    (a, b) => new Date(b.pinnedAt).getTime() - new Date(a.pinnedAt).getTime()
+  )
+
+  const finalPosts = [...pinned, ...unpinned]
+  const results = source === 'user' ? finalPosts : updatedPosts
+  return results
 }

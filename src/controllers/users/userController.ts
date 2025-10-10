@@ -9,11 +9,11 @@ import { handleError } from '../../utils/errorHandler'
 import { queryData, search, followAccount } from '../../utils/query'
 import { uploadFilesToS3 } from '../../utils/fileUpload'
 import bcrypt from 'bcryptjs'
-import { Follower, Mute, Pin, Poll, Post } from '../../models/post/postModel'
+import { Poll, Post } from '../../models/post/postModel'
 import { sendEmail } from '../../utils/sendEmail'
 import { UserStatus } from '../../models/users/usersStatMode'
 import { Bookmark, Like, Repost, View } from '../../models/users/statModel'
-import { Place } from '../../models/team/placeModel'
+import { Place } from '../../models/place/placeModel'
 import { Wallet } from '../../models/users/walletModel'
 import { BioUser } from '../../models/users/bioUser'
 import { BioUserSchoolInfo } from '../../models/users/bioUserSchoolInfo'
@@ -24,6 +24,10 @@ import { UserSettings } from '../../models/users/userSettings'
 import { Chat } from '../../models/message/chatModel'
 import { BioUserBank } from '../../models/users/bioUserBank'
 import { SocialNotification } from '../../models/message/socialNotificationModel'
+import { Interest } from '../../models/post/interestModel'
+import { Follower, Mute, Pin } from '../../models/post/postStateModel'
+import { getFilteredPosts } from '../post/postController'
+import { getFeaturedNews } from '../news/newsController'
 
 export const createUser = async (
   req: Request,
@@ -34,31 +38,36 @@ export const createUser = async (
     // await Place.updateMany({}, [
     //   { $set: { country: { $trim: { input: '$country' } } } },
     // ])
-    // const signupCountry = (req as any).country
-    // const signupIp = (req as any).ipAddress
+    const signupCountry = (req as any).country
+    const signupIp = (req as any).ipAddress
+    const bioUser = new BioUser({ ...req.body, signupCountry, signupIp })
+    await bioUser.save()
 
-    // const bioUser = new BioUser({ ...req.body, signupCountry, signupIp })
-    // await bioUser.save()
+    await BioUserSchoolInfo.create({ bioUserId: bioUser._id })
+    await BioUserSettings.create({ bioUserId: bioUser._id })
+    await BioUserState.create({ bioUserId: bioUser._id })
+    await BioUserBank.create({
+      bioUserId: bioUser._id,
+      bankCountry: signupCountry,
+    })
 
-    // await BioUserSchoolInfo.create({ bioUserId: bioUser._id })
-    // await BioUserSettings.create({ bioUserId: bioUser._id })
-    // await BioUserState.create({ bioUserId: bioUser._id })
-    // await BioUserBank.create({ bioUserId: bioUser._id })
+    const place = await Place.findOne({
+      country: new RegExp(`^${signupCountry.trim()}\\s*$`, 'i'),
+    })
 
-    // const place = await Place.findOne({
-    //   country: new RegExp(`^${signupCountry.trim()}\\s*$`, 'i'),
-    // })
-    // const newUser = new User({
-    //   bioUserId: bioUser._id,
-    //   email: req.body.email,
-    //   signupIp,
-    //   signupCountry: place?.country.trim(),
-    //   signupCountryFlag: place?.countryFlag.trim(),
-    //   signupCountrySymbol: place?.countrySymbol.trim(),
-    //   password: await bcrypt.hash(req.body.password, 10),
-    // })
-
-    // await newUser.save()
+    const newUser = new User({
+      bioUserId: bioUser._id,
+      email: req.body.email,
+      signupIp,
+      lat: req.body.lat,
+      lng: req.body.lng,
+      signupCountry: place?.country.trim(),
+      signupCountryFlag: place?.countryFlag.trim(),
+      signupCountrySymbol: place?.countrySymbol.trim(),
+      password: await bcrypt.hash(req.body.password, 10),
+    })
+    await newUser.save()
+    await Interest.create({ userId: newUser._id, countries: [signupCountry] })
 
     // await Wallet.create({
     //   userId: newUser._id,
@@ -70,8 +79,7 @@ export const createUser = async (
     //   currencySymbol: place?.currencySymbol.trim(),
     // })
 
-    // await sendEmail('', req.body.email, 'welcome')
-
+    await sendEmail('', req.body.email, 'welcome')
     res.status(200).json({
       message: 'User created successfully',
     })
@@ -89,7 +97,7 @@ export const createUserAccount = async (
     uploadedFiles.forEach((file) => {
       req.body[file.fieldName] = file.s3Url
     })
-    const { username, displayName, picture, followingsId, userId } = req.body
+    const { username, displayName, picture, userId, country, state } = req.body
 
     const user = await User.findOneAndUpdate(
       { _id: userId },
@@ -98,6 +106,8 @@ export const createUserAccount = async (
         displayName: displayName,
         isFirstTime: false,
         username: username,
+        country: country,
+        state: state,
       },
       { new: true }
     )
@@ -106,13 +116,22 @@ export const createUserAccount = async (
       throw new Error('User not found')
     }
 
-    await Follower.create({
-      userId: user._id,
-      followingId: followingsId,
+    const news = await getFeaturedNews(user.country, user.state)
+
+    const postResult = await getFilteredPosts({
+      topics: [],
+      countries: [country],
+      page: 1,
+      limit: 20,
+      followerId: user._id,
+      source: 'post',
     })
+
     res.status(200).json({
       message: 'Account created successfully',
-      user: user,
+      user,
+      posts: postResult.results,
+      featuredNews: news,
     })
   } catch (error: any) {
     console.log(error)

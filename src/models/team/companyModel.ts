@@ -1,11 +1,19 @@
 import mongoose, { Schema } from 'mongoose'
-import {
-  ICompany,
-  IExpenses,
-  IPosition,
-  IInterest,
-  IPolicy,
-} from '../../utils/teamInterface'
+import { IExpenses, IPosition, IPolicy } from '../../utils/teamInterface'
+
+export interface ICompany extends Document {
+  name: string
+  domain: string
+  email: string
+  documents: string
+  finalInstruction: string
+  phone: string
+  allowSignup: boolean
+  headqauters: string
+  newVersion: string
+  newVersionLink: string
+  createdAt: Date
+}
 
 const PositionSchema: Schema = new Schema(
   {
@@ -35,6 +43,7 @@ const CompanySchema: Schema = new Schema(
     headquaters: { type: String, default: '' },
     newVersion: { type: String, default: '' },
     newVersionLink: { type: String, default: '' },
+    allowSignUp: { type: Boolean, default: true },
     createdAt: { type: Date, default: Date.now },
   },
   {
@@ -70,17 +79,3 @@ const ExpensesSchema: Schema = new Schema(
   }
 )
 export const Expenses = mongoose.model<IExpenses>('Expenses', ExpensesSchema)
-
-const InterestSchema: Schema = new Schema(
-  {
-    name: { type: String, default: '' },
-    country: { type: String, default: '' },
-    rank: { type: Number, default: 0 },
-    createdAt: { type: Date, default: Date.now },
-  },
-  {
-    timestamps: true,
-  }
-)
-
-export const Interest = mongoose.model<IInterest>('Interest', InterestSchema)

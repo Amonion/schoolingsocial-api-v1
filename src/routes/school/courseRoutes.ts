@@ -12,6 +12,7 @@ import {
   getStaffSubjects,
   getSubjectById,
   getSubjects,
+  searchSubject,
   updateCourse,
   updateStaffSubject,
   updateSubject,
@@ -24,6 +25,7 @@ router
   .route('/staff-subjects/:id')
   .get(getStaffSubjectById)
   .patch(upload.any(), updateStaffSubject)
+router.route('/subjects/search').get(searchSubject)
 router.route('/subjects').get(getSubjects).post(upload.any(), createSubject)
 router.route('/').get(getCourses).post(upload.any(), createCourse)
 

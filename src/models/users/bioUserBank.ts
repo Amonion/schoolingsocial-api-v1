@@ -1,5 +1,22 @@
 import mongoose, { Schema } from 'mongoose'
-import { IBioUserBank } from '../../interfaces/userInterface'
+
+export interface IBioUserBank extends Document {
+  accountName: string
+  accountNumber: string
+  bankCountry: string
+  bankId: string
+  bankName: string
+  bankLogo: string
+  bankUsername: string
+  bioUserDisplayName: string
+  bioUserId: string
+  bioUserIntro: string
+  bioUserMedia: string
+  bioUserPicture: string
+  bioUserUsername: string
+  bvn: string
+  createdAt: Date
+}
 
 const BioUserBankSchema: Schema = new Schema(
   {

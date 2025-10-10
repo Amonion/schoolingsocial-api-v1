@@ -21,20 +21,6 @@ export interface IBank extends Document {
   placeId: string
 }
 
-export interface ICompany extends Document {
-  name: string
-  domain: string
-  email: string
-  documents: string
-  finalInstruction: string
-  phone: string
-  allowSignup: boolean
-  headqauters: string
-  newVersion: string
-  newVersionLink: string
-  createdAt: Date
-}
-
 export interface IDepartment extends Document {
   period: number
   facultyId: number
@@ -105,11 +91,6 @@ export interface IFaculty extends Document {
   createdAt: Date
 }
 
-export interface IInterest extends Document {
-  name: string
-  rank: number
-}
-
 export interface ILeague extends Document {
   title: string
   instruction: string
@@ -127,33 +108,6 @@ export interface ILeague extends Document {
   endAt: Date
   subjects: string[]
   createdAt: Date
-}
-
-export interface INews extends Document {
-  placeId: string
-  title: string
-  content: string
-  author: string
-  publishedAt: Date | null | string
-  status: string
-  state: string
-  level: string
-  country: string
-  interests: number
-  saves: number
-  likes: number
-  comments: number
-  tags: string
-  continent: string
-  picture: string
-  video: string
-  videoUrl: string
-  category: string
-  subtitle: string
-  source: string
-  isFeatured: boolean
-  seoTitle: string
-  seoDescription: string
 }
 
 export interface IObjective extends Document {
