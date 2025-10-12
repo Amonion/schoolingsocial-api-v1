@@ -38,6 +38,7 @@ import { createPost } from './controllers/post/postController'
 import { getPresignedUrl, removeFile } from './utils/fileUpload'
 import { geoipMiddleware } from './middlewares/geoipMiddleware'
 import { UsersSocket } from './routes/socket/usersSocket'
+import { createMoment } from './controllers/post/momentController'
 
 dotenv.config()
 
@@ -101,6 +102,9 @@ io.on('connection', (socket) => {
         break
       case 'post':
         createPost(data)
+        break
+      case 'moment':
+        createMoment(data)
         break
       case 'users':
         await UsersSocket(data)

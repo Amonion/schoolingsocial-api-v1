@@ -5,15 +5,8 @@ import {
   Exam,
   League,
   Paper,
-  Objective,
 } from '../../models/exam/competitionModel'
-import {
-  IWeekend,
-  IExam,
-  ILeague,
-  IPaper,
-  IObjective,
-} from '../../utils/teamInterface'
+import { IWeekend, IExam, ILeague, IPaper } from '../../utils/teamInterface'
 import { queryData, updateItem, createItem, search } from '../../utils/query'
 import {
   Attempt,
@@ -23,6 +16,7 @@ import {
 import { IUserTest, IUserTestExam } from '../../utils/userInterface'
 import { UserInfo } from '../../models/users/userInfoModel'
 import { User } from '../../models/users/user'
+import { IObjective, Objective } from '../../models/exam/objectiveModel'
 
 export const createWeekend = async (
   req: Request,

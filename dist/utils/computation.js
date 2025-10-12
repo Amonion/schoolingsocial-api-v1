@@ -1,7 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.getPeriodRange = exports.calculateTrendingScore = exports.postScore = void 0;
-const postScore = (reaction, score) => {
+const postScore = (reaction, score = 0) => {
     if (reaction === 'reposts') {
         return score + 6;
     }

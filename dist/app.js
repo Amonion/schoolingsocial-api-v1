@@ -20,10 +20,11 @@ const cors_1 = __importDefault(require("cors"));
 const body_parser_1 = __importDefault(require("body-parser"));
 const dotenv_1 = __importDefault(require("dotenv"));
 const errorHandler_1 = require("./utils/errorHandler");
-const competitionRoutes_1 = __importDefault(require("./routes/team/competitionRoutes"));
-const companyRoutes_1 = __importDefault(require("./routes/team/companyRoutes"));
+const competitionRoutes_1 = __importDefault(require("./routes/exam/competitionRoutes"));
+const companyRoutes_1 = __importDefault(require("./routes/appRoutes/companyRoutes"));
+const questionRoutes_1 = __importDefault(require("./routes/exam/questionRoutes"));
 const messageRoutes_1 = __importDefault(require("./routes/message/messageRoutes"));
-const newsRoutes_1 = __importDefault(require("./routes/team/newsRoutes"));
+const newsRoutes_1 = __importDefault(require("./routes/news/newsRoutes"));
 const placeRoutes_1 = __importDefault(require("./routes/place/placeRoutes"));
 const postRoutes_1 = __importDefault(require("./routes/post/postRoutes"));
 const courseRoutes_1 = __importDefault(require("./routes/school/courseRoutes"));
@@ -42,11 +43,13 @@ const userCompetitionRoutes_1 = __importDefault(require("./routes/users/userComp
 const userRoutes_1 = __importDefault(require("./routes/users/userRoutes"));
 const transactionRoutes_1 = __importDefault(require("./routes/finance/transactionRoutes"));
 const utilityRoutes_1 = __importDefault(require("./routes/utility/utilityRoutes"));
+const aiRoutes_1 = __importDefault(require("./routes/utility/aiRoutes"));
 const chatController_1 = require("./controllers/users/chatController");
 const postController_1 = require("./controllers/post/postController");
 const fileUpload_1 = require("./utils/fileUpload");
 const geoipMiddleware_1 = require("./middlewares/geoipMiddleware");
 const usersSocket_1 = require("./routes/socket/usersSocket");
+const momentController_1 = require("./controllers/post/momentController");
 dotenv_1.default.config();
 const app = (0, express_1.default)();
 exports.app = app;
@@ -62,6 +65,7 @@ app.use((0, cors_1.default)({
     origin: [
         'http://localhost:3000',
         'https://schoolingsocial.netlify.app',
+        'https://schoolingweb.netlify.app',
         'https://schoolingsocial.com',
         'https://schooling-client-v1.onrender.com',
     ],
@@ -98,6 +102,9 @@ io.on('connection', (socket) => {
             case 'post':
                 (0, postController_1.createPost)(data);
                 break;
+            case 'moment':
+                (0, momentController_1.createMoment)(data);
+                break;
             case 'users':
                 yield (0, usersSocket_1.UsersSocket)(data);
                 break;
@@ -113,9 +120,11 @@ app.use(body_parser_1.default.json());
 app.use('/api/v1/s3-delete-file', fileUpload_1.removeFile);
 app.use('/api/v1/s3-presigned-url', fileUpload_1.getPresignedUrl);
 app.use('/api/v1/academic-levels', academicLevelRoutes_1.default);
+app.use('/api/v1/intelligence', aiRoutes_1.default);
 app.use('/api/v1/ads', adsRoutes_1.default);
 app.use('/api/v1/banks', bankRoutes_1.default);
 app.use('/api/v1/competitions', competitionRoutes_1.default);
+app.use('/api/v1/questions', questionRoutes_1.default);
 app.use('/api/v1/courses', courseRoutes_1.default);
 app.use('/api/v1/company', companyRoutes_1.default);
 app.use('/api/v1/documents', placeDocumentRoutes_1.default);

@@ -20,7 +20,7 @@ var __rest = (this && this.__rest) || function (s, e) {
     return t;
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.followUser = exports.searchPosts = exports.getPostStat = exports.updatePostViews = exports.updatePostStat = exports.deletePost = exports.updatePost = exports.getBookMarkedPosts = exports.getMutedUsers = exports.getBlockedUsers = exports.getFollowers = exports.getFollowings = exports.getPosts = exports.getPostById = exports.repostPost = exports.muteUser = exports.blockUser = exports.pinPost = exports.updatePoll = exports.createPost = exports.makePost = void 0;
+exports.followUser = exports.searchPosts = exports.getPostStat = exports.updatePostViews = exports.updatePostStat = exports.deletePost = exports.updatePost = exports.getBookMarkedPosts = exports.getMutedUsers = exports.getBlockedUsers = exports.getFollowers = exports.getFollowings = exports.getFilteredPosts = exports.getPosts = exports.getUserPosts = exports.getPostById = exports.repostPost = exports.muteUser = exports.blockUser = exports.pinPost = exports.updatePoll = exports.createPost = void 0;
 const postModel_1 = require("../../models/post/postModel");
 const fileUpload_1 = require("../../utils/fileUpload");
 const errorHandler_1 = require("../../utils/errorHandler");
@@ -29,75 +29,8 @@ const statModel_1 = require("../../models/users/statModel");
 const computation_1 = require("../../utils/computation");
 const app_1 = require("../../app");
 const user_1 = require("../../models/users/user");
-/////////////////////////////// POST /////////////////////////////////
-const makePost = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    try {
-        const sender = req.body.sender;
-        const data = Object.assign({}, req.body);
-        if (data._id) {
-            delete data._id;
-        }
-        const form = {
-            picture: sender.picture,
-            username: sender.username,
-            displayName: sender.displayName,
-            polls: data.polls,
-            users: data.users,
-            replyTo: data.replyTo,
-            uniqueId: data.uniqueId,
-            userId: sender._id,
-            postId: data.postId,
-            level: data.level,
-            replyToId: data.replyToId,
-            postType: data.postType,
-            content: data.content,
-            createdAt: data.createdAt,
-            media: data.media,
-            score: 0.5,
-            status: data.status,
-            isVerified: sender.isVerified,
-        };
-        const post = yield postModel_1.Post.findById(data.postId);
-        const comment = yield postModel_1.Post.create(form);
-        if (data.postType === 'comment') {
-            yield user_1.User.updateOne({ _id: sender._id }, {
-                $inc: { comments: 1 },
-            });
-            const score = (0, computation_1.postScore)('comments', post.score);
-            if (data.replyToId) {
-                yield postModel_1.Post.updateOne({ _id: data.replyToId }, {
-                    $inc: { replies: 1, score: 3 },
-                });
-            }
-            else if (data.replyToId !== data.postId) {
-                yield postModel_1.Post.findByIdAndUpdate(data.postId, {
-                    $inc: { replies: 1 },
-                    $set: { score: score },
-                });
-            }
-        }
-        else {
-            yield user_1.User.updateOne({ _id: sender._id }, {
-                $inc: { posts: 1 },
-            });
-        }
-        yield statModel_1.View.create({
-            postId: post._id,
-            userId: sender._id,
-        });
-        res.status(200).json({
-            message: data.postType === 'comment'
-                ? null
-                : 'Your content is posted successfully',
-            data: post,
-        });
-    }
-    catch (error) {
-        console.log(error);
-        (0, errorHandler_1.handleError)(res, undefined, undefined, error);
-    }
-});
-exports.makePost = makePost;
+const interestModel_1 = require("../../models/post/interestModel");
+const postStateModel_1 = require("../../models/post/postStateModel");
 const createPost = (data) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const sender = data.sender;
@@ -112,26 +45,15 @@ const createPost = (data) => __awaiter(void 0, void 0, void 0, function* () {
             postType: data.postType,
             status: data.status,
             content: data.content,
+            country: data.country,
             createdAt: data.createdAt,
             media: data.media,
             isVerified: sender.isVerified,
         };
         const post = yield postModel_1.Post.create(form);
-        if (data.postType === 'comment') {
-            const score = (0, computation_1.postScore)('comments', post.score);
-            yield user_1.User.updateOne({ _id: sender._id }, {
-                $inc: { comments: 1 },
-            });
-            yield postModel_1.Post.updateOne({ _id: data.postId }, {
-                $inc: { replies: 1 },
-                $set: { score: score },
-            });
-        }
-        else {
-            yield user_1.User.updateOne({ _id: sender._id }, {
-                $inc: { posts: 1 },
-            });
-        }
+        yield user_1.User.updateOne({ _id: sender._id }, {
+            $inc: { posts: 1, postMedia: data.media.length },
+        });
         yield statModel_1.View.create({
             postId: post._id,
             userId: sender._id,
@@ -183,15 +105,15 @@ exports.updatePoll = updatePoll;
 const pinPost = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const { userId, pinnedAt } = req.body;
-        const pinnedPost = yield postModel_1.Pin.findOne({
+        const pinnedPost = yield postStateModel_1.Pin.findOne({
             postId: req.params.id,
             userId: userId,
         });
         if (pinnedPost) {
-            yield postModel_1.Pin.findByIdAndDelete(pinnedPost._id);
+            yield postStateModel_1.Pin.findByIdAndDelete(pinnedPost._id);
         }
         else {
-            yield postModel_1.Pin.create({
+            yield postStateModel_1.Pin.create({
                 userId: userId,
                 postId: req.params.id,
                 createdAt: pinnedAt,
@@ -227,16 +149,16 @@ exports.pinPost = pinPost;
 const blockUser = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const { userId, username, displayName, picture, bioId, isVerified, accountUsername, accountUserId, accountDisplayName, accountPicture, accountIsVerified, } = req.body;
-        const blockedUser = yield postModel_1.Block.findOne({
+        const blockedUser = yield postStateModel_1.Block.findOne({
             accountUsername: accountUsername,
             userId: userId,
         });
         if (blockedUser) {
-            yield postModel_1.Block.findByIdAndDelete(blockedUser._id);
+            yield postStateModel_1.Block.findByIdAndDelete(blockedUser._id);
             yield user_1.User.findByIdAndUpdate(accountUserId, { $inc: { blocks: -1 } });
         }
         else {
-            yield postModel_1.Block.create({
+            yield postStateModel_1.Block.create({
                 userId,
                 username,
                 displayName,
@@ -275,17 +197,17 @@ exports.blockUser = blockUser;
 const muteUser = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const { userId, username, displayName, picture, bioId, isVerified, accountUsername, accountUserId, accountDisplayName, accountPicture, accountIsVerified, } = req.body;
-        const mutedUser = yield postModel_1.Mute.findOne({
+        const mutedUser = yield postStateModel_1.Mute.findOne({
             accountUsername: accountUsername,
             userId: userId,
         });
         console.log(req.body);
         if (mutedUser) {
-            yield postModel_1.Mute.findByIdAndDelete(mutedUser._id);
+            yield postStateModel_1.Mute.findByIdAndDelete(mutedUser._id);
             yield user_1.User.findByIdAndUpdate(accountUserId, { $inc: { mutes: -1 } });
         }
         else {
-            yield postModel_1.Mute.create({
+            yield postStateModel_1.Mute.create({
                 userId,
                 username,
                 displayName,
@@ -370,28 +292,90 @@ const getPostById = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
     (0, query_1.getItemById)(req, res, postModel_1.Post, 'Post not found');
 });
 exports.getPostById = getPostById;
-const getPosts = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+const getUserPosts = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const followerId = String(req.query.myId);
         delete req.query.myId;
-        delete req.query.following;
-        const processedPosts = yield processFetchedPosts(req, followerId);
-        res.status(200).json(processedPosts);
+        const response = yield (0, query_1.queryData)(postModel_1.Post, req);
+        const results = yield processPosts(response.results, followerId, 'user');
+        res.status(200).json({ results, count: response.count });
+    }
+    catch (error) {
+        (0, errorHandler_1.handleError)(res, undefined, undefined, error);
+    }
+});
+exports.getUserPosts = getUserPosts;
+const getPosts = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const followerId = String(req.query.myId);
+        const page = parseInt(req.query.page, 10) || 1;
+        const source = String(req.query.source);
+        const interest = yield interestModel_1.Interest.findById(followerId);
+        const result = yield (0, exports.getFilteredPosts)({
+            followerId: followerId,
+            countries: interest ? interest.countries : [],
+            topics: interest ? interest.topics : [],
+            page: page,
+            source: source,
+        });
+        res.status(200).json(result);
     }
     catch (error) {
         (0, errorHandler_1.handleError)(res, undefined, undefined, error);
     }
 });
 exports.getPosts = getPosts;
+const getFilteredPosts = (interest) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const { countries = [], topics = [], page = 1, limit = 20, followerId, } = interest;
+        const filter = {};
+        if (countries.length > 0) {
+            filter.country = { $in: countries };
+        }
+        if (topics.length > 0) {
+            const escaped = topics.map((t) => t.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
+            const pattern = escaped.join('|');
+            filter.content = { $regex: pattern, $options: 'i' };
+        }
+        const threeDaysAgo = new Date();
+        threeDaysAgo.setDate(topics.length + countries.length === 0
+            ? threeDaysAgo.getDate() - 100
+            : threeDaysAgo.getDate() - 3);
+        filter.createdAt = { $gte: threeDaysAgo };
+        filter.postType = 'main';
+        const sortOptions = { score: -1, createdAt: -1 };
+        const skip = (page - 1) * limit;
+        const [posts, total] = yield Promise.all([
+            postModel_1.Post.find(filter)
+                .sort(sortOptions)
+                .skip(skip)
+                .limit(limit)
+                .lean(),
+            postModel_1.Post.countDocuments(filter),
+        ]);
+        const results = yield processPosts(posts, followerId, 'post');
+        return {
+            count: total,
+            page,
+            page_size: limit,
+            results,
+        };
+    }
+    catch (err) {
+        console.error('Error fetching filtered posts:', err);
+        throw err;
+    }
+});
+exports.getFilteredPosts = getFilteredPosts;
 const getFollowings = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const { followerId } = req.query;
         // const result = await queryData<IFollower>(Follower, req)
-        const followingResponse = yield (0, query_1.queryData)(postModel_1.Follower, req);
+        const followingResponse = yield (0, query_1.queryData)(postStateModel_1.Follower, req);
         const followings = followingResponse.results;
         delete req.query.followerId;
         req.query.userId = followerId;
-        const followersResponse = yield (0, query_1.queryData)(postModel_1.Follower, req);
+        const followersResponse = yield (0, query_1.queryData)(postStateModel_1.Follower, req);
         const followers = followersResponse.results;
         const updatedFollowers = [];
         for (let i = 0; i < followings.length; i++) {
@@ -410,18 +394,6 @@ const getFollowings = (req, res) => __awaiter(void 0, void 0, void 0, function* 
             page_size: followersResponse.page_size,
             results: updatedFollowers,
         });
-        // const followerId = String(req.query.myId)
-        // const followers = await Follower.find({ followerId: followerId })
-        // const followersUserIds = followers.map((user) => user.userId)
-        // delete req.query.myId
-        // const mongoQuery = {
-        //   ...req.query,
-        //   userId: { in: followersUserIds },
-        // }
-        // req.query = mongoQuery
-        // delete req.query.myId
-        // const processedPosts = await processFetchedPosts(req, followerId)
-        // res.status(200).json(processedPosts)
     }
     catch (error) {
         (0, errorHandler_1.handleError)(res, undefined, undefined, error);
@@ -432,11 +404,11 @@ const getFollowers = (req, res) => __awaiter(void 0, void 0, void 0, function* (
     try {
         const { userId } = req.query;
         // const result = await queryData<IFollower>(Follower, req)
-        const followersResponse = yield (0, query_1.queryData)(postModel_1.Follower, req);
+        const followersResponse = yield (0, query_1.queryData)(postStateModel_1.Follower, req);
         const followers = followersResponse.results;
         delete req.query.userId;
         req.query.followerId = userId;
-        const followingsResponse = yield (0, query_1.queryData)(postModel_1.Follower, req);
+        const followingsResponse = yield (0, query_1.queryData)(postStateModel_1.Follower, req);
         const followings = followingsResponse.results;
         const updatedFollowers = [];
         for (let i = 0; i < followers.length; i++) {
@@ -463,7 +435,7 @@ const getFollowers = (req, res) => __awaiter(void 0, void 0, void 0, function* (
 exports.getFollowers = getFollowers;
 const getBlockedUsers = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const result = yield (0, query_1.queryData)(postModel_1.Block, req);
+        const result = yield (0, query_1.queryData)(postStateModel_1.Block, req);
         res.status(200).json(result);
     }
     catch (error) {
@@ -473,7 +445,7 @@ const getBlockedUsers = (req, res) => __awaiter(void 0, void 0, void 0, function
 exports.getBlockedUsers = getBlockedUsers;
 const getMutedUsers = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const result = yield (0, query_1.queryData)(postModel_1.Mute, req);
+        const result = yield (0, query_1.queryData)(postStateModel_1.Mute, req);
         res.status(200).json(result);
     }
     catch (error) {
@@ -807,7 +779,7 @@ const processFetchedPosts = (req, followerId) => __awaiter(void 0, void 0, void 
         userId,
         followerId,
     }));
-    const follows = yield postModel_1.Follower.find({ $or: queryConditions }, { userId: 1, _id: 0 });
+    const follows = yield postStateModel_1.Follower.find({ $or: queryConditions }, { userId: 1, _id: 0 });
     const followedUserIds = new Set(follows.map((user) => user.userId));
     posts.map((post) => {
         if (followedUserIds.has(post.userId)) {
@@ -815,15 +787,15 @@ const processFetchedPosts = (req, followerId) => __awaiter(void 0, void 0, void 
         }
         return post;
     });
-    const blockedUsers = yield postModel_1.Block.find({
+    const blockedUsers = yield postStateModel_1.Block.find({
         userId: followerId,
         accountUserId: { $in: postUserIds },
     }).select('accountUserId');
-    const mutedUsers = yield postModel_1.Mute.find({
+    const mutedUsers = yield postStateModel_1.Mute.find({
         userId: followerId,
         accountUserId: { $in: postUserIds },
     }).select('accountUserId');
-    const pinnedPosts = yield postModel_1.Pin.find({
+    const pinnedPosts = yield postStateModel_1.Pin.find({
         userId: followerId,
         postId: { $in: postIds },
     }).select('postId createdAt');
@@ -906,4 +878,110 @@ const processFetchedPosts = (req, followerId) => __awaiter(void 0, void 0, void 
         page_size: response.page_size,
         results: source === 'user' ? finalPosts : updatedPosts,
     };
+});
+const processPosts = (posts, followerId, source) => __awaiter(void 0, void 0, void 0, function* () {
+    var _a;
+    const postIds = posts.map((post) => post._id);
+    const postUserIds = posts.map((post) => post.userId);
+    const userIds = [...new Set(posts.map((post) => post.userId))];
+    const userObjects = userIds.map((userId) => ({ userId, followerId }));
+    const queryConditions = userObjects.map(({ userId, followerId }) => ({
+        userId,
+        followerId,
+    }));
+    const follows = yield postStateModel_1.Follower.find({ $or: queryConditions }, { userId: 1, _id: 0 });
+    const followedUserIds = new Set(follows.map((user) => user.userId));
+    posts.map((post) => {
+        if (followedUserIds.has(post.userId)) {
+            post.followed = true;
+        }
+        return post;
+    });
+    const blockedUsers = yield postStateModel_1.Block.find({
+        userId: followerId,
+        accountUserId: { $in: postUserIds },
+    }).select('accountUserId');
+    const mutedUsers = yield postStateModel_1.Mute.find({
+        userId: followerId,
+        accountUserId: { $in: postUserIds },
+    }).select('accountUserId');
+    const pinnedPosts = yield postStateModel_1.Pin.find({
+        userId: followerId,
+        postId: { $in: postIds },
+    }).select('postId createdAt');
+    const polledPosts = yield postModel_1.Poll.find({
+        userId: followerId,
+        postId: { $in: postIds },
+    }).select('postId pollIndex');
+    const likedPosts = yield statModel_1.Like.find({
+        userId: followerId,
+        postId: { $in: postIds },
+    }).select('postId');
+    const hatedPosts = yield statModel_1.Hate.find({
+        userId: followerId,
+        postId: { $in: postIds },
+    }).select('postId');
+    const bookmarkedPosts = yield statModel_1.Bookmark.find({
+        bookmarkUserId: followerId,
+        postId: { $in: postIds },
+    }).select('postId');
+    const viewedPosts = yield statModel_1.View.find({
+        userId: followerId,
+        postId: { $in: postIds },
+    }).select('postId');
+    const blockedPostIds = blockedUsers.map((block) => block.accountUserId.toString());
+    const polledList = polledPosts.map((poll) => ({
+        postId: poll.postId.toString(),
+        pollIndex: poll.pollIndex,
+    }));
+    const mutedUserIds = mutedUsers.map((mute) => mute.accountUserId.toString());
+    const likedPostIds = likedPosts.map((like) => like.postId.toString());
+    const hatedPostIds = hatedPosts.map((hate) => hate.postId.toString());
+    const bookmarkedPostIds = bookmarkedPosts.map((bookmark) => bookmark.postId.toString());
+    const viewedPostIds = viewedPosts.map((view) => view.postId.toString());
+    const updatedPosts = [];
+    const pinnedMap = new Map(pinnedPosts.map((pin) => [pin.postId.toString(), pin.createdAt]));
+    for (let i = 0; i < posts.length; i++) {
+        const el = posts[i];
+        const postIdStr = el._id.toString();
+        const pinnedAtValue = pinnedMap.get(postIdStr);
+        const userIdStr = (_a = el.userId) === null || _a === void 0 ? void 0 : _a.toString();
+        if (mutedUsers.length > 0 && mutedUserIds.includes(userIdStr)) {
+            continue;
+        }
+        if (pinnedAtValue !== undefined) {
+            el.isPinned = true;
+            el.pinnedAt = pinnedAtValue;
+        }
+        if (blockedPostIds.length > 0 &&
+            blockedPostIds.includes(el.userId.toString())) {
+            el.blocked = true;
+        }
+        for (let x = 0; x < polledList.length; x++) {
+            const poll = polledList[x];
+            if (postIdStr.includes(poll.postId)) {
+                el.polls[poll.pollIndex].userId = followerId;
+                el.isSelected = true;
+            }
+        }
+        if (likedPostIds && likedPostIds.includes(el._id.toString())) {
+            el.liked = true;
+        }
+        if (hatedPostIds && hatedPostIds.includes(el._id.toString())) {
+            el.hated = true;
+        }
+        if (bookmarkedPostIds && bookmarkedPostIds.includes(el._id.toString())) {
+            el.bookmarked = true;
+        }
+        if (viewedPostIds && viewedPostIds.includes(el._id.toString())) {
+            el.viewed = true;
+        }
+        updatedPosts.push(el);
+    }
+    const pinned = updatedPosts.filter((post) => post.isPinned);
+    const unpinned = updatedPosts.filter((post) => !post.isPinned);
+    pinned.sort((a, b) => new Date(b.pinnedAt).getTime() - new Date(a.pinnedAt).getTime());
+    const finalPosts = [...pinned, ...unpinned];
+    const results = source === 'user' ? finalPosts : updatedPosts;
+    return results;
 });

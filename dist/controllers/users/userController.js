@@ -22,8 +22,7 @@ const postModel_1 = require("../../models/post/postModel");
 const sendEmail_1 = require("../../utils/sendEmail");
 const usersStatMode_1 = require("../../models/users/usersStatMode");
 const statModel_1 = require("../../models/users/statModel");
-const placeModel_1 = require("../../models/team/placeModel");
-const walletModel_1 = require("../../models/users/walletModel");
+const placeModel_1 = require("../../models/place/placeModel");
 const bioUser_1 = require("../../models/users/bioUser");
 const bioUserSchoolInfo_1 = require("../../models/users/bioUserSchoolInfo");
 const bioUserSettings_1 = require("../../models/users/bioUserSettings");
@@ -33,6 +32,10 @@ const userSettings_1 = require("../../models/users/userSettings");
 const chatModel_1 = require("../../models/message/chatModel");
 const bioUserBank_1 = require("../../models/users/bioUserBank");
 const socialNotificationModel_1 = require("../../models/message/socialNotificationModel");
+const interestModel_1 = require("../../models/post/interestModel");
+const postStateModel_1 = require("../../models/post/postStateModel");
+const postController_1 = require("../post/postController");
+const newsController_1 = require("../news/newsController");
 const createUser = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         // Run once to remove trailing/leading spaces in all documents
@@ -46,7 +49,10 @@ const createUser = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
         yield bioUserSchoolInfo_1.BioUserSchoolInfo.create({ bioUserId: bioUser._id });
         yield bioUserSettings_1.BioUserSettings.create({ bioUserId: bioUser._id });
         yield bioUserState_1.BioUserState.create({ bioUserId: bioUser._id });
-        yield bioUserBank_1.BioUserBank.create({ bioUserId: bioUser._id });
+        yield bioUserBank_1.BioUserBank.create({
+            bioUserId: bioUser._id,
+            bankCountry: signupCountry,
+        });
         const place = yield placeModel_1.Place.findOne({
             country: new RegExp(`^${signupCountry.trim()}\\s*$`, 'i'),
         });
@@ -54,21 +60,24 @@ const createUser = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
             bioUserId: bioUser._id,
             email: req.body.email,
             signupIp,
+            lat: req.body.lat,
+            lng: req.body.lng,
             signupCountry: place === null || place === void 0 ? void 0 : place.country.trim(),
             signupCountryFlag: place === null || place === void 0 ? void 0 : place.countryFlag.trim(),
             signupCountrySymbol: place === null || place === void 0 ? void 0 : place.countrySymbol.trim(),
             password: yield bcryptjs_1.default.hash(req.body.password, 10),
         });
         yield newUser.save();
-        yield walletModel_1.Wallet.create({
-            userId: newUser._id,
-            bioUserId: bioUser._id,
-            country: place === null || place === void 0 ? void 0 : place.country.trim(),
-            countryFlag: place === null || place === void 0 ? void 0 : place.countryFlag,
-            countrySymbol: place === null || place === void 0 ? void 0 : place.countrySymbol.trim(),
-            currency: place === null || place === void 0 ? void 0 : place.currency.trim(),
-            currencySymbol: place === null || place === void 0 ? void 0 : place.currencySymbol.trim(),
-        });
+        yield interestModel_1.Interest.create({ userId: newUser._id, countries: [signupCountry] });
+        // await Wallet.create({
+        //   userId: newUser._id,
+        //   bioUserId: bioUser._id,
+        //   country: place?.country.trim(),
+        //   countryFlag: place?.countryFlag,
+        //   countrySymbol: place?.countrySymbol.trim(),
+        //   currency: place?.currency.trim(),
+        //   currencySymbol: place?.currencySymbol.trim(),
+        // })
         yield (0, sendEmail_1.sendEmail)('', req.body.email, 'welcome');
         res.status(200).json({
             message: 'User created successfully',
@@ -85,23 +94,32 @@ const createUserAccount = (req, res) => __awaiter(void 0, void 0, void 0, functi
         uploadedFiles.forEach((file) => {
             req.body[file.fieldName] = file.s3Url;
         });
-        const { username, displayName, picture, followingsId, userId } = req.body;
+        const { username, displayName, picture, userId, country, state } = req.body;
         const user = yield user_1.User.findOneAndUpdate({ _id: userId }, {
             picture: picture,
             displayName: displayName,
             isFirstTime: false,
             username: username,
+            country: country,
+            state: state,
         }, { new: true });
         if (!user) {
             throw new Error('User not found');
         }
-        yield postModel_1.Follower.create({
-            userId: user._id,
-            followingId: followingsId,
+        const news = yield (0, newsController_1.getFeaturedNews)(user.country, user.state);
+        const postResult = yield (0, postController_1.getFilteredPosts)({
+            topics: [],
+            countries: [country],
+            page: 1,
+            limit: 20,
+            followerId: user._id,
+            source: 'post',
         });
         res.status(200).json({
             message: 'Account created successfully',
-            user: user,
+            user,
+            posts: postResult.results,
+            featuredNews: news,
         });
     }
     catch (error) {
@@ -117,7 +135,7 @@ const getAUser = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
             return res.status(404).json({ message: 'User not found' });
         }
         const followerId = req.query.userId;
-        const follow = yield postModel_1.Follower.findOne({
+        const follow = yield postStateModel_1.Follower.findOne({
             userId: user === null || user === void 0 ? void 0 : user._id,
             followerId: followerId,
         });
@@ -204,10 +222,10 @@ const deleteMyData = (req, res) => __awaiter(void 0, void 0, void 0, function* (
             bioUserId: user === null || user === void 0 ? void 0 : user.bioUserId,
         });
         yield statModel_1.Bookmark.deleteMany({ userId: req.params.id });
-        yield postModel_1.Follower.deleteMany({ userId: req.params.id });
+        yield postStateModel_1.Follower.deleteMany({ userId: req.params.id });
         yield statModel_1.Like.deleteMany({ userId: req.params.id });
-        yield postModel_1.Mute.deleteMany({ userId: req.params.id });
-        yield postModel_1.Pin.deleteMany({ userId: req.params.id });
+        yield postStateModel_1.Mute.deleteMany({ userId: req.params.id });
+        yield postStateModel_1.Pin.deleteMany({ userId: req.params.id });
         yield postModel_1.Poll.deleteMany({ userId: req.params.id });
         yield postModel_1.Post.deleteMany({ userId: req.params.id });
         yield statModel_1.Repost.deleteMany({ userId: req.params.id });
@@ -347,7 +365,7 @@ const followUserAccount = (req, res) => __awaiter(void 0, void 0, void 0, functi
     try {
         const { follow } = yield (0, query_1.followAccount)(req, res);
         let isFollowed = req.body.isFollowed;
-        let followers = yield postModel_1.Follower.countDocuments({ userId: req.params.id });
+        let followers = yield postStateModel_1.Follower.countDocuments({ userId: req.params.id });
         isFollowed = follow ? false : true;
         res.status(200).json({
             isFollowed: isFollowed,

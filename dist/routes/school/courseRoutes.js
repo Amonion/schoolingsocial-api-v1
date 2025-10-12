@@ -13,6 +13,7 @@ router
     .route('/staff-subjects/:id')
     .get(courseController_1.getStaffSubjectById)
     .patch(upload.any(), courseController_1.updateStaffSubject);
+router.route('/subjects/search').get(courseController_1.searchSubject);
 router.route('/subjects').get(courseController_1.getSubjects).post(upload.any(), courseController_1.createSubject);
 router.route('/').get(courseController_1.getCourses).post(upload.any(), courseController_1.createCourse);
 router

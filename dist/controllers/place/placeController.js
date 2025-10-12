@@ -10,12 +10,12 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.getUniquePlaces = exports.searchPlaces = exports.searchPlace = exports.deletePlaces = exports.deletePlace = exports.updatePlace = exports.getAllPlaces = exports.getPlaces = exports.getPlaceById = exports.createPlace = exports.cleanPlaces = void 0;
-const placeModel_1 = require("../../models/team/placeModel");
+const placeModel_1 = require("../../models/place/placeModel");
 const errorHandler_1 = require("../../utils/errorHandler");
 const query_1 = require("../../utils/query");
 const fileUpload_1 = require("../../utils/fileUpload");
-const competitionModel_1 = require("../../models/team/competitionModel");
-const newsModel_1 = require("../../models/team/newsModel");
+const competitionModel_1 = require("../../models/exam/competitionModel");
+const newsModel_1 = require("../../models/place/newsModel");
 const academicLevelModel_1 = require("../../models/school/academicLevelModel");
 const schoolModel_1 = require("../../models/school/schoolModel");
 const cleanPlaces = (req, res) => __awaiter(void 0, void 0, void 0, function* () {

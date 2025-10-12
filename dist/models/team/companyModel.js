@@ -33,7 +33,7 @@ var __importStar = (this && this.__importStar) || (function () {
     };
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.Interest = exports.Expenses = exports.Policy = exports.Company = exports.Position = void 0;
+exports.Expenses = exports.Policy = exports.Company = exports.Position = void 0;
 const mongoose_1 = __importStar(require("mongoose"));
 const PositionSchema = new mongoose_1.Schema({
     role: { type: String },
@@ -58,6 +58,7 @@ const CompanySchema = new mongoose_1.Schema({
     headquaters: { type: String, default: '' },
     newVersion: { type: String, default: '' },
     newVersionLink: { type: String, default: '' },
+    allowSignUp: { type: Boolean, default: true },
     createdAt: { type: Date, default: Date.now },
 }, {
     timestamps: true,
@@ -83,12 +84,3 @@ const ExpensesSchema = new mongoose_1.Schema({
     timestamps: true,
 });
 exports.Expenses = mongoose_1.default.model('Expenses', ExpensesSchema);
-const InterestSchema = new mongoose_1.Schema({
-    name: { type: String, default: '' },
-    country: { type: String, default: '' },
-    rank: { type: Number, default: 0 },
-    createdAt: { type: Date, default: Date.now },
-}, {
-    timestamps: true,
-});
-exports.Interest = mongoose_1.default.model('Interest', InterestSchema);

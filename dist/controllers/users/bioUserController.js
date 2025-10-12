@@ -20,7 +20,7 @@ var __rest = (this && this.__rest) || function (s, e) {
     return t;
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.searchBioUserSchoolInfo = exports.checkIsUserVerified = exports.getBioUsersState = exports.getBioUserSchoolByUsername = exports.getBioUserByUsername = exports.getBioUsers = exports.getBioUser = exports.getBioUserBank = exports.approveUser = exports.updateBioUserBank = exports.updateBioUserSettings = exports.updateBioSchool = exports.updateBioUserSchool = exports.updateBio = exports.updateBioUser = void 0;
+exports.searchBioUserSchoolInfo = exports.checkIsUserVerified = exports.getBioUsersState = exports.getBioUserSchoolByUsername = exports.getBioUserByUsername = exports.searchBioUsersSchool = exports.getBioUsers = exports.getBioUser = exports.getBioUserBank = exports.approveUser = exports.updateBioUserBank = exports.updateBioUserSettings = exports.updateBioSchool = exports.updateBioUserSchool = exports.updateBio = exports.updateBioUser = void 0;
 const bioUser_1 = require("../../models/users/bioUser");
 const fileUpload_1 = require("../../utils/fileUpload");
 const app_1 = require("../../app");
@@ -37,7 +37,7 @@ const departmentModel_1 = require("../../models/school/departmentModel");
 const user_1 = require("../../models/users/user");
 const postModel_1 = require("../../models/post/postModel");
 const sendNotification_1 = require("../../utils/sendNotification");
-const placeModel_1 = require("../../models/team/placeModel");
+const placeModel_1 = require("../../models/place/placeModel");
 const officeModel_1 = require("../../models/utility/officeModel");
 const updateBioUser = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     var _a, _b;
@@ -458,6 +458,10 @@ const getBioUsers = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
     }
 });
 exports.getBioUsers = getBioUsers;
+const searchBioUsersSchool = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    return (0, query_1.search)(bioUserSchoolInfo_1.BioUserSchoolInfo, req, res);
+});
+exports.searchBioUsersSchool = searchBioUsersSchool;
 const getBioUserByUsername = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const bioUser = yield bioUser_1.BioUser.findOne({

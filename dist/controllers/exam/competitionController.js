@@ -9,13 +9,12 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.searchExamInfo = exports.getObjectives = exports.createObjective = exports.updatePaper = exports.getPapers = exports.getPaperById = exports.createPaper = exports.updateLeague = exports.getLeagues = exports.getLeagueById = exports.createLeague = exports.updateExam = exports.getExams = exports.getUserExam = exports.getExamById = exports.initExam = exports.createExam = exports.updateWeekend = exports.getWeekends = exports.getWeekendById = exports.createWeekend = void 0;
+exports.searchExamInfo = exports.getObjectives = exports.createObjective = exports.updatePaper = exports.getPapers = exports.getPaperById = exports.createPaper = exports.updateLeague = exports.getLeagues = exports.getLeagueById = exports.createLeague = exports.updateExam = exports.getExams = exports.getExamById = exports.createExam = exports.updateWeekend = exports.getWeekends = exports.getWeekendById = exports.createWeekend = void 0;
 const errorHandler_1 = require("../../utils/errorHandler");
 const competitionModel_1 = require("../../models/exam/competitionModel");
 const query_1 = require("../../utils/query");
 const competitionModel_2 = require("../../models/users/competitionModel");
-const userInfoModel_1 = require("../../models/users/userInfoModel");
-const user_1 = require("../../models/users/user");
+const fileUpload_1 = require("../../utils/fileUpload");
 const objectiveModel_1 = require("../../models/exam/objectiveModel");
 const createWeekend = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     (0, query_1.createItem)(req, res, competitionModel_1.Weekend, 'Weekend was created successfully');
@@ -55,199 +54,76 @@ const updateWeekend = (req, res) => __awaiter(void 0, void 0, void 0, function* 
 exports.updateWeekend = updateWeekend;
 //-----------------Exam--------------------//
 const createExam = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    // createItem(req, res, Exam, "Exam was created successfully");
     try {
-        const paperId = req.body.paperId;
-        const userId = req.body.userId;
-        const username = req.body.username;
-        const picture = req.body.picture;
-        const displayName = req.body.displayName;
-        const started = Number(req.body.started);
-        const ended = Number(req.body.ended);
-        // const attempts = Number(req.body.attempts);
-        const instruction = req.body.instruction;
-        const questions = req.body.questions ? JSON.parse(req.body.questions) : [];
-        const rate = (1000 * questions.length) / (ended - started);
-        let mainObjective = yield objectiveModel_1.Objective.find({ paperId: paperId });
-        const paper = yield competitionModel_2.UserTestExam.findOne({
-            paperId: paperId,
-            userId: userId,
+        if (req.body.continents) {
+            req.body.continents = JSON.parse(req.body.continents);
+        }
+        if (req.body.countries) {
+            req.body.countries = JSON.parse(req.body.countries);
+        }
+        if (req.body.countriesId) {
+            req.body.countriesId = JSON.parse(req.body.countriesId);
+        }
+        if (req.body.states) {
+            req.body.states = JSON.parse(req.body.states);
+        }
+        if (req.body.statesId) {
+            req.body.statesId = JSON.parse(req.body.statesId);
+        }
+        if (req.body.academicLevels) {
+            req.body.academicLevels = JSON.parse(req.body.academicLevels);
+        }
+        const uploadedFiles = yield (0, fileUpload_1.uploadFilesToS3)(req);
+        uploadedFiles.forEach((file) => {
+            req.body[file.fieldName] = file.s3Url;
         });
-        const attempts = !paper || (paper === null || paper === void 0 ? void 0 : paper.isFirstTime) ? 1 : Number(paper === null || paper === void 0 ? void 0 : paper.attempts) + 1;
-        let correctAnswer = 0;
-        for (let i = 0; i < questions.length; i++) {
-            const el = questions[i];
-            for (let x = 0; x < el.options.length; x++) {
-                const opt = el.options[x];
-                if (opt.isSelected === opt.isClicked &&
-                    opt.isSelected &&
-                    opt.isClicked) {
-                    correctAnswer++;
-                }
-            }
-        }
-        const accuracy = correctAnswer / mainObjective.length;
-        const metric = accuracy * rate;
-        const updatedQuestions = [];
-        for (let i = 0; i < mainObjective.length; i++) {
-            const el = mainObjective[i];
-            const objIndex = questions.findIndex((obj) => obj._id == el._id);
-            if (objIndex !== -1) {
-                const obj = {
-                    isClicked: questions[objIndex].isClicked,
-                    paperId: paperId,
-                    userId: userId,
-                    question: el.question,
-                    options: questions[objIndex].options,
-                };
-                updatedQuestions.push(obj);
-            }
-            else {
-                const obj = {
-                    isClicked: false,
-                    paperId: paperId,
-                    userId: userId,
-                    question: el.question,
-                    options: el.options,
-                };
-                updatedQuestions.push(obj);
-            }
-        }
-        const exam = yield competitionModel_2.UserTestExam.findOneAndUpdate({
-            paperId,
-            userId,
-        }, {
-            $set: {
-                paperId,
-                userId,
-                username,
-                displayName,
-                picture,
-                started,
-                ended,
-                attempts,
-                rate,
-                accuracy,
-                metric,
-                instruction,
-                isFirstTime: false,
-                questions: mainObjective.length,
-                attemptedQuestions: questions.length,
-                totalCorrectAnswer: correctAnswer,
-            },
-        }, {
-            new: true,
-            upsert: true,
+        const exam = yield competitionModel_1.Exam.create(req.body);
+        // await Post.create({
+        //   userId: exam._id,
+        //   username: `${exam.name}_${
+        //     new Date(exam.publishedAt).getMonth() + 1
+        //   }_${new Date(exam.publishedAt).getFullYear()}_${exam.subjects}`,
+        //   picture: exam.picture,
+        //   displayName: exam.picture,
+        //   content: exam.title,
+        //   status: false,
+        // })
+        const item = yield (0, query_1.queryData)(competitionModel_1.Exam, req);
+        const { page, page_size, count, results } = item;
+        res.status(200).json({
+            message: 'Exam was created successfully',
+            results,
+            count,
+            page,
+            page_size,
         });
-        const user = yield userInfoModel_1.UserInfo.findByIdAndUpdate(userId, { $inc: { examAttempts: (paper === null || paper === void 0 ? void 0 : paper.isFirstTime) ? 0 : 1 } }, { new: true, upsert: true });
-        yield user_1.User.updateMany({ userId: userId }, { $inc: { totalAttempts: (paper === null || paper === void 0 ? void 0 : paper.isFirstTime) ? 0 : 1 } });
-        yield competitionModel_2.UserTest.deleteMany({ userId: userId, paperId: paperId });
-        yield competitionModel_2.UserTest.insertMany(updatedQuestions);
-        if (!paper) {
-            yield competitionModel_1.Exam.updateOne({ _id: paperId }, {
-                $inc: {
-                    participants: 1,
-                },
-            });
-        }
-        const result = yield (0, query_1.queryData)(competitionModel_2.UserTest, req);
-        const data = {
-            exam,
-            attempt: Number(exam === null || exam === void 0 ? void 0 : exam.attempts),
-            results: result.results,
-            totalAttempts: user === null || user === void 0 ? void 0 : user.examAttempts,
-            message: 'Exam submitted successfull',
-        };
-        res.status(200).json(data);
     }
     catch (error) {
-        console.log(error);
         (0, errorHandler_1.handleError)(res, undefined, undefined, error);
     }
 });
 exports.createExam = createExam;
-const initExam = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    try {
-        const paperId = req.body.paperId;
-        const userId = req.body.userId;
-        const username = req.body.username;
-        const picture = req.body.picture;
-        const displayName = req.body.displayName;
-        const started = Number(req.body.started);
-        const instruction = req.body.instruction;
-        let questions = yield objectiveModel_1.Objective.countDocuments({ paperId: paperId });
-        yield competitionModel_2.UserTestExam.findOneAndUpdate({
-            paperId,
-            userId,
-        }, {
-            $set: {
-                paperId,
-                userId,
-                username,
-                displayName,
-                picture,
-                started,
-                attempts: 1,
-                isFirstTime: true,
-                rate: 0,
-                accuracy: 0,
-                instruction,
-                questions: questions,
-                attemptedQuestions: 0,
-                totalCorrectAnswer: 0,
-            },
-        }, {
-            new: true,
-            upsert: true,
-        });
-        yield competitionModel_1.Exam.updateOne({ _id: paperId }, {
-            $inc: {
-                participants: 1,
-            },
-        });
-        yield userInfoModel_1.UserInfo.findByIdAndUpdate(userId, { $inc: { examAttempts: 1 } }, { new: true, upsert: true });
-        yield user_1.User.updateMany({ userId: userId }, { $inc: { totalAttempts: 1 } });
-        res.status(200).json({ message: 'Exam is initialized' });
-    }
-    catch (error) {
-        console.log(error);
-        (0, errorHandler_1.handleError)(res, undefined, undefined, error);
-    }
-});
-exports.initExam = initExam;
 const getExamById = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const item = yield competitionModel_1.Exam.findById(req.params.id);
+        const attempt = yield competitionModel_2.Attempt.findOne({
+            paperId: req.params.id,
+            userId: req.query.userId,
+        });
         if (!item) {
             return res.status(404).json({ message: 'Exam not found' });
         }
-        res.status(200).json(item);
+        res.status(200).json({ exam: item, attempt: attempt === null || attempt === void 0 ? void 0 : attempt.attempts });
     }
     catch (error) {
         (0, errorHandler_1.handleError)(res, undefined, undefined, error);
     }
 });
 exports.getExamById = getExamById;
-const getUserExam = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    try {
-        const exam = yield competitionModel_2.UserTestExam.findOne({
-            userId: req.query.userId,
-            paperId: req.query.paperId,
-        });
-        const result = yield (0, query_1.queryData)(competitionModel_2.UserTest, req);
-        const data = {
-            exam,
-            results: result.results,
-        };
-        res.status(200).json(data);
-    }
-    catch (error) {
-        (0, errorHandler_1.handleError)(res, undefined, undefined, error);
-    }
-});
-exports.getUserExam = getUserExam;
 const getExams = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const result = yield (0, query_1.queryData)(competitionModel_2.UserTestExam, req);
+        const result = yield (0, query_1.queryData)(competitionModel_1.Exam, req);
         res.status(200).json(result);
     }
     catch (error) {
@@ -344,12 +220,12 @@ const createObjective = (req, res) => __awaiter(void 0, void 0, void 0, function
     const deletedIDs = JSON.parse(req.body.deletedIDs);
     for (let i = 0; i < deletedIDs.length; i++) {
         const id = deletedIDs[i];
-        yield objectiveModel_1.Objective.findByIdAndDelete(id);
+        // await Objective.findByIdAndDelete(id);
     }
     for (let i = 0; i < questions.length; i++) {
         const el = questions[i];
-        if (el._id && el._id !== undefined && el._id !== '') {
-            yield objectiveModel_1.Objective.updateOne({ _id: el._id }, {
+        if (el._id !== undefined && el._id !== '') {
+            yield objectiveModel_1.Objective.findByIdAndUpdate(el._id, {
                 $set: {
                     question: el.question,
                     options: el.options,

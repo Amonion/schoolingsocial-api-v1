@@ -10,7 +10,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.deleteDocument = exports.getDocumentById = exports.getDocuments = exports.updateDocument = exports.createDocument = void 0;
-const placeModel_1 = require("../../models/team/placeModel");
+const placeModel_1 = require("../../models/place/placeModel");
 const errorHandler_1 = require("../../utils/errorHandler");
 const query_1 = require("../../utils/query");
 //-----------------DOCUMENT--------------------//

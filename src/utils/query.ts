@@ -4,7 +4,6 @@ import { deleteFilesFromS3, uploadFilesToS3 } from './fileUpload'
 import { handleError } from './errorHandler'
 import { Post } from '../models/post/postModel'
 import { User } from '../models/users/user'
-import { redisClient } from '../server'
 import { Follower } from '../models/post/postStateModel'
 
 export interface PaginationResult<T> {

@@ -40,6 +40,7 @@ import {
   createComment,
   getComments,
 } from '../../controllers/post/commentController'
+import { getMoments } from '../../controllers/post/momentController'
 
 const router = express.Router()
 router.route('/follow/:id').patch(upload.any(), followUser)
@@ -62,7 +63,7 @@ router.route('/search').get(searchPosts)
 // router.route('/check-nsfw').post(uploadFile.single('file'), checkNudeMedia)
 
 router.route('/comments').get(getComments).post(upload.any(), createComment)
-
+router.route('/moments').get(getMoments)
 router
   .route('/uploads/:id')
   .get(getUploadById)

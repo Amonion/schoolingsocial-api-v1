@@ -23,6 +23,8 @@ const bioUserState_1 = require("../../models/users/bioUserState");
 const bioUserSettings_1 = require("../../models/users/bioUserSettings");
 const officeModel_1 = require("../../models/utility/officeModel");
 const bioUserSchoolInfo_1 = require("../../models/users/bioUserSchoolInfo");
+const interestModel_1 = require("../../models/post/interestModel");
+const postController_1 = require("../post/postController");
 dotenv_1.default.config();
 const loginUser = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { email, password } = req.body;
@@ -50,6 +52,15 @@ const loginUser = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
             officeModel_1.Office.findOne({ bioUserId: user.bioUserId, isActiveOffice: true }),
             officeModel_1.Office.find({ bioUserId: user.bioUserId, isUserActive: true }),
         ]);
+        const interest = yield interestModel_1.Interest.findById(user._id);
+        const postResult = yield (0, postController_1.getFilteredPosts)({
+            topics: interest ? interest.topics : [],
+            countries: interest ? interest.countries : [],
+            page: 1,
+            limit: 20,
+            followerId: user._id,
+            source: 'post',
+        });
         user.password = undefined;
         res.status(200).json({
             message: 'Login successful',
@@ -61,6 +72,7 @@ const loginUser = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
             activeOffice,
             userOffices,
             token,
+            posts: postResult.results,
         });
     }
     catch (error) {

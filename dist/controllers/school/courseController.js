@@ -9,7 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.deleteSubject = exports.updateSubject = exports.updateStaffSubject = exports.getStaffSubjectById = exports.getStaffSubjects = exports.getSubjects = exports.getPositions = exports.getSubjectById = exports.createSubject = exports.deleteCourse = exports.updateCourse = exports.getCourses = exports.getCourseById = exports.createCourse = void 0;
+exports.searchSubject = exports.deleteSubject = exports.updateSubject = exports.updateStaffSubject = exports.getStaffSubjectById = exports.getStaffSubjects = exports.getSubjects = exports.getPositions = exports.getSubjectById = exports.createSubject = exports.deleteCourse = exports.updateCourse = exports.getCourses = exports.getCourseById = exports.createCourse = void 0;
 const errorHandler_1 = require("../../utils/errorHandler");
 const query_1 = require("../../utils/query");
 const courseModel_1 = require("../../models/school/courseModel");
@@ -143,3 +143,7 @@ const deleteSubject = (req, res) => __awaiter(void 0, void 0, void 0, function* 
     yield (0, query_1.deleteItem)(req, res, courseModel_1.Subject, ['media', 'picture'], 'Subject not found');
 });
 exports.deleteSubject = deleteSubject;
+const searchSubject = (req, res) => {
+    return (0, query_1.search)(courseModel_1.Subject, req, res);
+};
+exports.searchSubject = searchSubject;

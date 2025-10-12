@@ -21,7 +21,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.getAdStats = exports.getDraftAd = exports.getAd = exports.getAds = exports.createAd = exports.publishAdReview = exports.updateAd = exports.deleteAd = exports.getAdById = void 0;
-const placeModel_1 = require("../../models/team/placeModel");
+const placeModel_1 = require("../../models/place/placeModel");
 const errorHandler_1 = require("../../utils/errorHandler");
 const query_1 = require("../../utils/query");
 const adModel_1 = require("../../models/place/adModel");

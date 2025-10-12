@@ -20,6 +20,7 @@ router
     .get(bioUserController_1.getBioUsersState)
     .patch(upload.any(), bioUserController_1.updateBioUser);
 router.route('/bio-user/username/:username').get(bioUserController_1.getBioUserByUsername);
+router.route('/biouser-school/search').get(bioUserController_1.searchBioUsersSchool);
 router.route('/biouser-school/:username').get(bioUserController_1.getBioUserSchoolByUsername);
 router.route('/biouser-school').get(bioUserController_1.searchBioUserSchoolInfo);
 router.route('/bio-user/:id').get(bioUserController_1.getBioUser).patch(upload.any(), bioUserController_1.updateBioUser);

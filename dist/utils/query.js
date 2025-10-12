@@ -14,6 +14,7 @@ const fileUpload_1 = require("./fileUpload");
 const errorHandler_1 = require("./errorHandler");
 const postModel_1 = require("../models/post/postModel");
 const user_1 = require("../models/users/user");
+const postStateModel_1 = require("../models/post/postStateModel");
 const buildFilterQuery = (req) => {
     const filters = {};
     const operators = {
@@ -72,7 +73,9 @@ const buildFilterQuery = (req) => {
         else {
             const value = Array.isArray(rawValue) ? rawValue : [rawValue];
             const normalizedValue = value[0];
-            if (key === 'levelName' && !req.baseUrl.includes('/api/v1/courses')) {
+            if (key === 'levelName' &&
+                !req.baseUrl.includes('/api/v1/courses') &&
+                !req.baseUrl.includes('/api/v1/questions')) {
                 const namesArray = normalizedValue
                     .split(',')
                     .map((name) => name.trim());
@@ -267,6 +270,27 @@ const buildSortingQuery = (req) => {
     }
     return sort;
 };
+// export const queryData = async <T>(
+//   model: Model<T>,
+//   req: Request
+// ): Promise<PaginationResult<T>> => {
+//   const page_size = parseInt(req.query.page_size as string, 10) || 10
+//   const page = parseInt(req.query.page as string, 10) || 1
+//   const filters = buildFilterQuery(req)
+//   const sort = buildSortingQuery(req)
+//   const count = await model.countDocuments(filters)
+//   const results = await model
+//     .find(filters)
+//     .skip((page - 1) * page_size)
+//     .limit(page_size)
+//     .sort(sort)
+//   return {
+//     count,
+//     results,
+//     page,
+//     page_size,
+//   }
+// }
 const queryData = (model, req) => __awaiter(void 0, void 0, void 0, function* () {
     const page_size = parseInt(req.query.page_size, 10) || 10;
     const page = parseInt(req.query.page, 10) || 1;
@@ -278,12 +302,13 @@ const queryData = (model, req) => __awaiter(void 0, void 0, void 0, function* ()
         .skip((page - 1) * page_size)
         .limit(page_size)
         .sort(sort);
-    return {
+    const payload = {
         count,
         results,
         page,
         page_size,
     };
+    return payload;
 });
 exports.queryData = queryData;
 const generalSearchQuery = (req) => {
@@ -379,6 +404,7 @@ function buildSearchQuery(req) {
         'firstName',
         'middleName',
         'content',
+        'author',
         'lastName',
         'subtitle',
     ];
@@ -402,7 +428,6 @@ function buildSearchQuery(req) {
 const search = (model, req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const newSearchQuery = buildSearchQuery(req);
-        console.log(newSearchQuery);
         const page = parseInt(req.query.page) || 1;
         const limit = parseInt(req.query.limit) || 20;
         const skip = (page - 1) * limit;
@@ -412,7 +437,7 @@ const search = (model, req, res) => __awaiter(void 0, void 0, void 0, function* 
             .limit(limit)
             .sort({ createdAt: -1 });
         if (req.query.followerId) {
-            const followings = yield postModel_1.Follower.find({
+            const followings = yield postStateModel_1.Follower.find({
                 followerId: req.query.followerId,
             });
             const followedUserIds = new Set(followings.map((f) => f.userId.toString()));
@@ -422,7 +447,6 @@ const search = (model, req, res) => __awaiter(void 0, void 0, void 0, function* 
                 return obj;
             });
         }
-        // console.log(results)
         res.json({ results });
     }
     catch (error) {
@@ -456,12 +480,12 @@ const followAccount = (req, res) => __awaiter(void 0, void 0, void 0, function* 
     const user = yield user_1.User.findById(req.params.id);
     const follower = yield user_1.User.findById(req.body.followerId);
     const post = req.body.post;
-    const follow = yield postModel_1.Follower.findOne({
+    const follow = yield postStateModel_1.Follower.findOne({
         userId: user === null || user === void 0 ? void 0 : user._id,
         followerId: req.body.followerId,
     });
     if (follow) {
-        yield postModel_1.Follower.findByIdAndDelete(follow._id);
+        yield postStateModel_1.Follower.findByIdAndDelete(follow._id);
         yield user_1.User.findByIdAndUpdate(req.params.id, { $inc: { followers: -1 } });
         yield user_1.User.findByIdAndUpdate(follower === null || follower === void 0 ? void 0 : follower._id, { $inc: { following: -1 } });
         if (post) {
@@ -476,7 +500,7 @@ const followAccount = (req, res) => __awaiter(void 0, void 0, void 0, function* 
         }
     }
     else {
-        yield postModel_1.Follower.create({
+        yield postStateModel_1.Follower.create({
             displayName: user === null || user === void 0 ? void 0 : user.displayName,
             username: user === null || user === void 0 ? void 0 : user.username,
             userId: user === null || user === void 0 ? void 0 : user._id,

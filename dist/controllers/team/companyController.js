@@ -9,14 +9,29 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.updateInterest = exports.getInterests = exports.createInterest = exports.updatePosition = exports.getPositions = exports.getPositionById = exports.createPosition = exports.updateExpenses = exports.getExpenses = exports.getExpensesById = exports.createExpenses = exports.deletePolicy = exports.updatePolicy = exports.getPolcies = exports.getPolicyById = exports.createPolicy = exports.updateCompany = exports.getCompanies = exports.getCompanyById = exports.createCompany = void 0;
+exports.updatePosition = exports.getPositions = exports.getPositionById = exports.createPosition = exports.updateExpenses = exports.getExpenses = exports.getExpensesById = exports.createExpenses = exports.deletePolicy = exports.updatePolicy = exports.getPolcies = exports.getPolicyById = exports.createPolicy = exports.getCompany = exports.getCompanyById = exports.updateCompany = void 0;
 const errorHandler_1 = require("../../utils/errorHandler");
 const companyModel_1 = require("../../models/team/companyModel");
 const query_1 = require("../../utils/query");
-const createCompany = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    (0, query_1.createItem)(req, res, companyModel_1.Company, 'Company was created successfully');
+const updateCompany = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        if (req.body.id) {
+            const company = yield companyModel_1.Company.findByIdAndUpdate(req.body.id, req.body, {
+                upsert: true,
+                new: true,
+            });
+            res.status(200).json({ company });
+        }
+        else {
+            const company = yield companyModel_1.Company.create(req.body);
+            res.status(200).json({ company });
+        }
+    }
+    catch (error) {
+        console.log(error);
+    }
 });
-exports.createCompany = createCompany;
+exports.updateCompany = updateCompany;
 const getCompanyById = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const item = yield companyModel_1.Company.findById(req.params.id);
@@ -30,25 +45,16 @@ const getCompanyById = (req, res) => __awaiter(void 0, void 0, void 0, function*
     }
 });
 exports.getCompanyById = getCompanyById;
-const getCompanies = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+const getCompany = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const result = yield (0, query_1.queryData)(companyModel_1.Company, req);
-        res.status(200).json(result);
+        const company = yield companyModel_1.Company.findOne();
+        res.status(200).json({ company });
     }
     catch (error) {
         (0, errorHandler_1.handleError)(res, undefined, undefined, error);
     }
 });
-exports.getCompanies = getCompanies;
-const updateCompany = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    try {
-        (0, query_1.updateItem)(req, res, companyModel_1.Company, [], ['Company not found', 'Company was updated successfully']);
-    }
-    catch (error) {
-        (0, errorHandler_1.handleError)(res, undefined, undefined, error);
-    }
-});
-exports.updateCompany = updateCompany;
+exports.getCompany = getCompany;
 //-----------------TERMS & CONDITIONS--------------------//
 const createPolicy = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     (0, query_1.createItem)(req, res, companyModel_1.Policy, 'Policy was created successfully');
@@ -170,28 +176,3 @@ const updatePosition = (req, res) => __awaiter(void 0, void 0, void 0, function*
     }
 });
 exports.updatePosition = updatePosition;
-//-----------------INTEREST--------------------//
-const createInterest = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    (0, query_1.createItem)(req, res, companyModel_1.Interest, 'Interest was created successfully');
-});
-exports.createInterest = createInterest;
-const getInterests = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    try {
-        const result = yield (0, query_1.queryData)(companyModel_1.Interest, req);
-        res.status(200).json(result);
-    }
-    catch (error) {
-        (0, errorHandler_1.handleError)(res, undefined, undefined, error);
-    }
-});
-exports.getInterests = getInterests;
-const updateInterest = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    try {
-        (0, query_1.updateItem)(req, res, companyModel_1.Interest, ['receipt'], ['Interest not found', 'Interest was updated successfully']);
-    }
-    catch (error) {
-        (0, errorHandler_1.handleError)(res, undefined, undefined, error);
-    }
-});
-exports.updateInterest = updateInterest;
-//-----------------FACULTY--------------------//
