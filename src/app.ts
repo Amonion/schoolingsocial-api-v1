@@ -62,6 +62,7 @@ app.use(
     origin: [
       'http://localhost:3000',
       'https://schoolingsocial.netlify.app',
+      'https://schoolingweb.netlify.app',
       'https://schoolingsocial.com',
       'https://schooling-client-v1.onrender.com',
     ],
