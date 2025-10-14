@@ -19,6 +19,7 @@ interface Poll {
 export interface IPost extends Document {
   _id: string
   postId: string
+  backgroundColor: string
   createdAt: Date
   pinnedAt: Date
   username: string
@@ -76,6 +77,7 @@ const PostSchema: Schema = new Schema(
     comments: { type: Array },
     content: { type: String },
     country: { type: String },
+    backgroundColor: { type: String },
     user: { type: String },
     replyTo: { type: String },
     postType: { type: String, default: 'main' },

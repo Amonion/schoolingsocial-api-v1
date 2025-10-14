@@ -31,6 +31,7 @@ router.route('/search').get(postController_1.searchPosts);
 // router.route('/check-nsfw').post(uploadFile.single('file'), checkNudeMedia)
 router.route('/comments').get(commentController_1.getComments).post(upload.any(), commentController_1.createComment);
 router.route('/moments').get(momentController_1.getMoments);
+router.route('/moments/:id').delete(momentController_1.deleteMoment);
 router
     .route('/uploads/:id')
     .get(uploadController_1.getUploadById)

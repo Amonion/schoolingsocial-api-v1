@@ -102,6 +102,9 @@ io.on('connection', (socket) => {
             case 'post':
                 (0, postController_1.createPost)(data);
                 break;
+            case 'updateMoment':
+                (0, momentController_1.updateMoment)(data);
+                break;
             case 'moment':
                 (0, momentController_1.createMoment)(data);
                 break;

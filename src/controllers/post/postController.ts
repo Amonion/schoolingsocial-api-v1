@@ -49,6 +49,7 @@ export const createPost = async (data: IPost) => {
       country: data.country,
       createdAt: data.createdAt,
       media: data.media,
+      backgroundColor: data.backgroundColor,
       isVerified: sender.isVerified,
     }
 

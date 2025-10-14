@@ -47,6 +47,7 @@ const PostSchema = new mongoose_1.Schema({
     comments: { type: Array },
     content: { type: String },
     country: { type: String },
+    backgroundColor: { type: String },
     user: { type: String },
     replyTo: { type: String },
     postType: { type: String, default: 'main' },

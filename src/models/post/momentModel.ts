@@ -11,10 +11,13 @@ export interface MomentMedia {
 
 export interface IMoment extends Document {
   _id: string
+  id: string
   username: string
   media: MomentMedia[]
   picture: string
   displayName: string
+  isEditing: boolean
+  createdAt: Date
 }
 
 const MomentSchema: Schema = new Schema(

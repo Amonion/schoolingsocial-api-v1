@@ -48,6 +48,7 @@ const createPost = (data) => __awaiter(void 0, void 0, void 0, function* () {
             country: data.country,
             createdAt: data.createdAt,
             media: data.media,
+            backgroundColor: data.backgroundColor,
             isVerified: sender.isVerified,
         };
         const post = yield postModel_1.Post.create(form);

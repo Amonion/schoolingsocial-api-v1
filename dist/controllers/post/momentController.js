@@ -9,7 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getMoments = exports.createMoment = void 0;
+exports.deleteMoment = exports.getMoments = exports.updateMoment = exports.createMoment = void 0;
 const app_1 = require("../../app");
 const momentModel_1 = require("../../models/post/momentModel");
 const errorHandler_1 = require("../../utils/errorHandler");
@@ -27,6 +27,21 @@ const createMoment = (data) => __awaiter(void 0, void 0, void 0, function* () {
     }
 });
 exports.createMoment = createMoment;
+const updateMoment = (data) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const moment = yield momentModel_1.Moment.findByIdAndUpdate(data.id, {
+            media: data.media,
+        }, { new: true });
+        app_1.io.emit(`update_moment_${data.username}`, {
+            message: 'Your moment was updated successfully',
+            data: moment,
+        });
+    }
+    catch (error) {
+        console.log(error);
+    }
+});
+exports.updateMoment = updateMoment;
 const getMoments = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const followerId = req.query.myId;
@@ -39,3 +54,38 @@ const getMoments = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
     }
 });
 exports.getMoments = getMoments;
+const deleteMoment = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const mediaIndex = Number(req.query.mediaIndex);
+        const mediaLength = Number(req.query.mediaLength);
+        if (isNaN(mediaIndex) || isNaN(mediaLength)) {
+            return res.status(400).json({ message: 'Invalid media index or length' });
+        }
+        if (mediaLength === 1) {
+            const deletedMoment = yield momentModel_1.Moment.findByIdAndDelete(req.params.id);
+            if (!deletedMoment) {
+                return res.status(404).json({ message: 'Moment not found' });
+            }
+            return res.status(200).json({
+                message: 'Moment deleted successfully.',
+                id: req.params.id,
+            });
+        }
+        yield momentModel_1.Moment.findByIdAndUpdate(req.params.id, {
+            $unset: { [`media.${mediaIndex}`]: 1 },
+        });
+        const updatedMoment = yield momentModel_1.Moment.findByIdAndUpdate(req.params.id, { $pull: { media: null } }, { new: true });
+        if (!updatedMoment) {
+            return res.status(404).json({ message: 'Moment not found' });
+        }
+        res.status(200).json({
+            moment: updatedMoment,
+            id: req.params.id,
+            message: 'Media deleted successfully.',
+        });
+    }
+    catch (error) {
+        (0, errorHandler_1.handleError)(res, undefined, undefined, error);
+    }
+});
+exports.deleteMoment = deleteMoment;

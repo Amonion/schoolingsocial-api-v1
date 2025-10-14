@@ -54,51 +54,120 @@ export const getNews = async (req: Request, res: Response) => {
   }
 }
 
+// export const getFeaturedNews = async (
+//   country: string,
+//   state: string,
+//   limitPerCategory = 20
+// ) => {
+//   const pipeline: PipelineStage[] = [
+//     {
+//       $facet: {
+//         international: [
+//           {
+//             $match: {
+//               priority: { $regex: /^international$/i },
+//               isPublished: true,
+//             },
+//           },
+//           { $sort: { createdAt: -1 } },
+//           { $limit: limitPerCategory },
+//         ],
+//         national: [
+//           {
+//             $match: {
+//               priority: { $regex: /^national$/i },
+//               country: { $regex: new RegExp(`^${country}$`, 'i') },
+//               isPublished: true,
+//             },
+//           },
+//           { $sort: { createdAt: -1 } },
+//           { $limit: limitPerCategory },
+//         ],
+//         local: [
+//           {
+//             $match: {
+//               priority: { $regex: /^local$/i },
+//               state: { $regex: new RegExp(`^${state}$`, 'i') },
+//               isPublished: true,
+//             },
+//           },
+//           { $sort: { createdAt: -1 } },
+//           { $limit: limitPerCategory },
+//         ],
+//       },
+//     },
+//     {
+//       $project: {
+//         all: { $concatArrays: ['$international', '$national', '$local'] },
+//       },
+//     },
+//     { $unwind: '$all' },
+//     { $replaceRoot: { newRoot: '$all' } },
+//     { $sort: { createdAt: -1 } },
+//     {
+//       $addFields: {
+//         isFeatured: true,
+//         isPublished: true,
+//       },
+//     },
+//   ]
+
+//   const news = await News.aggregate(pipeline)
+//   return news
+// }
+
 export const getFeaturedNews = async (
-  country: string,
-  state: string,
+  country?: string,
+  state?: string,
   limitPerCategory = 20
 ) => {
-  const pipeline: PipelineStage[] = [
-    {
-      $facet: {
-        international: [
-          {
-            $match: {
-              priority: { $regex: /^international$/i },
-              isPublished: true,
-            },
-          },
-          { $sort: { createdAt: -1 } },
-          { $limit: limitPerCategory },
-        ],
-        national: [
-          {
-            $match: {
-              priority: { $regex: /^national$/i },
-              country: { $regex: new RegExp(`^${country}$`, 'i') },
-              isPublished: true,
-            },
-          },
-          { $sort: { createdAt: -1 } },
-          { $limit: limitPerCategory },
-        ],
-        local: [
-          {
-            $match: {
-              priority: { $regex: /^local$/i },
-              state: { $regex: new RegExp(`^${state}$`, 'i') },
-              isPublished: true,
-            },
-          },
-          { $sort: { createdAt: -1 } },
-          { $limit: limitPerCategory },
-        ],
+  const facets: Record<string, PipelineStage.FacetPipelineStage[]> = {
+    international: [
+      {
+        $match: {
+          priority: { $regex: /^international$/i },
+          isPublished: true,
+        },
       },
-    },
+      { $sort: { createdAt: -1 } },
+      { $limit: limitPerCategory },
+    ],
+  }
+
+  if (country) {
+    facets.national = [
+      {
+        $match: {
+          priority: { $regex: /^national$/i },
+          country: { $regex: new RegExp(`^${country}$`, 'i') },
+          isPublished: true,
+        },
+      },
+      { $sort: { createdAt: -1 } },
+      { $limit: limitPerCategory },
+    ]
+  }
+  if (state) {
+    facets.local = [
+      {
+        $match: {
+          priority: { $regex: /^local$/i },
+          state: { $regex: new RegExp(`^${state}$`, 'i') },
+          isPublished: true,
+        },
+      },
+      { $sort: { createdAt: -1 } },
+      { $limit: limitPerCategory },
+    ]
+  }
+
+  const pipeline: PipelineStage[] = [
+    { $facet: facets },
     {
       $project: {
-        all: { $concatArrays: ['$international', '$national', '$local'] },
+        all: {
+          $concatArrays: Object.keys(facets).map((key) => `$${key}`),
+        },
       },
     },
     { $unwind: '$all' },
