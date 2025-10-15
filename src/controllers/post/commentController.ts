@@ -6,6 +6,7 @@ import { View } from '../../models/users/statModel'
 import { postScore } from '../../utils/computation'
 import { User } from '../../models/users/user'
 import { queryData } from '../../utils/query'
+import { processPosts } from './postController'
 
 /////////////////////////////// POST /////////////////////////////////
 export const createComment = async (req: Request, res: Response) => {
@@ -80,10 +81,11 @@ export const createComment = async (req: Request, res: Response) => {
 
 export const getComments = async (req: Request, res: Response) => {
   try {
-    const followerId = req.query.myId
+    const followerId = String(req.query.myId)
     delete req.query.myId
-    const result = await queryData<IPost>(Post, req)
-    res.status(200).json(result)
+    const response = await queryData<IPost>(Post, req)
+    const results = await processPosts(response.results, followerId, 'user')
+    res.status(200).json({ results, count: response.count })
   } catch (error) {
     console.log(error)
     handleError(res, undefined, undefined, error)

@@ -1,9 +1,9 @@
 import { Request, Response } from 'express'
-import OpenAI from 'openai'
+// import OpenAI from 'openai'
 
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-})
+// const openai = new OpenAI({
+//   apiKey: process.env.OPENAI_API_KEY,
+// })
 
 export const postAIMessage = async (req: Request, res: Response) => {
   //   try {
@@ -50,18 +50,17 @@ export const postAIMessage = async (req: Request, res: Response) => {
   }
 
   try {
-    const completion = await openai.chat.completions.create({
-      model,
-      messages, // must be [{ role: "user" | "assistant" | "system", content: string }]
-      temperature,
-      max_tokens,
-    })
-
-    return res.json({
-      provider: 'openai',
-      result: completion.choices[0].message.content,
-      full: completion,
-    })
+    // const completion = await openai.chat.completions.create({
+    //   model,
+    //   messages,
+    //   temperature,
+    //   max_tokens,
+    // })
+    // return res.json({
+    //   provider: 'openai',
+    //   result: completion.choices[0].message.content,
+    //   full: completion,
+    // })
   } catch (err: any) {
     console.error('OpenAI API error:', err)
     return res.status(500).json({ error: err.message || 'OpenAI error' })

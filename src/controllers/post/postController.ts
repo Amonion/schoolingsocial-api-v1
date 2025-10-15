@@ -696,6 +696,92 @@ export const deletePost = async (req: Request, res: Response) => {
   }
 }
 
+export const toggleLikePost = async (req: Request, res: Response) => {
+  try {
+    const { userId, id } = req.body
+    let updateQuery: any = {}
+    let score = 0
+
+    const post = await Post.findById(id)
+
+    if (!post) {
+      return res.status(404).json({ message: 'Post not found' })
+    }
+
+    const like = await Like.findOne({ postId: id, userId })
+    if (like) {
+      updateQuery.$inc = { likes: -1 }
+      await Like.deleteOne({ postId: id, userId })
+      score = post.score - 2
+    } else {
+      score = postScore('likes', post.score)
+      updateQuery.$inc = { likes: 1 }
+      await Like.create({ postId: id, userId })
+      const hate = await Hate.findOne({ postId: id, userId })
+      if (hate) {
+        updateQuery.$inc.hates = -1
+        await Hate.deleteOne({ postId: id, userId })
+      }
+    }
+
+    await Post.updateOne(
+      { _id: post._id },
+      {
+        $set: { score: score },
+      }
+    )
+
+    await Post.findByIdAndUpdate(id, updateQuery, {
+      new: true,
+    })
+    return res.status(200).json({ message: null })
+  } catch (error: any) {
+    handleError(res, undefined, undefined, error)
+  }
+}
+
+export const toggleHatePost = async (req: Request, res: Response) => {
+  try {
+    const { userId, id } = req.body
+    let updateQuery: any = {}
+    let score = 0
+
+    const post = await Post.findById(id)
+
+    if (!post) {
+      return res.status(404).json({ message: 'Post not found' })
+    }
+
+    const hate = await Hate.findOne({ postId: id, userId })
+    if (hate) {
+      updateQuery.$inc = { hates: -1 }
+      await Hate.deleteOne({ postId: id, userId })
+    } else {
+      updateQuery.$inc = { hates: 1 }
+      await Hate.create({ postId: id, userId })
+      const like = await Like.findOne({ postId: id, userId })
+      if (like) {
+        updateQuery.$inc.likes = -1
+        await Like.deleteOne({ postId: id, userId })
+      }
+    }
+
+    await Post.updateOne(
+      { _id: post._id },
+      {
+        $set: { score: score },
+      }
+    )
+
+    await Post.findByIdAndUpdate(id, updateQuery, {
+      new: true,
+    })
+    return res.status(200).json({ message: null })
+  } catch (error: any) {
+    handleError(res, undefined, undefined, error)
+  }
+}
+
 export const updatePostStat = async (req: Request, res: Response) => {
   try {
     const { userId, id } = req.body
@@ -709,50 +795,6 @@ export const updatePostStat = async (req: Request, res: Response) => {
 
     if (!post) {
       return res.status(404).json({ message: 'Post not found' })
-    }
-
-    if (req.body.likes !== undefined) {
-      if (!req.body.likes && post.likes <= 0) {
-        return res.status(200).json({ message: null })
-      }
-
-      const like = await Like.findOne({ postId: id, userId })
-      if (like) {
-        updateQuery.$inc = { likes: -1 }
-        await Like.deleteOne({ postId: id, userId })
-        score = post.score - 2
-      } else {
-        score = postScore('likes', post.score)
-        updateQuery.$inc = { likes: 1 }
-        liked = true
-        await Like.create({ postId: id, userId })
-        const hate = await Hate.findOne({ postId: id, userId })
-        if (hate) {
-          updateQuery.$inc.hates = -1
-          await Hate.deleteOne({ postId: id, userId })
-        }
-      }
-    }
-
-    if (req.body.hates !== undefined) {
-      if (!req.body.hates && post.hates <= 0) {
-        return res.status(200).json({ message: null })
-      }
-
-      const hate = await Hate.findOne({ postId: id, userId })
-      if (hate) {
-        updateQuery.$inc = { hates: -1 }
-        await Hate.deleteOne({ postId: id, userId })
-      } else {
-        updateQuery.$inc = { hates: 1 }
-        hated = true
-        await Hate.create({ postId: id, userId })
-        const like = await Like.findOne({ postId: id, userId })
-        if (like) {
-          updateQuery.$inc.likes = -1
-          await Like.deleteOne({ postId: id, userId })
-        }
-      }
     }
 
     if (req.body.bookmarks !== undefined) {
@@ -1057,7 +1099,7 @@ const processFetchedPosts = async (req: Request, followerId: string) => {
   }
 }
 
-const processPosts = async (
+export const processPosts = async (
   posts: IPost[],
   followerId: string,
   source: string

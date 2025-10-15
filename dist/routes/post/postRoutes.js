@@ -16,6 +16,8 @@ router.route('/poll/:id').post(upload.any(), postController_1.updatePoll);
 router.route('/followers').get(postController_1.getFollowers);
 router.route('/uploads').get(uploadController_1.getUploads).post(upload.any(), uploadController_1.createUpload);
 router.route('/stats').get(postController_1.getPostStat).patch(upload.any(), postController_1.updatePostStat);
+router.route('/like').get(postController_1.getPostStat).patch(upload.any(), postController_1.toggleLikePost);
+router.route('/hate').get(postController_1.getPostStat).patch(upload.any(), postController_1.toggleHatePost);
 router.route('/repost/:id').post(upload.any(), postController_1.repostPost);
 router.route('/pin/:id').post(upload.any(), postController_1.pinPost);
 router.route('/block/:id').post(upload.any(), postController_1.blockUser);

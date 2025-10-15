@@ -17,6 +17,7 @@ const statModel_1 = require("../../models/users/statModel");
 const computation_1 = require("../../utils/computation");
 const user_1 = require("../../models/users/user");
 const query_1 = require("../../utils/query");
+const postController_1 = require("./postController");
 /////////////////////////////// POST /////////////////////////////////
 const createComment = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
@@ -82,10 +83,11 @@ const createComment = (req, res) => __awaiter(void 0, void 0, void 0, function* 
 exports.createComment = createComment;
 const getComments = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const followerId = req.query.myId;
+        const followerId = String(req.query.myId);
         delete req.query.myId;
-        const result = yield (0, query_1.queryData)(postModel_1.Post, req);
-        res.status(200).json(result);
+        const response = yield (0, query_1.queryData)(postModel_1.Post, req);
+        const results = yield (0, postController_1.processPosts)(response.results, followerId, 'user');
+        res.status(200).json({ results, count: response.count });
     }
     catch (error) {
         console.log(error);

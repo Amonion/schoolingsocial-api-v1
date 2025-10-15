@@ -20,7 +20,7 @@ var __rest = (this && this.__rest) || function (s, e) {
     return t;
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.followUser = exports.searchPosts = exports.getPostStat = exports.updatePostViews = exports.updatePostStat = exports.deletePost = exports.updatePost = exports.getBookMarkedPosts = exports.getMutedUsers = exports.getBlockedUsers = exports.getFollowers = exports.getFollowings = exports.getFilteredPosts = exports.getPosts = exports.getUserPosts = exports.getPostById = exports.repostPost = exports.muteUser = exports.blockUser = exports.pinPost = exports.updatePoll = exports.createPost = void 0;
+exports.processPosts = exports.followUser = exports.searchPosts = exports.getPostStat = exports.updatePostViews = exports.updatePostStat = exports.toggleHatePost = exports.toggleLikePost = exports.deletePost = exports.updatePost = exports.getBookMarkedPosts = exports.getMutedUsers = exports.getBlockedUsers = exports.getFollowers = exports.getFollowings = exports.getFilteredPosts = exports.getPosts = exports.getUserPosts = exports.getPostById = exports.repostPost = exports.muteUser = exports.blockUser = exports.pinPost = exports.updatePoll = exports.createPost = void 0;
 const postModel_1 = require("../../models/post/postModel");
 const fileUpload_1 = require("../../utils/fileUpload");
 const errorHandler_1 = require("../../utils/errorHandler");
@@ -298,7 +298,7 @@ const getUserPosts = (req, res) => __awaiter(void 0, void 0, void 0, function* (
         const followerId = String(req.query.myId);
         delete req.query.myId;
         const response = yield (0, query_1.queryData)(postModel_1.Post, req);
-        const results = yield processPosts(response.results, followerId, 'user');
+        const results = yield (0, exports.processPosts)(response.results, followerId, 'user');
         res.status(200).json({ results, count: response.count });
     }
     catch (error) {
@@ -354,7 +354,7 @@ const getFilteredPosts = (interest) => __awaiter(void 0, void 0, void 0, functio
                 .lean(),
             postModel_1.Post.countDocuments(filter),
         ]);
-        const results = yield processPosts(posts, followerId, 'post');
+        const results = yield (0, exports.processPosts)(posts, followerId, 'post');
         return {
             count: total,
             page,
@@ -580,6 +580,80 @@ const deletePost = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
     }
 });
 exports.deletePost = deletePost;
+const toggleLikePost = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const { userId, id } = req.body;
+        let updateQuery = {};
+        let score = 0;
+        const post = yield postModel_1.Post.findById(id);
+        if (!post) {
+            return res.status(404).json({ message: 'Post not found' });
+        }
+        const like = yield statModel_1.Like.findOne({ postId: id, userId });
+        if (like) {
+            updateQuery.$inc = { likes: -1 };
+            yield statModel_1.Like.deleteOne({ postId: id, userId });
+            score = post.score - 2;
+        }
+        else {
+            score = (0, computation_1.postScore)('likes', post.score);
+            updateQuery.$inc = { likes: 1 };
+            yield statModel_1.Like.create({ postId: id, userId });
+            const hate = yield statModel_1.Hate.findOne({ postId: id, userId });
+            if (hate) {
+                updateQuery.$inc.hates = -1;
+                yield statModel_1.Hate.deleteOne({ postId: id, userId });
+            }
+        }
+        yield postModel_1.Post.updateOne({ _id: post._id }, {
+            $set: { score: score },
+        });
+        yield postModel_1.Post.findByIdAndUpdate(id, updateQuery, {
+            new: true,
+        });
+        return res.status(200).json({ message: null });
+    }
+    catch (error) {
+        (0, errorHandler_1.handleError)(res, undefined, undefined, error);
+    }
+});
+exports.toggleLikePost = toggleLikePost;
+const toggleHatePost = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const { userId, id } = req.body;
+        let updateQuery = {};
+        let score = 0;
+        const post = yield postModel_1.Post.findById(id);
+        if (!post) {
+            return res.status(404).json({ message: 'Post not found' });
+        }
+        const hate = yield statModel_1.Hate.findOne({ postId: id, userId });
+        if (hate) {
+            updateQuery.$inc = { hates: -1 };
+            yield statModel_1.Hate.deleteOne({ postId: id, userId });
+        }
+        else {
+            updateQuery.$inc = { hates: 1 };
+            yield statModel_1.Hate.create({ postId: id, userId });
+            const like = yield statModel_1.Like.findOne({ postId: id, userId });
+            if (like) {
+                updateQuery.$inc.likes = -1;
+                yield statModel_1.Like.deleteOne({ postId: id, userId });
+            }
+        }
+        yield postModel_1.Post.updateOne({ _id: post._id }, {
+            $set: { score: score },
+        });
+        yield postModel_1.Post.findByIdAndUpdate(id, updateQuery, {
+            new: true,
+        });
+        return res.status(200).json({ message: null });
+    }
+    catch (error) {
+        (0, errorHandler_1.handleError)(res, undefined, undefined, error);
+    }
+});
+exports.toggleHatePost = toggleHatePost;
 const updatePostStat = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const { userId, id } = req.body;
@@ -591,48 +665,6 @@ const updatePostStat = (req, res) => __awaiter(void 0, void 0, void 0, function*
         const post = yield postModel_1.Post.findById(id);
         if (!post) {
             return res.status(404).json({ message: 'Post not found' });
-        }
-        if (req.body.likes !== undefined) {
-            if (!req.body.likes && post.likes <= 0) {
-                return res.status(200).json({ message: null });
-            }
-            const like = yield statModel_1.Like.findOne({ postId: id, userId });
-            if (like) {
-                updateQuery.$inc = { likes: -1 };
-                yield statModel_1.Like.deleteOne({ postId: id, userId });
-                score = post.score - 2;
-            }
-            else {
-                score = (0, computation_1.postScore)('likes', post.score);
-                updateQuery.$inc = { likes: 1 };
-                liked = true;
-                yield statModel_1.Like.create({ postId: id, userId });
-                const hate = yield statModel_1.Hate.findOne({ postId: id, userId });
-                if (hate) {
-                    updateQuery.$inc.hates = -1;
-                    yield statModel_1.Hate.deleteOne({ postId: id, userId });
-                }
-            }
-        }
-        if (req.body.hates !== undefined) {
-            if (!req.body.hates && post.hates <= 0) {
-                return res.status(200).json({ message: null });
-            }
-            const hate = yield statModel_1.Hate.findOne({ postId: id, userId });
-            if (hate) {
-                updateQuery.$inc = { hates: -1 };
-                yield statModel_1.Hate.deleteOne({ postId: id, userId });
-            }
-            else {
-                updateQuery.$inc = { hates: 1 };
-                hated = true;
-                yield statModel_1.Hate.create({ postId: id, userId });
-                const like = yield statModel_1.Like.findOne({ postId: id, userId });
-                if (like) {
-                    updateQuery.$inc.likes = -1;
-                    yield statModel_1.Like.deleteOne({ postId: id, userId });
-                }
-            }
         }
         if (req.body.bookmarks !== undefined) {
             if (!req.body.bookmarks && post.bookmarks <= 0) {
@@ -986,3 +1018,4 @@ const processPosts = (posts, followerId, source) => __awaiter(void 0, void 0, vo
     const results = source === 'user' ? finalPosts : updatedPosts;
     return results;
 });
+exports.processPosts = processPosts;

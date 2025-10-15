@@ -26,6 +26,8 @@ import {
   updatePoll,
   getFollowers,
   getUserPosts,
+  toggleLikePost,
+  toggleHatePost,
   // checkNudeMedia,
 } from '../../controllers/post/postController'
 
@@ -51,6 +53,8 @@ router.route('/poll/:id').post(upload.any(), updatePoll)
 router.route('/followers').get(getFollowers)
 router.route('/uploads').get(getUploads).post(upload.any(), createUpload)
 router.route('/stats').get(getPostStat).patch(upload.any(), updatePostStat)
+router.route('/like').get(getPostStat).patch(upload.any(), toggleLikePost)
+router.route('/hate').get(getPostStat).patch(upload.any(), toggleHatePost)
 router.route('/repost/:id').post(upload.any(), repostPost)
 router.route('/pin/:id').post(upload.any(), pinPost)
 router.route('/block/:id').post(upload.any(), blockUser)
