@@ -1,18 +1,46 @@
 import mongoose, { Schema } from 'mongoose'
-import {
-  IUserTestExam,
-  IUserTest,
-  IParticipant,
-  IAttempt,
-} from '../../utils/userInterface'
+
+export interface IAttempt extends Document {
+  username: string
+  userId: string
+  paperId: string
+  attempts: number
+}
+
+interface Option {
+  index: number
+  value: string
+  isSelected: boolean
+  isClicked: boolean
+}
+
+export interface IUserTestExam extends Document {
+  bioUserUsername: string
+  bioUserId: string
+  bioUserPicture: string
+  paperId: string
+  bioUserDisplayName: string
+  title: string
+  type: string
+  instruction: string
+  questions: number
+  duration: number
+  rate: number
+  accuracy: number
+  metric: number
+  attempts: number
+  isFirstTime: boolean
+  totalAnswered: number
+  totalCorrectAnswer: number
+}
 
 const UserTestExamSchema: Schema = new Schema(
   {
-    username: { type: String },
-    userId: { type: String },
-    picture: { type: String, default: '' },
+    bioUserUsername: { type: String },
+    bioUserId: { type: String },
+    bioUserPicture: { type: String, default: '' },
     paperId: { type: String, default: '' },
-    displayName: { type: String, default: '' },
+    bioUserDisplayName: { type: String, default: '' },
     title: { type: String, default: '' },
     instruction: { type: String, default: '' },
     type: { type: String, default: '' },
@@ -37,7 +65,16 @@ export const UserTestExam = mongoose.model<IUserTestExam>(
   UserTestExamSchema
 )
 
-const UserTestSchema: Schema = new Schema(
+export interface IUserObjective extends Document {
+  _id: string
+  bioUserId: string
+  paperId: string
+  isClicked: boolean
+  question: string
+  options: Option[]
+}
+
+const UserObjectiveSchema: Schema = new Schema(
   {
     userId: { type: String },
     paperId: { type: String, default: '' },
@@ -50,11 +87,25 @@ const UserTestSchema: Schema = new Schema(
     timestamps: true,
   }
 )
-export const UserTest = mongoose.model<IUserTest>('UserTest', UserTestSchema)
+export const UserObjective = mongoose.model<IUserObjective>(
+  'UserObjective',
+  UserObjectiveSchema
+)
+
+export interface IParticipant extends Document {
+  _id: string
+  bioUserId: string
+  bioUserUsername: string
+  paperId: string
+  isClicked: boolean
+  question: string
+  options: Option[]
+}
 
 const ParticipantSchema: Schema = new Schema(
   {
-    userId: { type: String },
+    bioUserId: { type: String },
+    bioUserUsername: { type: String },
     paperId: { type: String, default: '' },
     isClicked: { type: Boolean, default: false },
     question: { type: String, default: '' },

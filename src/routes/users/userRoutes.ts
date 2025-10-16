@@ -12,18 +12,11 @@ import {
   updateUser,
   deleteUser,
   createUser,
-  getUserInfo,
-  // followUser,
-  getUserDetails,
   getExistingUsername,
-  getManyUserDetails,
   searchAccounts,
   followUserAccount,
   updateUserSettings,
   getUserSettings,
-  getUserAccountInfo,
-  updateUserAccountInfo,
-  getUserSchoolInfo,
   deleteMyData,
   createUserAccount,
 } from '../../controllers/users/userController'
@@ -63,10 +56,7 @@ router.route('/biouser-school/:username').get(getBioUserSchoolByUsername)
 router.route('/biouser-school').get(searchBioUserSchoolInfo)
 router.route('/bio-user/:id').get(getBioUser).patch(upload.any(), updateBioUser)
 
-router
-  .route('/bio-user/school/:id')
-  .get(getUserInfo)
-  .patch(upload.any(), updateBioUserSchool)
+router.route('/bio-user/school/:id').patch(upload.any(), updateBioUserSchool)
 
 router
   .route('/bio-user/settings/:id')

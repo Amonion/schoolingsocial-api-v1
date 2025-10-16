@@ -1,75 +1,26 @@
 import { Request, Response } from 'express'
 import { handleError } from '../../utils/errorHandler'
-import {
-  Weekend,
-  Exam,
-  League,
-  Paper,
-} from '../../models/exam/competitionModel'
-import { IWeekend, IExam, ILeague, IPaper } from '../../utils/teamInterface'
-import { queryData, updateItem, createItem, search } from '../../utils/query'
+import { Exam } from '../../models/exam/competitionModel'
+import { queryData, search, updateItem } from '../../utils/query'
 import {
   Attempt,
-  UserTest,
+  IUserObjective,
+  IUserTestExam,
+  UserObjective,
   UserTestExam,
 } from '../../models/users/competitionModel'
-import { IUserTest, IUserTestExam } from '../../utils/userInterface'
-import { UserInfo } from '../../models/users/userInfoModel'
 import { User } from '../../models/users/user'
 import { IObjective, Objective } from '../../models/exam/objectiveModel'
+import { BioUserState } from '../../models/users/bioUserState'
 
-export const createWeekend = async (
-  req: Request,
-  res: Response
-): Promise<void> => {
-  createItem(req, res, Weekend, 'Weekend was created successfully')
-}
-
-export const getWeekendById = async (
-  req: Request,
-  res: Response
-): Promise<Response | void> => {
-  try {
-    const item = await Weekend.findById(req.params.id)
-    if (!item) {
-      return res.status(404).json({ message: 'Weekend not found' })
-    }
-    res.status(200).json(item)
-  } catch (error) {
-    handleError(res, undefined, undefined, error)
-  }
-}
-
-export const getWeekends = async (req: Request, res: Response) => {
-  try {
-    const result = await queryData<IWeekend>(Weekend, req)
-    res.status(200).json(result)
-  } catch (error) {
-    handleError(res, undefined, undefined, error)
-  }
-}
-
-export const updateWeekend = async (req: Request, res: Response) => {
-  try {
-    updateItem(
-      req,
-      res,
-      Weekend,
-      ['video', 'picture'],
-      ['Weekend not found', 'Weekend was updated successfully']
-    )
-  } catch (error) {
-    handleError(res, undefined, undefined, error)
-  }
-}
 //-----------------Exam--------------------//
-export const createExam = async (
+export const submitTest = async (
   req: Request,
   res: Response
 ): Promise<Response | void> => {
   try {
     const paperId = req.body.paperId
-    const userId = req.body.userId
+    const bioUserId = req.body.bioUserId
     const username = req.body.username
     const picture = req.body.picture
     const displayName = req.body.displayName
@@ -84,7 +35,7 @@ export const createExam = async (
 
     const paper = await UserTestExam.findOne({
       paperId: paperId,
-      userId: userId,
+      bioUserId: bioUserId,
     })
     const attempts =
       !paper || paper?.isFirstTime ? 1 : Number(paper?.attempts) + 1
@@ -106,7 +57,7 @@ export const createExam = async (
 
     const accuracy = correctAnswer / mainObjective.length
     const metric = accuracy * rate
-    const updatedQuestions: IUserTest[] = []
+    const updatedQuestions: IUserObjective[] = []
     for (let i = 0; i < mainObjective.length; i++) {
       const el = mainObjective[i]
       const objIndex = questions.findIndex(
@@ -117,19 +68,19 @@ export const createExam = async (
         const obj = {
           isClicked: questions[objIndex].isClicked,
           paperId: paperId,
-          userId: userId,
+          bioUserId: bioUserId,
           question: el.question,
           options: questions[objIndex].options,
-        } as IUserTest
+        } as IUserObjective
         updatedQuestions.push(obj)
       } else {
         const obj = {
           isClicked: false,
           paperId: paperId,
-          userId: userId,
+          bioUserId: bioUserId,
           question: el.question,
           options: el.options,
-        } as IUserTest
+        } as IUserObjective
         updatedQuestions.push(obj)
       }
     }
@@ -137,12 +88,12 @@ export const createExam = async (
     const exam = await UserTestExam.findOneAndUpdate(
       {
         paperId,
-        userId,
+        bioUserId,
       },
       {
         $set: {
           paperId,
-          userId,
+          bioUserId,
           username,
           displayName,
           picture,
@@ -165,17 +116,14 @@ export const createExam = async (
       }
     )
 
-    const user = await UserInfo.findByIdAndUpdate(
-      userId,
+    const bioUserState = await BioUserState.findOneAndUpdate(
+      { bioUserId: bioUserId },
       { $inc: { examAttempts: paper?.isFirstTime ? 0 : 1 } },
       { new: true, upsert: true }
     )
-    await User.updateMany(
-      { userId: userId },
-      { $inc: { totalAttempts: paper?.isFirstTime ? 0 : 1 } }
-    )
-    await UserTest.deleteMany({ userId: userId, paperId: paperId })
-    await UserTest.insertMany(updatedQuestions)
+
+    await UserObjective.deleteMany({ bioUserId: bioUserId, paperId: paperId })
+    await UserObjective.insertMany(updatedQuestions)
     if (!paper) {
       await Exam.updateOne(
         { _id: paperId },
@@ -187,13 +135,13 @@ export const createExam = async (
       )
     }
 
-    const result = await queryData<IUserTest>(UserTest, req)
+    const result = await queryData<IUserObjective>(UserObjective, req)
 
     const data = {
       exam,
+      bioUserState,
       attempt: Number(exam?.attempts),
       results: result.results,
-      totalAttempts: user?.examAttempts,
       message: 'Exam submitted successfull',
     }
 
@@ -255,7 +203,7 @@ export const initExam = async (
         },
       }
     )
-    await UserInfo.findByIdAndUpdate(
+    await BioUserState.findByIdAndUpdate(
       userId,
       { $inc: { examAttempts: 1 } },
       { new: true, upsert: true }
@@ -291,7 +239,7 @@ export const getUserExam = async (req: Request, res: Response) => {
       userId: req.query.userId,
       paperId: req.query.paperId,
     })
-    const result = await queryData<IUserTest>(UserTest, req)
+    const result = await queryData<IUserObjective>(UserObjective, req)
     const data = {
       exam,
       results: result.results,
@@ -321,158 +269,6 @@ export const updateExam = async (req: Request, res: Response) => {
       [],
       ['Exam not found', 'Exam was updated successfully']
     )
-  } catch (error) {
-    handleError(res, undefined, undefined, error)
-  }
-}
-//-------------------LEAGUE--------------------//
-export const createLeague = async (
-  req: Request,
-  res: Response
-): Promise<void> => {
-  createItem(req, res, League, 'League was created successfully')
-}
-
-export const getLeagueById = async (
-  req: Request,
-  res: Response
-): Promise<Response | void> => {
-  try {
-    const item = await League.findById(req.params.id)
-    if (!item) {
-      return res.status(404).json({ message: 'League not found' })
-    }
-    res.status(200).json(item)
-  } catch (error) {
-    handleError(res, undefined, undefined, error)
-  }
-}
-
-export const getLeagues = async (req: Request, res: Response) => {
-  try {
-    const result = await queryData<ILeague>(League, req)
-    res.status(200).json(result)
-  } catch (error) {
-    handleError(res, undefined, undefined, error)
-  }
-}
-
-export const updateLeague = async (req: Request, res: Response) => {
-  try {
-    updateItem(
-      req,
-      res,
-      Paper,
-      ['media', 'picture'],
-      ['Paper not found', 'Paper was updated successfully']
-    )
-  } catch (error) {
-    handleError(res, undefined, undefined, error)
-  }
-}
-
-//-----------------PAPER--------------------//
-export const createPaper = async (
-  req: Request,
-  res: Response
-): Promise<void> => {
-  createItem(req, res, Paper, 'Paper was created successfully')
-}
-
-export const getPaperById = async (
-  req: Request,
-  res: Response
-): Promise<Response | void> => {
-  try {
-    const item = await Paper.findById(req.params.id)
-    if (!item) {
-      return res.status(404).json({ message: 'Paper not found' })
-    }
-    res.status(200).json(item)
-  } catch (error) {
-    handleError(res, undefined, undefined, error)
-  }
-}
-
-export const getPapers = async (req: Request, res: Response) => {
-  try {
-    const result = await queryData<IPaper>(Paper, req)
-    res.status(200).json(result)
-  } catch (error) {
-    handleError(res, undefined, undefined, error)
-  }
-}
-
-export const updatePaper = async (req: Request, res: Response) => {
-  try {
-    updateItem(
-      req,
-      res,
-      Paper,
-      [],
-      ['Paper not found', 'Paper was updated successfully']
-    )
-  } catch (error) {
-    handleError(res, undefined, undefined, error)
-  }
-}
-
-//-----------------OBJECTIVE--------------------//
-export const createObjective = async (
-  req: Request,
-  res: Response
-): Promise<void> => {
-  const questions = JSON.parse(req.body.questions)
-  const deletedIDs = JSON.parse(req.body.deletedIDs)
-  for (let i = 0; i < deletedIDs.length; i++) {
-    const id = deletedIDs[i]
-    await Objective.findByIdAndDelete(id)
-  }
-
-  for (let i = 0; i < questions.length; i++) {
-    const el = questions[i]
-    if (el._id && el._id !== undefined && el._id !== '') {
-      await Objective.updateOne(
-        { _id: el._id },
-        {
-          $set: {
-            question: el.question,
-            options: el.options,
-            index: el.index,
-            paperId: el.paperId,
-          },
-        },
-        { upsert: true }
-      )
-    } else {
-      await Objective.create({
-        question: el.question,
-        options: el.options,
-        paperId: el.paperId,
-        index: el.index,
-      })
-    }
-  }
-
-  const result = await queryData(Objective, req)
-  await Exam.findOneAndUpdate(
-    { _id: result.results[0].paperId },
-    {
-      questions: result.count,
-    }
-  )
-  res.status(200).json({
-    message: 'The question was saved successfully',
-    count: result.count,
-    results: result.results,
-    page_size: result.page_size,
-  })
-}
-
-export const getObjectives = async (req: Request, res: Response) => {
-  try {
-    const result = await queryData<IObjective>(Objective, req)
-    res.status(200).json(result)
   } catch (error) {
     handleError(res, undefined, undefined, error)
   }

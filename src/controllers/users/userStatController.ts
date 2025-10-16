@@ -6,7 +6,6 @@ import { Chat } from '../../models/message/chatModel'
 import { handleError } from '../../utils/errorHandler'
 import { startOfMonth, subMonths } from 'date-fns'
 import { Model } from 'mongoose'
-import { UserInfo } from '../../models/users/userInfoModel'
 import { User } from '../../models/users/user'
 import { School } from '../../models/school/schoolModel'
 import { BioUserState } from '../../models/users/bioUserState'
@@ -90,7 +89,7 @@ export const updateVisit = async (data: IUserData) => {
   }
 
   if (data.bioUserId) {
-    updateOnlineStatus(data.bioUserId, data.visitedAt, UserInfo)
+    updateOnlineStatus(data.bioUserId, data.visitedAt, BioUserState)
   }
   if (data.userId) {
     updateOnlineStatus(data.userId, data.visitedAt, User)

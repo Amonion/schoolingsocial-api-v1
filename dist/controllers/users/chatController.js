@@ -15,11 +15,11 @@ const errorHandler_1 = require("../../utils/errorHandler");
 const query_1 = require("../../utils/query");
 const fileUpload_1 = require("../../utils/fileUpload");
 const app_1 = require("../../app");
-const userInfoModel_1 = require("../../models/users/userInfoModel");
 const usersStatMode_1 = require("../../models/users/usersStatMode");
 const expo_server_sdk_1 = require("expo-server-sdk");
 const user_1 = require("../../models/users/user");
 const sendNotification_1 = require("../../utils/sendNotification");
+const bioUser_1 = require("../../models/users/bioUser");
 const expo = new expo_server_sdk_1.Expo();
 const setConnectionKey = (id1, id2) => {
     const participants = [id1, id2].sort();
@@ -99,7 +99,7 @@ const createChat = (data) => __awaiter(void 0, void 0, void 0, function* () {
                 const user = yield user_1.User.findOne({
                     username: data.receiverUsername,
                 });
-                const userInfo = yield userInfoModel_1.UserInfo.findById(user === null || user === void 0 ? void 0 : user.bioUserId);
+                const userInfo = yield bioUser_1.BioUser.findById(user === null || user === void 0 ? void 0 : user.bioUserId);
                 if (!userInfo)
                     return;
                 (0, exports.sendChatPushNotification)({
@@ -397,7 +397,7 @@ const readChats = (data) => __awaiter(void 0, void 0, void 0, function* () {
         const connection = setConnectionKey(data.username, data.receiverUsername);
         const receiverUsername = data.receiverUsername;
         yield chatModel_1.Chat.updateMany({ _id: { $in: data.ids } }, { $set: { isRead: true } });
-        const mainUser = yield userInfoModel_1.UserInfo.findById(data.receiverMainId);
+        const mainUser = yield bioUser_1.BioUser.findById(data.receiverMainId);
         const updatedChats = yield chatModel_1.Chat.find({ _id: { $in: data.ids } });
         const unreadCount = yield chatModel_1.Chat.countDocuments({
             connection: connection,
@@ -410,7 +410,7 @@ const readChats = (data) => __awaiter(void 0, void 0, void 0, function* () {
             isFriends: true,
             $or: [
                 { receiverUsername: receiverUsername },
-                { receiverUsername: mainUser === null || mainUser === void 0 ? void 0 : mainUser.username },
+                { receiverUsername: mainUser === null || mainUser === void 0 ? void 0 : mainUser.bioUserUsername },
             ],
         });
         app_1.io.emit(`myChatsRead${data.username}`, {

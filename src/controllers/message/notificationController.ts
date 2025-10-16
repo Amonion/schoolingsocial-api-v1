@@ -1,7 +1,6 @@
 import { Request, Response } from 'express'
 import { handleError } from '../../utils/errorHandler'
 import { Expo } from 'expo-server-sdk'
-import { UserInfo } from '../../models/users/userInfoModel'
 import {
   IPersonalNotification,
   PersonalNotification,
@@ -12,6 +11,7 @@ import {
   ISocialNotification,
   SocialNotification,
 } from '../../models/message/socialNotificationModel'
+import { BioUser } from '../../models/users/bioUser'
 const expo = new Expo()
 
 export const getPersonalNotifications = async (req: Request, res: Response) => {
@@ -126,7 +126,7 @@ export const setPushNotificationToken = async (req: Request, res: Response) => {
   }
 
   try {
-    await UserInfo.findByIdAndUpdate(
+    await BioUser.findByIdAndUpdate(
       id,
       { notificationToken: token },
       { new: true }

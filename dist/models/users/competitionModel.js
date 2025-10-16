@@ -33,14 +33,14 @@ var __importStar = (this && this.__importStar) || (function () {
     };
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.Attempt = exports.Participant = exports.UserTest = exports.UserTestExam = void 0;
+exports.Attempt = exports.Participant = exports.UserObjective = exports.UserTestExam = void 0;
 const mongoose_1 = __importStar(require("mongoose"));
 const UserTestExamSchema = new mongoose_1.Schema({
-    username: { type: String },
-    userId: { type: String },
-    picture: { type: String, default: '' },
+    bioUserUsername: { type: String },
+    bioUserId: { type: String },
+    bioUserPicture: { type: String, default: '' },
     paperId: { type: String, default: '' },
-    displayName: { type: String, default: '' },
+    bioUserDisplayName: { type: String, default: '' },
     title: { type: String, default: '' },
     instruction: { type: String, default: '' },
     type: { type: String, default: '' },
@@ -59,7 +59,7 @@ const UserTestExamSchema = new mongoose_1.Schema({
     timestamps: true,
 });
 exports.UserTestExam = mongoose_1.default.model('UserTestExam', UserTestExamSchema);
-const UserTestSchema = new mongoose_1.Schema({
+const UserObjectiveSchema = new mongoose_1.Schema({
     userId: { type: String },
     paperId: { type: String, default: '' },
     isClicked: { type: Boolean, default: false },
@@ -69,9 +69,10 @@ const UserTestSchema = new mongoose_1.Schema({
 }, {
     timestamps: true,
 });
-exports.UserTest = mongoose_1.default.model('UserTest', UserTestSchema);
+exports.UserObjective = mongoose_1.default.model('UserObjective', UserObjectiveSchema);
 const ParticipantSchema = new mongoose_1.Schema({
-    userId: { type: String },
+    bioUserId: { type: String },
+    bioUserUsername: { type: String },
     paperId: { type: String, default: '' },
     isClicked: { type: Boolean, default: false },
     question: { type: String, default: '' },

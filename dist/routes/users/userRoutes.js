@@ -24,10 +24,7 @@ router.route('/biouser-school/search').get(bioUserController_1.searchBioUsersSch
 router.route('/biouser-school/:username').get(bioUserController_1.getBioUserSchoolByUsername);
 router.route('/biouser-school').get(bioUserController_1.searchBioUserSchoolInfo);
 router.route('/bio-user/:id').get(bioUserController_1.getBioUser).patch(upload.any(), bioUserController_1.updateBioUser);
-router
-    .route('/bio-user/school/:id')
-    .get(userController_1.getUserInfo)
-    .patch(upload.any(), bioUserController_1.updateBioUserSchool);
+router.route('/bio-user/school/:id').patch(upload.any(), bioUserController_1.updateBioUserSchool);
 router
     .route('/bio-user/settings/:id')
     .patch(upload.any(), bioUserController_1.updateBioUserSettings);

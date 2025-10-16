@@ -15,7 +15,6 @@ const app_1 = require("../../app");
 const chatModel_1 = require("../../models/message/chatModel");
 const errorHandler_1 = require("../../utils/errorHandler");
 const date_fns_1 = require("date-fns");
-const userInfoModel_1 = require("../../models/users/userInfoModel");
 const user_1 = require("../../models/users/user");
 const schoolModel_1 = require("../../models/school/schoolModel");
 const bioUserState_1 = require("../../models/users/bioUserState");
@@ -91,7 +90,7 @@ const updateVisit = (data) => __awaiter(void 0, void 0, void 0, function* () {
         yield userStatus.save();
     }
     if (data.bioUserId) {
-        updateOnlineStatus(data.bioUserId, data.visitedAt, userInfoModel_1.UserInfo);
+        updateOnlineStatus(data.bioUserId, data.visitedAt, bioUserState_1.BioUserState);
     }
     if (data.userId) {
         updateOnlineStatus(data.userId, data.visitedAt, user_1.User);

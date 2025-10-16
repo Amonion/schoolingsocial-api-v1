@@ -4,11 +4,11 @@ import { handleError } from '../../utils/errorHandler'
 import { queryData } from '../../utils/query'
 import { deleteFileFromS3 } from '../../utils/fileUpload'
 import { io } from '../../app'
-import { UserInfo } from '../../models/users/userInfoModel'
 import { UserStat, UserStatus } from '../../models/users/usersStatMode'
 import { Expo } from 'expo-server-sdk'
 import { User } from '../../models/users/user'
 import { sendPersonalNotification } from '../../utils/sendNotification'
+import { BioUser } from '../../models/users/bioUser'
 const expo = new Expo()
 
 const setConnectionKey = (id1: string, id2: string) => {
@@ -118,7 +118,7 @@ export const createChat = async (data: IChat) => {
         const user = await User.findOne({
           username: data.receiverUsername,
         })
-        const userInfo = await UserInfo.findById(user?.bioUserId)
+        const userInfo = await BioUser.findById(user?.bioUserId)
         if (!userInfo) return
         sendChatPushNotification({
           username: post.username,
@@ -446,7 +446,7 @@ export const readChats = async (data: Receive) => {
       { $set: { isRead: true } }
     )
 
-    const mainUser = await UserInfo.findById(data.receiverMainId)
+    const mainUser = await BioUser.findById(data.receiverMainId)
     const updatedChats = await Chat.find({ _id: { $in: data.ids } })
 
     const unreadCount = await Chat.countDocuments({
@@ -460,7 +460,7 @@ export const readChats = async (data: Receive) => {
       isFriends: true,
       $or: [
         { receiverUsername: receiverUsername },
-        { receiverUsername: mainUser?.username },
+        { receiverUsername: mainUser?.bioUserUsername },
       ],
     })
 

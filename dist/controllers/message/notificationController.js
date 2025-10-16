@@ -12,11 +12,11 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.sendPushNotification = exports.setPushNotificationToken = exports.readSocialNotifications = exports.getSocialNotification = exports.getSocialNotifications = exports.readPersonalNotifications = exports.getPersonalNotification = exports.getPersonalNotifications = void 0;
 const errorHandler_1 = require("../../utils/errorHandler");
 const expo_server_sdk_1 = require("expo-server-sdk");
-const userInfoModel_1 = require("../../models/users/userInfoModel");
 const personalNotificationModel_1 = require("../../models/message/personalNotificationModel");
 const notificationTemplateModel_1 = require("../../models/message/notificationTemplateModel");
 const query_1 = require("../../utils/query");
 const socialNotificationModel_1 = require("../../models/message/socialNotificationModel");
+const bioUser_1 = require("../../models/users/bioUser");
 const expo = new expo_server_sdk_1.Expo();
 const getPersonalNotifications = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
@@ -119,7 +119,7 @@ const setPushNotificationToken = (req, res) => __awaiter(void 0, void 0, void 0,
         return res.status(400).send({ error: 'Invalid Expo push token' });
     }
     try {
-        yield userInfoModel_1.UserInfo.findByIdAndUpdate(id, { notificationToken: token }, { new: true });
+        yield bioUser_1.BioUser.findByIdAndUpdate(id, { notificationToken: token }, { new: true });
         res.send({ success: true });
     }
     catch (error) {

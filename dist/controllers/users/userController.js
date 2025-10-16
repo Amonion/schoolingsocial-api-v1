@@ -12,8 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.followUserAccount = exports.getExistingUsername = exports.getManyUserDetails = exports.getUserDetails = exports.getUserInfo = exports.getUserSchoolInfo = exports.getUserAccountInfo = exports.updateUserAccountInfo = exports.deleteUser = exports.getUsers = exports.deleteMyData = exports.searchAccounts = exports.getUserSettings = exports.updateUserSettings = exports.updateUser = exports.getAUser = exports.createUserAccount = exports.createUser = void 0;
-const userInfoModel_1 = require("../../models/users/userInfoModel");
+exports.followUserAccount = exports.getExistingUsername = exports.deleteUser = exports.getUsers = exports.deleteMyData = exports.searchAccounts = exports.getUserSettings = exports.updateUserSettings = exports.updateUser = exports.getAUser = exports.createUserAccount = exports.createUser = void 0;
 const errorHandler_1 = require("../../utils/errorHandler");
 const query_1 = require("../../utils/query");
 const fileUpload_1 = require("../../utils/fileUpload");
@@ -266,92 +265,9 @@ const deleteUser = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
 });
 exports.deleteUser = deleteUser;
 //-----------------INFO--------------------//
-const updateUserAccountInfo = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    try {
-        const user = yield userInfoModel_1.UserFinanceInfo.findOneAndUpdate({ userId: req.params.id }, req.body, {
-            new: true,
-        });
-        yield user_1.User.findOneAndUpdate({ userId: req.params.id }, { isAccountSet: true }, {
-            new: true,
-        });
-        res.status(200).json(user);
-    }
-    catch (error) {
-        (0, errorHandler_1.handleError)(res, undefined, undefined, error);
-    }
-});
-exports.updateUserAccountInfo = updateUserAccountInfo;
-const getUserAccountInfo = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    try {
-        const user = yield userInfoModel_1.UserFinanceInfo.findOne({ userId: req.params.id });
-        if (!user) {
-            return res.status(404).json({ message: 'User not found' });
-        }
-        res.status(200).json(user);
-    }
-    catch (error) {
-        (0, errorHandler_1.handleError)(res, undefined, undefined, error);
-    }
-});
-exports.getUserAccountInfo = getUserAccountInfo;
-const getUserSchoolInfo = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    try {
-        const user = yield userInfoModel_1.UserSchoolInfo.findOne({ userId: req.params.id });
-        if (!user) {
-            return res.status(404).json({ message: 'User not found' });
-        }
-        res.status(200).json(user);
-    }
-    catch (error) {
-        (0, errorHandler_1.handleError)(res, undefined, undefined, error);
-    }
-});
-exports.getUserSchoolInfo = getUserSchoolInfo;
-const getUserInfo = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    try {
-        if (req.query.school) {
-            const user = yield userInfoModel_1.UserSchoolInfo.findOne({ userId: req.params.id });
-            if (!user) {
-                return res.status(404).json({ message: 'User not found' });
-            }
-            res.status(200).json(user);
-        }
-        else {
-            const user = yield userInfoModel_1.UserInfo.findById(req.params.id);
-            if (!user) {
-                return res.status(404).json({ message: 'User not found' });
-            }
-            res.status(200).json(user);
-        }
-    }
-    catch (error) {
-        (0, errorHandler_1.handleError)(res, undefined, undefined, error);
-    }
-});
-exports.getUserInfo = getUserInfo;
-const getUserDetails = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    try {
-        const user = yield userInfoModel_1.UserInfo.findOne({ username: req.params.username });
-        res.status(200).json(user);
-    }
-    catch (error) {
-        (0, errorHandler_1.handleError)(res, undefined, undefined, error);
-    }
-});
-exports.getUserDetails = getUserDetails;
-const getManyUserDetails = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    try {
-        const results = yield (0, query_1.queryData)(userInfoModel_1.UserInfo, req);
-        res.status(200).json(results);
-    }
-    catch (error) {
-        (0, errorHandler_1.handleError)(res, undefined, undefined, error);
-    }
-});
-exports.getManyUserDetails = getManyUserDetails;
 const getExistingUsername = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const user = (yield userInfoModel_1.UserInfo.findOne({ username: req.params.username })) ||
+        const user = (yield bioUser_1.BioUser.findOne({ username: req.params.username })) ||
             (yield user_1.User.findOne({ username: req.params.username }));
         res.status(200).json(user);
     }

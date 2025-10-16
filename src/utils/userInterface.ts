@@ -31,13 +31,6 @@ export interface IAd extends Document {
   online: boolean
 }
 
-export interface IAttempt extends Document {
-  username: string
-  userId: string
-  paperId: string
-  attempts: number
-}
-
 export interface IChatData extends Document {
   to: string
   action: string
@@ -70,22 +63,6 @@ export interface IGeneral {
   currentSchoolCountry: string
   currentSchoolName: string
   countrySymbol: string
-}
-
-interface Option {
-  index: number
-  value: string
-  isSelected: boolean
-  isClicked: boolean
-}
-
-export interface IParticipant extends Document {
-  _id: string
-  userId: string
-  paperId: string
-  isClicked: boolean
-  question: string
-  options: Option[]
 }
 
 export interface IPoll extends Document {
@@ -332,34 +309,6 @@ export interface IUserStat extends Document {
   ips: string[]
   username: string
   visitedAt: Date
-}
-
-export interface IUserTestExam extends Document {
-  username: string
-  userId: string
-  picture: string
-  paperId: string
-  displayName: string
-  title: string
-  type: string
-  instruction: string
-  questions: number
-  duration: number
-  rate: number
-  accuracy: number
-  metric: number
-  attempts: number
-  isFirstTime: boolean
-  totalAnswered: number
-  totalCorrectAnswer: number
-}
-export interface IUserTest extends Document {
-  _id: string
-  userId: string
-  paperId: string
-  isClicked: boolean
-  question: string
-  options: Option[]
 }
 
 interface File {

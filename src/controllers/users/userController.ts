@@ -1,10 +1,5 @@
 import { Request, Response } from 'express'
 import { IUserInfo } from '../../utils/userInterface'
-import {
-  UserInfo,
-  UserSchoolInfo,
-  UserFinanceInfo,
-} from '../../models/users/userInfoModel'
 import { handleError } from '../../utils/errorHandler'
 import { queryData, search, followAccount } from '../../utils/query'
 import { uploadFilesToS3 } from '../../utils/fileUpload'
@@ -241,7 +236,6 @@ export const searchAccounts = (req: Request, res: Response) => {
 }
 
 ///////////// NEW CONTROLLERS //////////////
-
 export const deleteMyData = async (
   req: Request,
   res: Response
@@ -295,117 +289,15 @@ export const deleteUser = async (req: Request, res: Response) => {
     handleError(res, undefined, undefined, error)
   }
 }
+
 //-----------------INFO--------------------//
-
-export const updateUserAccountInfo = async (
-  req: Request,
-  res: Response
-): Promise<void> => {
-  try {
-    const user = await UserFinanceInfo.findOneAndUpdate(
-      { userId: req.params.id },
-      req.body,
-      {
-        new: true,
-      }
-    )
-    await User.findOneAndUpdate(
-      { userId: req.params.id },
-      { isAccountSet: true },
-      {
-        new: true,
-      }
-    )
-    res.status(200).json(user)
-  } catch (error) {
-    handleError(res, undefined, undefined, error)
-  }
-}
-
-export const getUserAccountInfo = async (
-  req: Request,
-  res: Response
-): Promise<Response | void> => {
-  try {
-    const user = await UserFinanceInfo.findOne({ userId: req.params.id })
-    if (!user) {
-      return res.status(404).json({ message: 'User not found' })
-    }
-    res.status(200).json(user)
-  } catch (error) {
-    handleError(res, undefined, undefined, error)
-  }
-}
-
-export const getUserSchoolInfo = async (
-  req: Request,
-  res: Response
-): Promise<Response | void> => {
-  try {
-    const user = await UserSchoolInfo.findOne({ userId: req.params.id })
-    if (!user) {
-      return res.status(404).json({ message: 'User not found' })
-    }
-    res.status(200).json(user)
-  } catch (error) {
-    handleError(res, undefined, undefined, error)
-  }
-}
-
-export const getUserInfo = async (
-  req: Request,
-  res: Response
-): Promise<Response | void> => {
-  try {
-    if (req.query.school) {
-      const user = await UserSchoolInfo.findOne({ userId: req.params.id })
-      if (!user) {
-        return res.status(404).json({ message: 'User not found' })
-      }
-      res.status(200).json(user)
-    } else {
-      const user = await UserInfo.findById(req.params.id)
-      if (!user) {
-        return res.status(404).json({ message: 'User not found' })
-      }
-      res.status(200).json(user)
-    }
-  } catch (error) {
-    handleError(res, undefined, undefined, error)
-  }
-}
-
-export const getUserDetails = async (
-  req: Request,
-  res: Response
-): Promise<Response | void> => {
-  try {
-    const user = await UserInfo.findOne({ username: req.params.username })
-    res.status(200).json(user)
-  } catch (error) {
-    handleError(res, undefined, undefined, error)
-  }
-}
-
-export const getManyUserDetails = async (
-  req: Request,
-  res: Response
-): Promise<Response | void> => {
-  try {
-    const results = await queryData<IUserInfo>(UserInfo, req)
-    res.status(200).json(results)
-  } catch (error) {
-    handleError(res, undefined, undefined, error)
-  }
-}
-
 export const getExistingUsername = async (
   req: Request,
   res: Response
 ): Promise<Response | void> => {
   try {
     const user =
-      (await UserInfo.findOne({ username: req.params.username })) ||
+      (await BioUser.findOne({ username: req.params.username })) ||
       (await User.findOne({ username: req.params.username }))
     res.status(200).json(user)
   } catch (error) {
