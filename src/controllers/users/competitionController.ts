@@ -21,9 +21,9 @@ export const submitTest = async (
   try {
     const paperId = req.body.paperId
     const bioUserId = req.body.bioUserId
-    const username = req.body.username
-    const picture = req.body.picture
-    const displayName = req.body.displayName
+    const bioUserUsername = req.body.bioUserUsername
+    const bioUserPicture = req.body.bioUserPicture
+    const bioUserDisplayName = req.body.bioUserDisplayName
     const started = Number(req.body.started)
     const ended = Number(req.body.ended)
     // const attempts = Number(req.body.attempts);
@@ -94,9 +94,9 @@ export const submitTest = async (
         $set: {
           paperId,
           bioUserId,
-          username,
-          displayName,
-          picture,
+          bioUserUsername,
+          bioUserDisplayName,
+          bioUserPicture,
           started,
           ended,
           attempts,
