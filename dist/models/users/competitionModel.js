@@ -60,10 +60,10 @@ const UserTestExamSchema = new mongoose_1.Schema({
 });
 exports.UserTestExam = mongoose_1.default.model('UserTestExam', UserTestExamSchema);
 const UserObjectiveSchema = new mongoose_1.Schema({
-    userId: { type: String },
-    paperId: { type: String, default: '' },
+    bioUserId: { type: String },
+    paperId: { type: String },
     isClicked: { type: Boolean, default: false },
-    question: { type: String, default: '' },
+    question: { type: String },
     options: { type: Array, default: [] },
     createdAt: { type: Date, default: Date.now },
 }, {

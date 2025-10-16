@@ -193,7 +193,7 @@ exports.getExamById = getExamById;
 const getUserExam = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const exam = yield competitionModel_2.UserTestExam.findOne({
-            userId: req.query.userId,
+            bioUserId: req.query.bioUserId,
             paperId: req.query.paperId,
         });
         const result = yield (0, query_1.queryData)(competitionModel_2.UserObjective, req);

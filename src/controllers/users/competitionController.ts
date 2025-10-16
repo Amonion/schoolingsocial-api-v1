@@ -236,7 +236,7 @@ export const getExamById = async (
 export const getUserExam = async (req: Request, res: Response) => {
   try {
     const exam = await UserTestExam.findOne({
-      userId: req.query.userId,
+      bioUserId: req.query.bioUserId,
       paperId: req.query.paperId,
     })
     const result = await queryData<IUserObjective>(UserObjective, req)

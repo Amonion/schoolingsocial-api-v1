@@ -76,10 +76,10 @@ export interface IUserObjective extends Document {
 
 const UserObjectiveSchema: Schema = new Schema(
   {
-    userId: { type: String },
-    paperId: { type: String, default: '' },
+    bioUserId: { type: String },
+    paperId: { type: String },
     isClicked: { type: Boolean, default: false },
-    question: { type: String, default: '' },
+    question: { type: String },
     options: { type: Array, default: [] },
     createdAt: { type: Date, default: Date.now },
   },
