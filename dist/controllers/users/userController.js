@@ -12,7 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.followUserAccount = exports.getExistingUsername = exports.deleteUser = exports.getUsers = exports.deleteMyData = exports.searchAccounts = exports.getUserSettings = exports.updateUserSettings = exports.updateUser = exports.getAUser = exports.createUserAccount = exports.createUser = void 0;
+exports.followUserAccount = exports.getChatUser = exports.getExistingUsername = exports.deleteUser = exports.getUsers = exports.deleteMyData = exports.searchAccounts = exports.getUserSettings = exports.updateUserSettings = exports.updateUser = exports.getAUser = exports.createUserAccount = exports.createUser = void 0;
 const errorHandler_1 = require("../../utils/errorHandler");
 const query_1 = require("../../utils/query");
 const fileUpload_1 = require("../../utils/fileUpload");
@@ -276,6 +276,36 @@ const getExistingUsername = (req, res) => __awaiter(void 0, void 0, void 0, func
     }
 });
 exports.getExistingUsername = getExistingUsername;
+const getChatUser = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const bioUser = yield bioUser_1.BioUser.findOne({ username: req.params.username });
+        const user = yield user_1.User.findOne({ username: req.params.username });
+        if (bioUser) {
+            res.status(200).json({
+                data: {
+                    username: bioUser.bioUserUsername,
+                    picture: bioUser.bioUserPicture,
+                    displayName: bioUser.bioUserDisplayName,
+                    _id: bioUser._id,
+                },
+            });
+        }
+        else {
+            res.status(200).json({
+                data: {
+                    username: user.username,
+                    picture: user.picture,
+                    displayName: user.displayName,
+                    _id: user._id,
+                },
+            });
+        }
+    }
+    catch (error) {
+        (0, errorHandler_1.handleError)(res, undefined, undefined, error);
+    }
+});
+exports.getChatUser = getChatUser;
 //-----------------FOLLOW USER--------------------//
 const followUserAccount = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {

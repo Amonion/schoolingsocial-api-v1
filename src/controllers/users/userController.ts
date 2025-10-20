@@ -304,6 +304,36 @@ export const getExistingUsername = async (
     handleError(res, undefined, undefined, error)
   }
 }
+export const getChatUser = async (
+  req: Request,
+  res: Response
+): Promise<Response | void> => {
+  try {
+    const bioUser = await BioUser.findOne({ username: req.params.username })
+    const user = await User.findOne({ username: req.params.username })
+    if (bioUser) {
+      res.status(200).json({
+        data: {
+          username: bioUser.bioUserUsername,
+          picture: bioUser.bioUserPicture,
+          displayName: bioUser.bioUserDisplayName,
+          _id: bioUser._id,
+        },
+      })
+    } else {
+      res.status(200).json({
+        data: {
+          username: user.username,
+          picture: user.picture,
+          displayName: user.displayName,
+          _id: user._id,
+        },
+      })
+    }
+  } catch (error) {
+    handleError(res, undefined, undefined, error)
+  }
+}
 
 //-----------------FOLLOW USER--------------------//
 export const followUserAccount = async (req: Request, res: Response) => {

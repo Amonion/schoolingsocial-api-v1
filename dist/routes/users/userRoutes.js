@@ -11,6 +11,7 @@ const userController_1 = require("../../controllers/users/userController");
 const bioUserController_1 = require("../../controllers/users/bioUserController");
 const router = express_1.default.Router();
 router.route('/create-account').post(upload.any(), userController_1.createUserAccount);
+router.route('/chat/:username').get(userController_1.getChatUser);
 router.route('/username/:username').get(userController_1.getExistingUsername);
 router.route('/login').post(upload.any(), authController_1.loginUser);
 router.route('/auth').get(authController_1.getCurrentUser);

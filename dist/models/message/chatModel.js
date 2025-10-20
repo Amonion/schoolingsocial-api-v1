@@ -33,31 +33,31 @@ var __importStar = (this && this.__importStar) || (function () {
     };
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.Chat = void 0;
+exports.Friend = exports.Chat = void 0;
 const mongoose_1 = __importStar(require("mongoose"));
 const ChatSchema = new mongoose_1.Schema({
     username: { type: String },
     userId: { type: String },
-    picture: { type: String, default: '' },
-    media: { type: Array, default: [] },
-    day: { type: String, default: '' },
-    connection: { type: String, default: '' },
+    picture: { type: String },
+    media: { type: Array },
+    day: { type: String },
+    connection: { type: String },
     repliedChat: { type: Object, default: {} },
-    content: { type: String, default: '' },
+    content: { type: String },
     isSent: { type: Boolean, default: false },
-    isSavedUsernames: { type: Array, default: [] },
-    isReadUsernames: { type: Array, default: [] },
+    isSavedUsernames: { type: Array },
+    isReadUsernames: { type: Array },
     isPinned: { type: Boolean, default: false },
     isFriends: { type: Boolean, default: false },
     isRead: { type: Boolean, default: false },
-    receiverUsername: { type: String, default: '' },
-    receiverPicture: { type: String, default: '' },
-    receiverId: { type: String, default: '' },
-    from: { type: String, default: '' },
+    receiverUsername: { type: String },
+    receiverPicture: { type: String },
+    receiverId: { type: String },
+    from: { type: String },
     time: { type: Number, default: 0 },
     unreadUser: { type: Number, default: 0 },
     unreadReceiver: { type: Number, default: 0 },
-    deletedUsername: { type: String, default: '' },
+    deletedUsername: { type: String },
     receiverTime: { type: Date, default: Date.now },
     senderTime: { type: Date, default: Date.now },
     createdAt: { type: Date, default: Date.now },
@@ -65,3 +65,23 @@ const ChatSchema = new mongoose_1.Schema({
     timestamps: true,
 });
 exports.Chat = mongoose_1.default.model('Chat', ChatSchema);
+const FriendSchema = new mongoose_1.Schema({
+    senderUsername: { type: String },
+    senderDisplayName: { type: String },
+    senderPicture: { type: String },
+    receiverDisplayName: { type: String },
+    receiverUsername: { type: String },
+    receiverPicture: { type: String },
+    isFriends: { type: Boolean, default: false },
+    senderOnline: { type: Boolean, default: false },
+    receiverOnline: { type: Boolean, default: false },
+    connection: { type: String },
+    unreadSender: { type: Number, default: 0 },
+    unreadReceiver: { type: Number, default: 0 },
+    receiverTime: { type: Date, default: Date.now },
+    senderTime: { type: Date, default: Date.now },
+    createdAt: { type: Date, default: Date.now },
+}, {
+    timestamps: true,
+});
+exports.Friend = mongoose_1.default.model('Friend', FriendSchema);

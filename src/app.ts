@@ -12,6 +12,7 @@ import messageRoutes from './routes/message/messageRoutes'
 import newsRoutes from './routes/news/newsRoutes'
 import placeRoutes from './routes/place/placeRoutes'
 import postRoutes from './routes/post/postRoutes'
+import chatRoutes from './routes/message/chatRoutes'
 import courseRoutes from './routes/school/courseRoutes'
 import departmentRoutes from './routes/school/departmentRoutes'
 import facultyRoutes from './routes/school/facultyRoutes'
@@ -33,7 +34,7 @@ import {
   createChat,
   deleteChat,
   readChats,
-} from './controllers/users/chatController'
+} from './controllers/message/chatController'
 import { createPost } from './controllers/post/postController'
 import { getPresignedUrl, removeFile } from './utils/fileUpload'
 import { geoipMiddleware } from './middlewares/geoipMiddleware'
@@ -77,6 +78,7 @@ const io = new Server(server, {
   cors: {
     origin: [
       'http://localhost:3000',
+      'https://schoolingweb.netlify.app',
       'https://schoolingsocial.netlify.app',
       'https://schoolingsocial.com',
     ],
@@ -132,6 +134,7 @@ app.use('/api/v1/banks', bankRoutes)
 app.use('/api/v1/competitions', competitionRoutes)
 app.use('/api/v1/questions', questionRoutes)
 app.use('/api/v1/courses', courseRoutes)
+app.use('/api/v1/chats', chatRoutes)
 app.use('/api/v1/company', companyRoutes)
 app.use('/api/v1/documents', placeDocumentRoutes)
 app.use('/api/v1/messages', messageRoutes)

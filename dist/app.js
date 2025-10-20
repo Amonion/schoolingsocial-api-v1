@@ -27,6 +27,7 @@ const messageRoutes_1 = __importDefault(require("./routes/message/messageRoutes"
 const newsRoutes_1 = __importDefault(require("./routes/news/newsRoutes"));
 const placeRoutes_1 = __importDefault(require("./routes/place/placeRoutes"));
 const postRoutes_1 = __importDefault(require("./routes/post/postRoutes"));
+const chatRoutes_1 = __importDefault(require("./routes/message/chatRoutes"));
 const courseRoutes_1 = __importDefault(require("./routes/school/courseRoutes"));
 const departmentRoutes_1 = __importDefault(require("./routes/school/departmentRoutes"));
 const facultyRoutes_1 = __importDefault(require("./routes/school/facultyRoutes"));
@@ -44,7 +45,7 @@ const userRoutes_1 = __importDefault(require("./routes/users/userRoutes"));
 const transactionRoutes_1 = __importDefault(require("./routes/finance/transactionRoutes"));
 const utilityRoutes_1 = __importDefault(require("./routes/utility/utilityRoutes"));
 const aiRoutes_1 = __importDefault(require("./routes/utility/aiRoutes"));
-const chatController_1 = require("./controllers/users/chatController");
+const chatController_1 = require("./controllers/message/chatController");
 const postController_1 = require("./controllers/post/postController");
 const fileUpload_1 = require("./utils/fileUpload");
 const geoipMiddleware_1 = require("./middlewares/geoipMiddleware");
@@ -77,6 +78,7 @@ const io = new socket_io_1.Server(server, {
     cors: {
         origin: [
             'http://localhost:3000',
+            'https://schoolingweb.netlify.app',
             'https://schoolingsocial.netlify.app',
             'https://schoolingsocial.com',
         ],
@@ -129,6 +131,7 @@ app.use('/api/v1/banks', bankRoutes_1.default);
 app.use('/api/v1/competitions', competitionRoutes_1.default);
 app.use('/api/v1/questions', questionRoutes_1.default);
 app.use('/api/v1/courses', courseRoutes_1.default);
+app.use('/api/v1/chats', chatRoutes_1.default);
 app.use('/api/v1/company', companyRoutes_1.default);
 app.use('/api/v1/documents', placeDocumentRoutes_1.default);
 app.use('/api/v1/messages', messageRoutes_1.default);

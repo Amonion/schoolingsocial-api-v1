@@ -19,6 +19,7 @@ import {
   getUserSettings,
   deleteMyData,
   createUserAccount,
+  getChatUser,
 } from '../../controllers/users/userController'
 
 import {
@@ -39,6 +40,7 @@ import {
 
 const router = express.Router()
 router.route('/create-account').post(upload.any(), createUserAccount)
+router.route('/chat/:username').get(getChatUser)
 router.route('/username/:username').get(getExistingUsername)
 router.route('/login').post(upload.any(), loginUser)
 
