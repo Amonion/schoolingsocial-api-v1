@@ -25,12 +25,12 @@ export interface IChat extends Document {
   _id: string
   from: string
   content: string
-  userId: string
+  status: string
   isReadUsernames: string[]
   isSavedUsernames: string[]
   action: string
-  username: string
-  picture: string
+  senderUsername: string
+  senderPicture: string
   media: [
     {
       source: string
@@ -46,42 +46,32 @@ export interface IChat extends Document {
   receiverTime: Date
   createdAt: Date
   time: number
+  timeNumber: number
   unreadUser: number
   unreadReceiver: number
   receiverUsername: string
   receiverPicture: string
-  receiverId: string
   repliedChat: IRepliedChatContent
+  isFriends: boolean
   isPinned: boolean
   isRead: boolean
-  isFriends: boolean
-  isSent: boolean
-  senderId: string
 }
 
 const ChatSchema: Schema = new Schema(
   {
-    username: { type: String },
-    userId: { type: String },
-    picture: { type: String },
+    senderUsername: { type: String },
     media: { type: Array },
     day: { type: String },
     connection: { type: String },
+    status: { type: String },
     repliedChat: { type: Object, default: {} },
     content: { type: String },
-    isSent: { type: Boolean, default: false },
     isSavedUsernames: { type: Array },
     isReadUsernames: { type: Array },
     isPinned: { type: Boolean, default: false },
-    isFriends: { type: Boolean, default: false },
     isRead: { type: Boolean, default: false },
     receiverUsername: { type: String },
-    receiverPicture: { type: String },
-    receiverId: { type: String },
-    from: { type: String },
-    time: { type: Number, default: 0 },
-    unreadUser: { type: Number, default: 0 },
-    unreadReceiver: { type: Number, default: 0 },
+    timeNumber: { type: Number, default: 0 },
     deletedUsername: { type: String },
     receiverTime: { type: Date, default: Date.now },
     senderTime: { type: Date, default: Date.now },
@@ -102,12 +92,12 @@ export interface IFriend extends Document {
   receiverDisplayName: string
   receiverUsername: string
   receiverPicture: string
-
   isFriends: boolean
   senderOnline: boolean
   receiverOnline: boolean
   connection: string
-
+  status: string
+  contentType: string
   senderTime: Date
   receiverTime: Date
   createdAt: Date
@@ -128,6 +118,9 @@ const FriendSchema: Schema = new Schema(
     senderOnline: { type: Boolean, default: false },
     receiverOnline: { type: Boolean, default: false },
     connection: { type: String },
+    status: { type: String },
+    content: { type: String },
+    contentType: { type: String },
     unreadSender: { type: Number, default: 0 },
     unreadReceiver: { type: Number, default: 0 },
     receiverTime: { type: Date, default: Date.now },

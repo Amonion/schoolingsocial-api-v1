@@ -95,6 +95,13 @@ io.on('connection', (socket) => {
             case 'chat':
                 (0, chatController_1.createChat)(data);
                 break;
+            case 'deliveredChat':
+                console.log('delivered chat');
+                (0, chatController_1.updateDeliveredChat)(data.chat);
+                break;
+            case 'pendingChat':
+                (0, chatController_1.sendPendingChats)(data);
+                break;
             case 'read':
                 (0, chatController_1.readChats)(data);
                 break;

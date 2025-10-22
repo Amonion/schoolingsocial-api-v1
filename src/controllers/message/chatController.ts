@@ -1,15 +1,24 @@
 import { Request, Response } from 'express'
-import { Chat, IChat } from '../../models/message/chatModel'
+import { Chat, Friend, IChat } from '../../models/message/chatModel'
 import { handleError } from '../../utils/errorHandler'
 import { queryData } from '../../utils/query'
 import { deleteFileFromS3 } from '../../utils/fileUpload'
 import { io } from '../../app'
-import { UserStat, UserStatus } from '../../models/users/usersStatMode'
+import { UserStat } from '../../models/users/usersStatMode'
 import { Expo } from 'expo-server-sdk'
 import { User } from '../../models/users/user'
-import { sendPersonalNotification } from '../../utils/sendNotification'
+import {
+  sendPersonalNotification,
+  sendSocialNotification,
+} from '../../utils/sendNotification'
 import { BioUser } from '../../models/users/bioUser'
+import { SocialNotification } from '../../models/message/socialNotificationModel'
 const expo = new Expo()
+
+interface PendingChat {
+  isFriends: boolean
+  messages: IChat[]
+}
 
 const setConnectionKey = (id1: string, id2: string) => {
   const participants = [id1, id2].sort()
@@ -29,6 +38,73 @@ interface ChatData {
   token: string
   message: string
   username: string
+}
+
+const sendCreatedChat = async (
+  post: IChat,
+  connection: string,
+  totalUnread?: number
+) => {
+  const friend = await Friend.findOne({ connection: connection })
+
+  /////////////// SEND TO UPDATE PENDING ROOM CHAT //////////////
+  io.emit(`updatePendingChat${post.senderUsername}`, {
+    key: connection,
+    chat: post,
+    totalUnread: totalUnread,
+    friend,
+    pending: true,
+    isFriends: friend.isFriends,
+  })
+
+  /////////////// WHEN USER IS IN CHAT ROOM OR NOT //////////////
+  if (friend.isFriends) {
+    console.log('Sending to friend')
+    io.emit(`addCreatedChat${post.receiverUsername}`, {
+      key: connection,
+      chat: post,
+      totalUnread: totalUnread,
+      pending: true,
+      isFriends: friend.isFriends,
+      friend,
+    })
+  } else {
+    const notification = await SocialNotification.findOne({
+      senderUsername: post.senderUsername,
+      receiverName: post.receiverUsername,
+      name: 'friend_request',
+    })
+    if (!notification) {
+      const response = await sendSocialNotification('friend_request', {
+        senderUsername: friend.senderUsername,
+        receiverUsername: friend.receiverUsername,
+        senderPicture: friend.senderPicture,
+        receiverPicture: friend.receiverPicture,
+        senderName: friend.senderDisplayName,
+        receiverName: friend.receiverDisplayName,
+      })
+
+      io.emit(`social_notification_${post.receiverUsername}`, response)
+    }
+  }
+
+  /////////////// WHEN USER IS NOT IN THE APP //////////////
+  // const onlineUser = await UserStatus.findOne({
+  //   username: post.receiverUsername,
+  // })
+
+  // if (!onlineUser?.online) {
+  //   const user = await User.findOne({
+  //     username: post.receiverUsername,
+  //   })
+  //   const userInfo = await BioUser.findById(user?.bioUserId)
+  //   if (!userInfo) return
+  //   sendChatPushNotification({
+  //     username: post.senderUsername,
+  //     message: post.content,
+  //     token: userInfo?.notificationToken,
+  //   })
+  // }
 }
 
 export const sendChatPushNotification = async (chatData: ChatData) => {
@@ -53,66 +129,26 @@ export const sendChatPushNotification = async (chatData: ChatData) => {
 
 export const createChat = async (data: IChat) => {
   try {
-    const sendCreatedChat = async (
-      post: IChat,
-      isFriends: boolean,
-      totalUnread?: number
-    ) => {
-      io.emit(`createdChat${connection}`, {
-        key: connection,
-        data: post,
-        totalUnread: totalUnread,
-      })
-
-      /////////////// WHEN USER IS NOT IN CHAT ROOM //////////////
-      if (isFriends) {
-        io.emit(`createdChat${data.receiverUsername}`, {
-          key: connection,
-          data: post,
-          message: data.action === 'online' ? 'online' : '',
-          totalUnread: totalUnread,
-        })
-      }
-
-      /////////////// WHEN USER IS NOT IN THE APP //////////////
-      const onlineUser = await UserStatus.findOne({
-        username: data.receiverUsername,
-      })
-
-      if (!onlineUser?.online) {
-        const user = await User.findOne({
-          username: data.receiverUsername,
-        })
-        const userInfo = await BioUser.findById(user?.bioUserId)
-        if (!userInfo) return
-        sendChatPushNotification({
-          username: post.username,
-          message: post.content,
-          token: userInfo?.notificationToken,
-        })
-      }
-    }
-
     const connection = data.connection
     const prev = await Chat.findOne({
       connection: connection,
     }).sort({ createdAt: -1 })
-    data.connection = connection
 
-    const unreadReceiver = await Chat.countDocuments({
-      connection: connection,
-      receiverUsername: data.receiverUsername,
-      isRead: false,
-    })
-    const unreadUser = await Chat.countDocuments({
-      connection: connection,
-      username: data.username,
-      isRead: false,
-    })
+    const justBecameFriends =
+      !data.isFriends && data.receiverUsername !== data.senderUsername
+    if (justBecameFriends) {
+      await Friend.findOneAndUpdate(
+        { connection: connection },
+        { isFriends: true }
+      )
+      data.isFriends = true
+    }
 
-    data.unreadReceiver = unreadReceiver + 1
-    data.unreadUser = unreadUser
-    data.isSent = true
+    data.status = 'sent'
+    await Friend.findOneAndUpdate({ connection: data.connection }, data, {
+      new: true,
+      upsert: true,
+    })
 
     if (prev) {
       const lastTime = new Date(prev.createdAt).getTime()
@@ -120,16 +156,98 @@ export const createChat = async (data: IChat) => {
       const currentTime = new Date().getTime()
       const receiverTime = new Date(currentTime - lastTime + lastReceiverTime)
       data.receiverTime = receiverTime
-      const post = await Chat.create(data)
-      const totalUread = await Chat.countDocuments({
-        isRead: false,
-        isFriends: true,
-        receiverUsername: data.receiverUsername,
-      })
-      sendCreatedChat(post, data.isFriends, totalUread)
+      const post = await Chat.findOneAndUpdate(
+        { timeNumber: data.timeNumber, connection: data.connection },
+        data,
+        { new: true, upsert: true }
+      )
+      const totalUread = justBecameFriends
+        ? await Chat.countDocuments({
+            isRead: false,
+            isFriends: true,
+            receiverUsername: data.receiverUsername,
+          })
+        : 0
+      sendCreatedChat(post, connection, totalUread)
     } else {
       const post = await Chat.create(data)
-      sendCreatedChat(post, false)
+      sendCreatedChat(post, connection)
+    }
+  } catch (error) {
+    console.log(error)
+  }
+}
+
+export const updateDeliveredChat = async (data: IChat) => {
+  try {
+    const connection = data.connection
+    const friend = await Friend.findOneAndUpdate(
+      { connection: connection },
+      { status: 'delivered' },
+      { new: true }
+    )
+    const chat = await Chat.findByIdAndUpdate(
+      data._id,
+      { status: 'delivered' },
+      { new: true }
+    )
+    io.emit(`updateDeliveredChat${chat.senderUsername}`, {
+      connection,
+      chat,
+      friend,
+    })
+  } catch (error) {
+    console.log(error)
+  }
+}
+
+export const sendPendingChats = async (data: PendingChat) => {
+  try {
+    for (let i = 0; i < data.messages.length; i++) {
+      const chat = data.messages[i]
+      const connection = chat.connection
+      const justBecameFriends =
+        !chat.isFriends && chat.receiverUsername !== chat.senderUsername
+      if (justBecameFriends) {
+        await Friend.findOneAndUpdate(
+          { connection: connection },
+          { isFriends: true }
+        )
+      }
+
+      const prev = await Chat.findOne({
+        connection: connection,
+      }).sort({ createdAt: -1 })
+
+      chat.status = 'sent'
+      delete chat._id
+
+      if (prev) {
+        const lastTime = new Date(prev.createdAt).getTime()
+        const lastReceiverTime = new Date(prev.receiverTime).getTime()
+        const currentTime = new Date().getTime()
+        const receiverTime = new Date(currentTime - lastTime + lastReceiverTime)
+        chat.receiverTime = receiverTime
+        const post = await Chat.findOneAndUpdate(
+          { timeNumber: chat.timeNumber, connection: chat.connection },
+          chat,
+          { new: true, upsert: true }
+        )
+        const totalUread = justBecameFriends
+          ? await Chat.countDocuments({
+              isRead: false,
+              receiverUsername: chat.receiverUsername,
+            })
+          : 0
+        sendCreatedChat(post, connection, totalUread)
+      } else {
+        const post = await Chat.findOneAndUpdate(
+          { timeNumber: chat.timeNumber, connection: chat.connection },
+          chat,
+          { new: true, upsert: true }
+        )
+        sendCreatedChat(post, connection)
+      }
     }
   } catch (error) {
     console.log(error)

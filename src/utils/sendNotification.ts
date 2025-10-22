@@ -29,7 +29,7 @@ export const sendSocialNotification = async (
 
   const click_here =
     templateName === 'friend_request'
-      ? `<a href="/home/chat/${data.from}/${data.senderUsername}" class="text-[var(--custom)]">click here</a>`
+      ? `<a href="/friends/chat/${data.senderUsername}" class="text-[var(--custom)]">click here</a>`
       : ''
 
   const content = notificationTemp.content

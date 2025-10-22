@@ -21,7 +21,7 @@ const sendSocialNotification = (templateName, data) => __awaiter(void 0, void 0,
         throw new Error(`Notification template '${templateName}' not found.`);
     }
     const click_here = templateName === 'friend_request'
-        ? `<a href="/home/chat/${data.from}/${data.senderUsername}" class="text-[var(--custom)]">click here</a>`
+        ? `<a href="/friends/chat/${data.senderUsername}" class="text-[var(--custom)]">click here</a>`
         : '';
     const content = notificationTemp.content
         .replace('{{receiver_name}}', data.receiverName)

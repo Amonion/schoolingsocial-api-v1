@@ -34,6 +34,8 @@ import {
   createChat,
   deleteChat,
   readChats,
+  sendPendingChats,
+  updateDeliveredChat,
 } from './controllers/message/chatController'
 import { createPost } from './controllers/post/postController'
 import { getPresignedUrl, removeFile } from './utils/fileUpload'
@@ -95,6 +97,13 @@ io.on('connection', (socket) => {
     switch (data.to) {
       case 'chat':
         createChat(data)
+        break
+      case 'deliveredChat':
+        console.log('delivered chat')
+        updateDeliveredChat(data.chat)
+        break
+      case 'pendingChat':
+        sendPendingChats(data)
         break
       case 'read':
         readChats(data)
