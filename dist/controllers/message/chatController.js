@@ -26,21 +26,19 @@ const setConnectionKey = (id1, id2) => {
     return participants.join('');
 };
 const sendCreatedChat = (post, connection, totalUnread) => __awaiter(void 0, void 0, void 0, function* () {
-    const friend = yield chatModel_1.Friend.findOne({ connection: connection });
+    const friend = yield chatModel_1.Friend.findOneAndUpdate({ connection: connection }, { totalUnread: totalUnread }, { new: true });
     /////////////// SEND TO UPDATE PENDING ROOM CHAT //////////////
     app_1.io.emit(`updatePendingChat${post.senderUsername}`, {
-        key: connection,
+        connection,
         chat: post,
-        totalUnread: totalUnread,
         friend,
         pending: true,
         isFriends: friend.isFriends,
     });
-    /////////////// WHEN USER IS IN CHAT ROOM OR NOT //////////////
     if (friend.isFriends) {
-        console.log('Sending to friend');
+        /////////////// WHEN USER IS IN CHAT ROOM OR NOT //////////////
         app_1.io.emit(`addCreatedChat${post.receiverUsername}`, {
-            key: connection,
+            connection,
             chat: post,
             totalUnread: totalUnread,
             pending: true,
@@ -109,8 +107,9 @@ const createChat = (data) => __awaiter(void 0, void 0, void 0, function* () {
         const prev = yield chatModel_1.Chat.findOne({
             connection: connection,
         }).sort({ createdAt: -1 });
-        const justBecameFriends = !data.isFriends && data.receiverUsername !== data.senderUsername;
-        if (justBecameFriends) {
+        if (prev &&
+            !data.isFriends &&
+            prev.receiverUsername === data.senderUsername) {
             yield chatModel_1.Friend.findOneAndUpdate({ connection: connection }, { isFriends: true });
             data.isFriends = true;
         }
@@ -126,10 +125,9 @@ const createChat = (data) => __awaiter(void 0, void 0, void 0, function* () {
             const receiverTime = new Date(currentTime - lastTime + lastReceiverTime);
             data.receiverTime = receiverTime;
             const post = yield chatModel_1.Chat.findOneAndUpdate({ timeNumber: data.timeNumber, connection: data.connection }, data, { new: true, upsert: true });
-            const totalUread = justBecameFriends
+            const totalUread = data.isFriends
                 ? yield chatModel_1.Chat.countDocuments({
                     isRead: false,
-                    isFriends: true,
                     receiverUsername: data.receiverUsername,
                 })
                 : 0;

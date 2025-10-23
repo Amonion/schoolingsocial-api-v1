@@ -45,23 +45,25 @@ const sendCreatedChat = async (
   connection: string,
   totalUnread?: number
 ) => {
-  const friend = await Friend.findOne({ connection: connection })
+  const friend = await Friend.findOneAndUpdate(
+    { connection: connection },
+    { totalUnread: totalUnread },
+    { new: true }
+  )
 
   /////////////// SEND TO UPDATE PENDING ROOM CHAT //////////////
   io.emit(`updatePendingChat${post.senderUsername}`, {
-    key: connection,
+    connection,
     chat: post,
-    totalUnread: totalUnread,
     friend,
     pending: true,
     isFriends: friend.isFriends,
   })
 
-  /////////////// WHEN USER IS IN CHAT ROOM OR NOT //////////////
   if (friend.isFriends) {
-    console.log('Sending to friend')
+    /////////////// WHEN USER IS IN CHAT ROOM OR NOT //////////////
     io.emit(`addCreatedChat${post.receiverUsername}`, {
-      key: connection,
+      connection,
       chat: post,
       totalUnread: totalUnread,
       pending: true,
@@ -134,9 +136,11 @@ export const createChat = async (data: IChat) => {
       connection: connection,
     }).sort({ createdAt: -1 })
 
-    const justBecameFriends =
-      !data.isFriends && data.receiverUsername !== data.senderUsername
-    if (justBecameFriends) {
+    if (
+      prev &&
+      !data.isFriends &&
+      prev.receiverUsername === data.senderUsername
+    ) {
       await Friend.findOneAndUpdate(
         { connection: connection },
         { isFriends: true }
@@ -161,10 +165,9 @@ export const createChat = async (data: IChat) => {
         data,
         { new: true, upsert: true }
       )
-      const totalUread = justBecameFriends
+      const totalUread = data.isFriends
         ? await Chat.countDocuments({
             isRead: false,
-            isFriends: true,
             receiverUsername: data.receiverUsername,
           })
         : 0

@@ -71,6 +71,7 @@ const FriendSchema = new mongoose_1.Schema({
     status: { type: String },
     content: { type: String },
     contentType: { type: String },
+    totalUnread: { type: Number, default: 0 },
     unreadSender: { type: Number, default: 0 },
     unreadReceiver: { type: Number, default: 0 },
     receiverTime: { type: Date, default: Date.now },

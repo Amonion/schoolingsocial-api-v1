@@ -83,6 +83,7 @@ export const sendPersonalNotification = async (
 
   const content = notificationTemp.content
     .replace('{{sender_username}}', data.senderUsername)
+    .replace('{{receiver_username}}', data.receiverUsername)
     .replace('{{school}}', data.str1)
     .replace('{{click_here}}', click_here)
 
