@@ -20,11 +20,6 @@ interface PendingChat {
   messages: IChat[]
 }
 
-const setConnectionKey = (id1: string, id2: string) => {
-  const participants = [id1, id2].sort()
-  return participants.join('')
-}
-
 interface Receive {
   ids: string[]
   receiverId: string
@@ -32,6 +27,7 @@ interface Receive {
   userId: string
   username: string
   receiverUsername: string
+  senderUsername: string
   connection: string
 }
 interface ChatData {
@@ -46,8 +42,15 @@ const sendCreatedChat = async (
   totalUnread?: number
 ) => {
   const friend = await Friend.findOneAndUpdate(
-    { connection: connection },
-    { totalUnread: totalUnread },
+    {
+      connection,
+      'unreadMessages.username': post.receiverUsername,
+    },
+    {
+      $set: {
+        'unreadMessages.$.unread': totalUnread,
+      },
+    },
     { new: true }
   )
 
@@ -65,7 +68,6 @@ const sendCreatedChat = async (
     io.emit(`addCreatedChat${post.receiverUsername}`, {
       connection,
       chat: post,
-      totalUnread: totalUnread,
       pending: true,
       isFriends: friend.isFriends,
       friend,
@@ -132,6 +134,7 @@ export const sendChatPushNotification = async (chatData: ChatData) => {
 export const createChat = async (data: IChat) => {
   try {
     const connection = data.connection
+
     const prev = await Chat.findOne({
       connection: connection,
     }).sort({ createdAt: -1 })
@@ -165,14 +168,26 @@ export const createChat = async (data: IChat) => {
         data,
         { new: true, upsert: true }
       )
-      const totalUread = data.isFriends
-        ? await Chat.countDocuments({
-            isRead: false,
-            receiverUsername: data.receiverUsername,
-          })
-        : 0
+      const totalUread = await Chat.countDocuments({
+        isRead: false,
+        receiverUsername: data.receiverUsername,
+      })
       sendCreatedChat(post, connection, totalUread)
     } else {
+      await Friend.findOneAndUpdate(
+        { connection },
+        {
+          $addToSet: {
+            unreadMessages: {
+              $each: [
+                { username: data.senderUsername, unread: 0 },
+                { username: data.receiverUsername, unread: 1 },
+              ],
+            },
+          },
+        },
+        { new: true, upsert: true }
+      )
       const post = await Chat.create(data)
       sendCreatedChat(post, connection)
     }
@@ -256,6 +271,126 @@ export const sendPendingChats = async (data: PendingChat) => {
     console.log(error)
   }
 }
+
+export const getChats = async (req: Request, res: Response) => {
+  try {
+    const username = req.query.username
+    delete req.query.username
+    const result = await queryData<IChat>(Chat, req)
+    const unread = await Chat.countDocuments({
+      connection: req.query.connection,
+      isRead: false,
+      receiverUsername: username,
+    })
+    res.status(200).json({
+      count: result.count,
+      results: result.results,
+      unread: unread,
+      page: result.page,
+    })
+  } catch (error) {
+    handleError(res, undefined, undefined, error)
+  }
+}
+
+export const getFriends = async (req: Request, res: Response) => {
+  try {
+    const username = String(req.query.username)
+    const page = parseInt(req.query.page as string) || 1
+    const limit = parseInt(req.query.page_size as string) || 10
+    const skip = (page - 1) * limit
+
+    const friends = await Friend.find({
+      connection: { $regex: username, $options: 'i' },
+    })
+      .skip(skip)
+      .limit(limit)
+      .select('-__v')
+      .lean()
+
+    const total = await Friend.countDocuments({
+      connection: { $regex: username, $options: 'i' },
+    })
+
+    res.status(200).json({
+      count: total,
+      results: friends,
+    })
+  } catch (error) {
+    handleError(res, undefined, undefined, error)
+  }
+}
+
+export const readChats = async (data: Receive) => {
+  try {
+    const connection = data.connection
+    const receiverUsername = data.receiverUsername
+    const senderUsername = data.senderUsername
+    const ids = data.ids
+
+    await Chat.updateMany(
+      { timeNumber: { $in: ids }, connection: connection },
+      { $set: { status: 'read', isRead: true } }
+    )
+
+    await Friend.updateMany(
+      { timeNumber: { $in: ids }, connection: connection },
+      { $set: { status: 'read' } }
+    )
+
+    const unreadCount = await Chat.countDocuments({
+      connection: connection,
+      isRead: false,
+      receiverUsername: receiverUsername,
+    })
+
+    const friend = await Friend.findOneAndUpdate(
+      {
+        connection,
+        'unreadMessages.username': receiverUsername,
+      },
+      {
+        $set: {
+          'unreadMessages.$.unread': unreadCount,
+        },
+      },
+      { new: true }
+    )
+
+    console.log(data)
+
+    io.emit(`updateChatToRead${senderUsername}`, {
+      ids,
+      friend,
+      connection,
+    })
+  } catch (error) {
+    console.log(error)
+  }
+}
+
+export const checkChatStatus = async (data: Receive) => {
+  try {
+    const connection = data.connection
+    const senderUsername = data.senderUsername
+    const ids = data.ids
+
+    const chats = await Chat.find({
+      timeNumber: { $in: ids },
+      connection: connection,
+    }).select('timeNumber status')
+
+    console.log(chats)
+
+    io.emit(`updateCheckedChats${senderUsername}`, {
+      ids,
+      connection,
+    })
+  } catch (error) {
+    console.log(error)
+  }
+}
+//////////////////////  ABOVE UPDATED CHATS //////////////////////
 
 export const createChatMobile = async (req: Request, res: Response) => {
   try {
@@ -511,70 +646,6 @@ export const friendsChats = async (req: Request, res: Response) => {
     res.status(200).json({ results: result, totalUnread: totalUnread })
   } catch (error) {
     handleError(res, undefined, undefined, error)
-  }
-}
-
-export const getChats = async (req: Request, res: Response) => {
-  try {
-    const username = req.query.username
-    delete req.query.username
-    const result = await queryData<IChat>(Chat, req)
-    const unread = await Chat.countDocuments({
-      connection: req.query.connection,
-      isRead: false,
-      receiverUsername: username,
-    })
-    res.status(200).json({
-      count: result.count,
-      results: result.results,
-      unread: unread,
-      page: result.page,
-    })
-  } catch (error) {
-    handleError(res, undefined, undefined, error)
-  }
-}
-
-export const readChats = async (data: Receive) => {
-  try {
-    const connection = setConnectionKey(data.username, data.receiverUsername)
-    const receiverUsername = data.receiverUsername
-    await Chat.updateMany(
-      { _id: { $in: data.ids } },
-      { $set: { isRead: true } }
-    )
-
-    const mainUser = await BioUser.findById(data.receiverMainId)
-    const updatedChats = await Chat.find({ _id: { $in: data.ids } })
-
-    const unreadCount = await Chat.countDocuments({
-      connection: connection,
-      isRead: false,
-      isFriends: true,
-      receiverUsername: receiverUsername,
-    })
-    const totalUnread = await Chat.countDocuments({
-      isRead: false,
-      isFriends: true,
-      $or: [
-        { receiverUsername: receiverUsername },
-        { receiverUsername: mainUser?.bioUserUsername },
-      ],
-    })
-
-    io.emit(`myChatsRead${data.username}`, {
-      chats: updatedChats,
-      username: data.username,
-    })
-
-    io.emit(`iReadChats${data.receiverUsername}`, {
-      chats: updatedChats,
-      totalUnread: totalUnread,
-      receiverUsername: data.receiverUsername,
-      unreadCount: unreadCount,
-    })
-  } catch (error) {
-    console.log(error)
   }
 }
 

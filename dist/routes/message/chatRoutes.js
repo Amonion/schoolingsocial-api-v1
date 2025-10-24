@@ -10,6 +10,7 @@ const emailController_1 = require("../../controllers/message/emailController");
 const chatController_1 = require("../../controllers/message/chatController");
 const router = express_1.default.Router();
 router.route('/').get(chatController_1.getChats);
+router.route('/friends').get(chatController_1.getFriends);
 router
     .route('/:id')
     .get(emailController_1.getEmailById)

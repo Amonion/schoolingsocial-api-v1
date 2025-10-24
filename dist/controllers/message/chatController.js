@@ -9,7 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.deleteChats = exports.deleteChat = exports.addSearchedChats = exports.unSaveChats = exports.pinChats = exports.saveChats = exports.getSaveChats = exports.readChats = exports.getChats = exports.friendsChats = exports.searchFavChats = exports.searchChats = exports.createChatMobile = exports.sendPendingChats = exports.updateDeliveredChat = exports.createChat = exports.sendChatPushNotification = void 0;
+exports.deleteChats = exports.deleteChat = exports.addSearchedChats = exports.unSaveChats = exports.pinChats = exports.saveChats = exports.getSaveChats = exports.friendsChats = exports.searchFavChats = exports.searchChats = exports.createChatMobile = exports.checkChatStatus = exports.readChats = exports.getFriends = exports.getChats = exports.sendPendingChats = exports.updateDeliveredChat = exports.createChat = exports.sendChatPushNotification = void 0;
 const chatModel_1 = require("../../models/message/chatModel");
 const errorHandler_1 = require("../../utils/errorHandler");
 const query_1 = require("../../utils/query");
@@ -18,15 +18,17 @@ const app_1 = require("../../app");
 const usersStatMode_1 = require("../../models/users/usersStatMode");
 const expo_server_sdk_1 = require("expo-server-sdk");
 const sendNotification_1 = require("../../utils/sendNotification");
-const bioUser_1 = require("../../models/users/bioUser");
 const socialNotificationModel_1 = require("../../models/message/socialNotificationModel");
 const expo = new expo_server_sdk_1.Expo();
-const setConnectionKey = (id1, id2) => {
-    const participants = [id1, id2].sort();
-    return participants.join('');
-};
 const sendCreatedChat = (post, connection, totalUnread) => __awaiter(void 0, void 0, void 0, function* () {
-    const friend = yield chatModel_1.Friend.findOneAndUpdate({ connection: connection }, { totalUnread: totalUnread }, { new: true });
+    const friend = yield chatModel_1.Friend.findOneAndUpdate({
+        connection,
+        'unreadMessages.username': post.receiverUsername,
+    }, {
+        $set: {
+            'unreadMessages.$.unread': totalUnread,
+        },
+    }, { new: true });
     /////////////// SEND TO UPDATE PENDING ROOM CHAT //////////////
     app_1.io.emit(`updatePendingChat${post.senderUsername}`, {
         connection,
@@ -40,7 +42,6 @@ const sendCreatedChat = (post, connection, totalUnread) => __awaiter(void 0, voi
         app_1.io.emit(`addCreatedChat${post.receiverUsername}`, {
             connection,
             chat: post,
-            totalUnread: totalUnread,
             pending: true,
             isFriends: friend.isFriends,
             friend,
@@ -125,15 +126,23 @@ const createChat = (data) => __awaiter(void 0, void 0, void 0, function* () {
             const receiverTime = new Date(currentTime - lastTime + lastReceiverTime);
             data.receiverTime = receiverTime;
             const post = yield chatModel_1.Chat.findOneAndUpdate({ timeNumber: data.timeNumber, connection: data.connection }, data, { new: true, upsert: true });
-            const totalUread = data.isFriends
-                ? yield chatModel_1.Chat.countDocuments({
-                    isRead: false,
-                    receiverUsername: data.receiverUsername,
-                })
-                : 0;
+            const totalUread = yield chatModel_1.Chat.countDocuments({
+                isRead: false,
+                receiverUsername: data.receiverUsername,
+            });
             sendCreatedChat(post, connection, totalUread);
         }
         else {
+            yield chatModel_1.Friend.findOneAndUpdate({ connection }, {
+                $addToSet: {
+                    unreadMessages: {
+                        $each: [
+                            { username: data.senderUsername, unread: 0 },
+                            { username: data.receiverUsername, unread: 1 },
+                        ],
+                    },
+                },
+            }, { new: true, upsert: true });
             const post = yield chatModel_1.Chat.create(data);
             sendCreatedChat(post, connection);
         }
@@ -199,6 +208,108 @@ const sendPendingChats = (data) => __awaiter(void 0, void 0, void 0, function* (
     }
 });
 exports.sendPendingChats = sendPendingChats;
+const getChats = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const username = req.query.username;
+        delete req.query.username;
+        const result = yield (0, query_1.queryData)(chatModel_1.Chat, req);
+        const unread = yield chatModel_1.Chat.countDocuments({
+            connection: req.query.connection,
+            isRead: false,
+            receiverUsername: username,
+        });
+        res.status(200).json({
+            count: result.count,
+            results: result.results,
+            unread: unread,
+            page: result.page,
+        });
+    }
+    catch (error) {
+        (0, errorHandler_1.handleError)(res, undefined, undefined, error);
+    }
+});
+exports.getChats = getChats;
+const getFriends = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const username = String(req.query.username);
+        const page = parseInt(req.query.page) || 1;
+        const limit = parseInt(req.query.page_size) || 10;
+        const skip = (page - 1) * limit;
+        const friends = yield chatModel_1.Friend.find({
+            connection: { $regex: username, $options: 'i' },
+        })
+            .skip(skip)
+            .limit(limit)
+            .select('-__v')
+            .lean();
+        const total = yield chatModel_1.Friend.countDocuments({
+            connection: { $regex: username, $options: 'i' },
+        });
+        res.status(200).json({
+            count: total,
+            results: friends,
+        });
+    }
+    catch (error) {
+        (0, errorHandler_1.handleError)(res, undefined, undefined, error);
+    }
+});
+exports.getFriends = getFriends;
+const readChats = (data) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const connection = data.connection;
+        const receiverUsername = data.receiverUsername;
+        const senderUsername = data.senderUsername;
+        const ids = data.ids;
+        yield chatModel_1.Chat.updateMany({ timeNumber: { $in: ids }, connection: connection }, { $set: { status: 'read', isRead: true } });
+        yield chatModel_1.Friend.updateMany({ timeNumber: { $in: ids }, connection: connection }, { $set: { status: 'read' } });
+        const unreadCount = yield chatModel_1.Chat.countDocuments({
+            connection: connection,
+            isRead: false,
+            receiverUsername: receiverUsername,
+        });
+        const friend = yield chatModel_1.Friend.findOneAndUpdate({
+            connection,
+            'unreadMessages.username': receiverUsername,
+        }, {
+            $set: {
+                'unreadMessages.$.unread': unreadCount,
+            },
+        }, { new: true });
+        console.log(data);
+        app_1.io.emit(`updateChatToRead${senderUsername}`, {
+            ids,
+            friend,
+            connection,
+        });
+    }
+    catch (error) {
+        console.log(error);
+    }
+});
+exports.readChats = readChats;
+const checkChatStatus = (data) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const connection = data.connection;
+        const senderUsername = data.senderUsername;
+        const ids = data.ids;
+        const chats = yield chatModel_1.Chat.find({
+            timeNumber: { $in: ids },
+            connection: connection,
+        }).select('timeNumber status');
+        console.log(chats);
+        app_1.io.emit(`updateCheckedChats${senderUsername}`, {
+            ids,
+            connection,
+        });
+    }
+    catch (error) {
+        console.log(error);
+    }
+});
+exports.checkChatStatus = checkChatStatus;
+//////////////////////  ABOVE UPDATED CHATS //////////////////////
 const createChatMobile = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const data = req.body;
@@ -427,65 +538,6 @@ const friendsChats = (req, res) => __awaiter(void 0, void 0, void 0, function* (
     }
 });
 exports.friendsChats = friendsChats;
-const getChats = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    try {
-        const username = req.query.username;
-        delete req.query.username;
-        const result = yield (0, query_1.queryData)(chatModel_1.Chat, req);
-        const unread = yield chatModel_1.Chat.countDocuments({
-            connection: req.query.connection,
-            isRead: false,
-            receiverUsername: username,
-        });
-        res.status(200).json({
-            count: result.count,
-            results: result.results,
-            unread: unread,
-            page: result.page,
-        });
-    }
-    catch (error) {
-        (0, errorHandler_1.handleError)(res, undefined, undefined, error);
-    }
-});
-exports.getChats = getChats;
-const readChats = (data) => __awaiter(void 0, void 0, void 0, function* () {
-    try {
-        const connection = setConnectionKey(data.username, data.receiverUsername);
-        const receiverUsername = data.receiverUsername;
-        yield chatModel_1.Chat.updateMany({ _id: { $in: data.ids } }, { $set: { isRead: true } });
-        const mainUser = yield bioUser_1.BioUser.findById(data.receiverMainId);
-        const updatedChats = yield chatModel_1.Chat.find({ _id: { $in: data.ids } });
-        const unreadCount = yield chatModel_1.Chat.countDocuments({
-            connection: connection,
-            isRead: false,
-            isFriends: true,
-            receiverUsername: receiverUsername,
-        });
-        const totalUnread = yield chatModel_1.Chat.countDocuments({
-            isRead: false,
-            isFriends: true,
-            $or: [
-                { receiverUsername: receiverUsername },
-                { receiverUsername: mainUser === null || mainUser === void 0 ? void 0 : mainUser.bioUserUsername },
-            ],
-        });
-        app_1.io.emit(`myChatsRead${data.username}`, {
-            chats: updatedChats,
-            username: data.username,
-        });
-        app_1.io.emit(`iReadChats${data.receiverUsername}`, {
-            chats: updatedChats,
-            totalUnread: totalUnread,
-            receiverUsername: data.receiverUsername,
-            unreadCount: unreadCount,
-        });
-    }
-    catch (error) {
-        console.log(error);
-    }
-});
-exports.readChats = readChats;
 const getSaveChats = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const result = yield (0, query_1.queryData)(chatModel_1.Chat, req);

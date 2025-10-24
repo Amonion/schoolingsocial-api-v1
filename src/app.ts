@@ -31,6 +31,7 @@ import transactionRoutes from './routes/finance/transactionRoutes'
 import utilityRoutes from './routes/utility/utilityRoutes'
 import aiRoutes from './routes/utility/aiRoutes'
 import {
+  checkChatStatus,
   createChat,
   deleteChat,
   readChats,
@@ -99,11 +100,12 @@ io.on('connection', (socket) => {
         createChat(data)
         break
       case 'deliveredChat':
-        console.log('delivered chat')
         updateDeliveredChat(data.chat)
         break
       case 'pendingChat':
         sendPendingChats(data)
+      case 'checkRead':
+        checkChatStatus(data)
         break
       case 'read':
         readChats(data)

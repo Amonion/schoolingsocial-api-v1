@@ -4,16 +4,15 @@ const upload = multer()
 
 import {
   getEmailById,
-  getEmails,
   updateEmail,
   deleteEmail,
-  createEmail,
 } from '../../controllers/message/emailController'
-import { getChats } from '../../controllers/message/chatController'
+import { getChats, getFriends } from '../../controllers/message/chatController'
 
 const router = express.Router()
 
 router.route('/').get(getChats)
+router.route('/friends').get(getFriends)
 
 router
   .route('/:id')

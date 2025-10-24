@@ -83,6 +83,11 @@ const ChatSchema: Schema = new Schema(
 )
 export const Chat = mongoose.model<IChat>('Chat', ChatSchema)
 
+interface UnreadMessage {
+  username: string
+  unread: number
+}
+
 export interface IFriend extends Document {
   _id: string
   content: string
@@ -101,7 +106,8 @@ export interface IFriend extends Document {
   senderTime: Date
   receiverTime: Date
   createdAt: Date
-  time: number
+  timeNumber: number
+  unreadMessages: UnreadMessage[]
   totalUnread: number
   unreadSender: number
   unreadReceiver: number
@@ -122,9 +128,8 @@ const FriendSchema: Schema = new Schema(
     status: { type: String },
     content: { type: String },
     contentType: { type: String },
-    totalUnread: { type: Number, default: 0 },
-    unreadSender: { type: Number, default: 0 },
-    unreadReceiver: { type: Number, default: 0 },
+    timeNumber: { type: Number },
+    unreadMessages: { type: Array },
     receiverTime: { type: Date, default: Date.now },
     senderTime: { type: Date, default: Date.now },
     createdAt: { type: Date, default: Date.now },
