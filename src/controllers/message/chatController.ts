@@ -26,8 +26,10 @@ interface Receive {
   receiverMainId: string
   userId: string
   username: string
+  receiverDisplayName: string
   receiverUsername: string
   senderUsername: string
+  senderDisplayName: string
   connection: string
 }
 interface ChatData {
@@ -138,6 +140,9 @@ export const createChat = async (data: IChat) => {
     const prev = await Chat.findOne({
       connection: connection,
     }).sort({ createdAt: -1 })
+    const prevFriend = await Friend.findOne({
+      connection: connection,
+    }).sort({ createdAt: -1 })
 
     if (
       prev &&
@@ -152,10 +157,16 @@ export const createChat = async (data: IChat) => {
     }
 
     data.status = 'sent'
-    await Friend.findOneAndUpdate({ connection: data.connection }, data, {
-      new: true,
-      upsert: true,
-    })
+    const createdFriends = await Friend.findOneAndUpdate(
+      { connection: data.connection },
+      data,
+      {
+        new: true,
+        upsert: true,
+      }
+    )
+
+    console.log('The created friend is: ', createdFriends)
 
     if (prev) {
       const lastTime = new Date(prev.createdAt).getTime()

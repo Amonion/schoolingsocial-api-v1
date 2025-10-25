@@ -108,6 +108,9 @@ const createChat = (data) => __awaiter(void 0, void 0, void 0, function* () {
         const prev = yield chatModel_1.Chat.findOne({
             connection: connection,
         }).sort({ createdAt: -1 });
+        const prevFriend = yield chatModel_1.Friend.findOne({
+            connection: connection,
+        }).sort({ createdAt: -1 });
         if (prev &&
             !data.isFriends &&
             prev.receiverUsername === data.senderUsername) {
@@ -115,10 +118,11 @@ const createChat = (data) => __awaiter(void 0, void 0, void 0, function* () {
             data.isFriends = true;
         }
         data.status = 'sent';
-        yield chatModel_1.Friend.findOneAndUpdate({ connection: data.connection }, data, {
+        const createdFriends = yield chatModel_1.Friend.findOneAndUpdate({ connection: data.connection }, data, {
             new: true,
             upsert: true,
         });
+        console.log('The created friend is: ', createdFriends);
         if (prev) {
             const lastTime = new Date(prev.createdAt).getTime();
             const lastReceiverTime = new Date(prev.receiverTime).getTime();
