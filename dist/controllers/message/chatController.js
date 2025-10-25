@@ -37,7 +37,7 @@ const sendCreatedChat = (post, connection, totalUnread) => __awaiter(void 0, voi
         pending: true,
         isFriends: friend.isFriends,
     });
-    if (friend && friend && friend.isFriends) {
+    if (friend && friend.isFriends) {
         /////////////// WHEN USER IS IN CHAT ROOM OR NOT //////////////
         app_1.io.emit(`addCreatedChat${post.receiverUsername}`, {
             connection,
@@ -64,16 +64,6 @@ const sendCreatedChat = (post, connection, totalUnread) => __awaiter(void 0, voi
             });
             app_1.io.emit(`social_notification_${post.receiverUsername}`, response);
         }
-        yield chatModel_1.Friend.findOneAndUpdate({ connection }, {
-            $addToSet: {
-                unreadMessages: {
-                    $each: [
-                        { username: post.senderUsername, unread: 0 },
-                        { username: post.receiverUsername, unread: 1 },
-                    ],
-                },
-            },
-        }, { new: true, upsert: true });
     }
     /////////////// WHEN USER IS NOT IN THE APP //////////////
     // const onlineUser = await UserStatus.findOne({
@@ -118,9 +108,6 @@ const createChat = (data) => __awaiter(void 0, void 0, void 0, function* () {
         const prev = yield chatModel_1.Chat.findOne({
             connection: connection,
         }).sort({ createdAt: -1 });
-        const prevFriend = yield chatModel_1.Friend.findOne({
-            connection: connection,
-        }).sort({ createdAt: -1 });
         if (prev &&
             !data.isFriends &&
             prev.receiverUsername === data.senderUsername) {
@@ -128,10 +115,22 @@ const createChat = (data) => __awaiter(void 0, void 0, void 0, function* () {
             data.isFriends = true;
         }
         data.status = 'sent';
-        const createdFriends = yield chatModel_1.Friend.findOneAndUpdate({ connection: data.connection }, data, {
+        const createFriend = yield chatModel_1.Friend.findOneAndUpdate({ connection: data.connection }, data, {
             new: true,
             upsert: true,
         });
+        if (createFriend.unreadMessages.length === 0) {
+            yield chatModel_1.Friend.findOneAndUpdate({ connection }, {
+                $addToSet: {
+                    unreadMessages: {
+                        $each: [
+                            { username: data.senderUsername, unread: 0 },
+                            { username: data.receiverUsername, unread: 1 },
+                        ],
+                    },
+                },
+            }, { new: true, upsert: true });
+        }
         if (prev) {
             const lastTime = new Date(prev.createdAt).getTime();
             const lastReceiverTime = new Date(prev.receiverTime).getTime();

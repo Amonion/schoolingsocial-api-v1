@@ -65,7 +65,7 @@ const sendCreatedChat = async (
     isFriends: friend.isFriends,
   })
 
-  if (friend && friend && friend.isFriends) {
+  if (friend && friend.isFriends) {
     /////////////// WHEN USER IS IN CHAT ROOM OR NOT //////////////
     io.emit(`addCreatedChat${post.receiverUsername}`, {
       connection,
@@ -92,20 +92,6 @@ const sendCreatedChat = async (
 
       io.emit(`social_notification_${post.receiverUsername}`, response)
     }
-    await Friend.findOneAndUpdate(
-      { connection },
-      {
-        $addToSet: {
-          unreadMessages: {
-            $each: [
-              { username: post.senderUsername, unread: 0 },
-              { username: post.receiverUsername, unread: 1 },
-            ],
-          },
-        },
-      },
-      { new: true, upsert: true }
-    )
   }
 
   /////////////// WHEN USER IS NOT IN THE APP //////////////
@@ -154,9 +140,6 @@ export const createChat = async (data: IChat) => {
     const prev = await Chat.findOne({
       connection: connection,
     }).sort({ createdAt: -1 })
-    const prevFriend = await Friend.findOne({
-      connection: connection,
-    }).sort({ createdAt: -1 })
 
     if (
       prev &&
@@ -171,7 +154,7 @@ export const createChat = async (data: IChat) => {
     }
 
     data.status = 'sent'
-    const createdFriends = await Friend.findOneAndUpdate(
+    const createFriend = await Friend.findOneAndUpdate(
       { connection: data.connection },
       data,
       {
@@ -179,6 +162,23 @@ export const createChat = async (data: IChat) => {
         upsert: true,
       }
     )
+
+    if (createFriend.unreadMessages.length === 0) {
+      await Friend.findOneAndUpdate(
+        { connection },
+        {
+          $addToSet: {
+            unreadMessages: {
+              $each: [
+                { username: data.senderUsername, unread: 0 },
+                { username: data.receiverUsername, unread: 1 },
+              ],
+            },
+          },
+        },
+        { new: true, upsert: true }
+      )
+    }
 
     if (prev) {
       const lastTime = new Date(prev.createdAt).getTime()
