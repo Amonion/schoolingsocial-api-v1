@@ -305,6 +305,7 @@ export const getChats = async (req: Request, res: Response) => {
       isRead: false,
       receiverUsername: username,
     })
+    console.log(result)
     res.status(200).json({
       count: result.count,
       results: result.results,

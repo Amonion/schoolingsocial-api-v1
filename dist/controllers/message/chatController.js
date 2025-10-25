@@ -230,6 +230,7 @@ const getChats = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
             isRead: false,
             receiverUsername: username,
         });
+        console.log(result);
         res.status(200).json({
             count: result.count,
             results: result.results,
