@@ -37,7 +37,7 @@ const sendCreatedChat = (post, connection, totalUnread) => __awaiter(void 0, voi
         pending: true,
         isFriends: friend.isFriends,
     });
-    if (friend.isFriends) {
+    if (friend && friend && friend.isFriends) {
         /////////////// WHEN USER IS IN CHAT ROOM OR NOT //////////////
         app_1.io.emit(`addCreatedChat${post.receiverUsername}`, {
             connection,
@@ -64,6 +64,16 @@ const sendCreatedChat = (post, connection, totalUnread) => __awaiter(void 0, voi
             });
             app_1.io.emit(`social_notification_${post.receiverUsername}`, response);
         }
+        yield chatModel_1.Friend.findOneAndUpdate({ connection }, {
+            $addToSet: {
+                unreadMessages: {
+                    $each: [
+                        { username: post.senderUsername, unread: 0 },
+                        { username: post.receiverUsername, unread: 1 },
+                    ],
+                },
+            },
+        }, { new: true, upsert: true });
     }
     /////////////// WHEN USER IS NOT IN THE APP //////////////
     // const onlineUser = await UserStatus.findOne({
@@ -122,7 +132,6 @@ const createChat = (data) => __awaiter(void 0, void 0, void 0, function* () {
             new: true,
             upsert: true,
         });
-        console.log('The created friend is: ', createdFriends);
         if (prev) {
             const lastTime = new Date(prev.createdAt).getTime();
             const lastReceiverTime = new Date(prev.receiverTime).getTime();

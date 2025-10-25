@@ -65,7 +65,7 @@ const sendCreatedChat = async (
     isFriends: friend.isFriends,
   })
 
-  if (friend.isFriends) {
+  if (friend && friend && friend.isFriends) {
     /////////////// WHEN USER IS IN CHAT ROOM OR NOT //////////////
     io.emit(`addCreatedChat${post.receiverUsername}`, {
       connection,
@@ -92,6 +92,20 @@ const sendCreatedChat = async (
 
       io.emit(`social_notification_${post.receiverUsername}`, response)
     }
+    await Friend.findOneAndUpdate(
+      { connection },
+      {
+        $addToSet: {
+          unreadMessages: {
+            $each: [
+              { username: post.senderUsername, unread: 0 },
+              { username: post.receiverUsername, unread: 1 },
+            ],
+          },
+        },
+      },
+      { new: true, upsert: true }
+    )
   }
 
   /////////////// WHEN USER IS NOT IN THE APP //////////////
@@ -165,8 +179,6 @@ export const createChat = async (data: IChat) => {
         upsert: true,
       }
     )
-
-    console.log('The created friend is: ', createdFriends)
 
     if (prev) {
       const lastTime = new Date(prev.createdAt).getTime()
