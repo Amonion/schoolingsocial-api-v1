@@ -67,7 +67,7 @@ const sendCreatedChat = async (
 
   if (friend && friend.isFriends) {
     /////////////// WHEN USER IS IN CHAT ROOM OR NOT //////////////
-    io.emit(`addCreatedChat${post.receiverUsername}`, {
+    io.emit(`addCreatedChat${post.senderUsername}`, {
       connection,
       chat: post,
       pending: true,
@@ -224,7 +224,7 @@ export const updateDeliveredChat = async (data: IChat) => {
     const connection = data.connection
     const friend = await Friend.findOneAndUpdate(
       { connection: connection },
-      { status: 'delivered' },
+      { status: 'delivered', updatedAt: new Date() },
       { new: true }
     )
     const chat = await Chat.findByIdAndUpdate(
@@ -232,7 +232,7 @@ export const updateDeliveredChat = async (data: IChat) => {
       { status: 'delivered' },
       { new: true }
     )
-    io.emit(`updateDeliveredChat${chat.senderUsername}`, {
+    io.emit(`updateChatToDelivered${chat.senderUsername}`, {
       connection,
       chat,
       friend,
@@ -305,7 +305,6 @@ export const getChats = async (req: Request, res: Response) => {
       isRead: false,
       receiverUsername: username,
     })
-    console.log(result)
     res.status(200).json({
       count: result.count,
       results: result.results,
@@ -352,14 +351,20 @@ export const readChats = async (data: Receive) => {
     const senderUsername = data.senderUsername
     const ids = data.ids
 
+    console.log(data)
+
     await Chat.updateMany(
       { timeNumber: { $in: ids }, connection: connection },
       { $set: { status: 'read', isRead: true } }
     )
+    const chats = await Chat.find({
+      timeNumber: { $in: ids },
+      connection,
+    })
 
     await Friend.updateMany(
       { timeNumber: { $in: ids }, connection: connection },
-      { $set: { status: 'read' } }
+      { $set: { status: 'read' }, updatedAt: new Date() }
     )
 
     const unreadCount = await Chat.countDocuments({
@@ -381,12 +386,14 @@ export const readChats = async (data: Receive) => {
       { new: true }
     )
 
-    console.log(data)
+    console.log('Unread messages are: ', unreadCount)
 
     io.emit(`updateChatToRead${senderUsername}`, {
-      ids,
+      chats,
       friend,
       connection,
+      senderUsername,
+      receiverUsername,
     })
   } catch (error) {
     console.log(error)
@@ -402,13 +409,12 @@ export const checkChatStatus = async (data: Receive) => {
     const chats = await Chat.find({
       timeNumber: { $in: ids },
       connection: connection,
-    }).select('timeNumber status')
-
-    console.log(chats)
+    })
 
     io.emit(`updateCheckedChats${senderUsername}`, {
       ids,
       connection,
+      chats,
     })
   } catch (error) {
     console.log(error)

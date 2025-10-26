@@ -106,6 +106,7 @@ export interface IFriend extends Document {
   senderTime: Date
   receiverTime: Date
   createdAt: Date
+  updatedAt: Date
   timeNumber: number
   unreadMessages: UnreadMessage[]
   totalUnread: number

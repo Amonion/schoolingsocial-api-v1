@@ -39,7 +39,7 @@ const sendCreatedChat = (post, connection, totalUnread) => __awaiter(void 0, voi
     });
     if (friend && friend.isFriends) {
         /////////////// WHEN USER IS IN CHAT ROOM OR NOT //////////////
-        app_1.io.emit(`addCreatedChat${post.receiverUsername}`, {
+        app_1.io.emit(`addCreatedChat${post.senderUsername}`, {
             connection,
             chat: post,
             pending: true,
@@ -167,9 +167,9 @@ exports.createChat = createChat;
 const updateDeliveredChat = (data) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const connection = data.connection;
-        const friend = yield chatModel_1.Friend.findOneAndUpdate({ connection: connection }, { status: 'delivered' }, { new: true });
+        const friend = yield chatModel_1.Friend.findOneAndUpdate({ connection: connection }, { status: 'delivered', updatedAt: new Date() }, { new: true });
         const chat = yield chatModel_1.Chat.findByIdAndUpdate(data._id, { status: 'delivered' }, { new: true });
-        app_1.io.emit(`updateDeliveredChat${chat.senderUsername}`, {
+        app_1.io.emit(`updateChatToDelivered${chat.senderUsername}`, {
             connection,
             chat,
             friend,
@@ -230,7 +230,6 @@ const getChats = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
             isRead: false,
             receiverUsername: username,
         });
-        console.log(result);
         res.status(200).json({
             count: result.count,
             results: result.results,
@@ -275,8 +274,13 @@ const readChats = (data) => __awaiter(void 0, void 0, void 0, function* () {
         const receiverUsername = data.receiverUsername;
         const senderUsername = data.senderUsername;
         const ids = data.ids;
+        console.log(data);
         yield chatModel_1.Chat.updateMany({ timeNumber: { $in: ids }, connection: connection }, { $set: { status: 'read', isRead: true } });
-        yield chatModel_1.Friend.updateMany({ timeNumber: { $in: ids }, connection: connection }, { $set: { status: 'read' } });
+        const chats = yield chatModel_1.Chat.find({
+            timeNumber: { $in: ids },
+            connection,
+        });
+        yield chatModel_1.Friend.updateMany({ timeNumber: { $in: ids }, connection: connection }, { $set: { status: 'read' }, updatedAt: new Date() });
         const unreadCount = yield chatModel_1.Chat.countDocuments({
             connection: connection,
             isRead: false,
@@ -290,11 +294,13 @@ const readChats = (data) => __awaiter(void 0, void 0, void 0, function* () {
                 'unreadMessages.$.unread': unreadCount,
             },
         }, { new: true });
-        console.log(data);
+        console.log('Unread messages are: ', unreadCount);
         app_1.io.emit(`updateChatToRead${senderUsername}`, {
-            ids,
+            chats,
             friend,
             connection,
+            senderUsername,
+            receiverUsername,
         });
     }
     catch (error) {
@@ -310,11 +316,11 @@ const checkChatStatus = (data) => __awaiter(void 0, void 0, void 0, function* ()
         const chats = yield chatModel_1.Chat.find({
             timeNumber: { $in: ids },
             connection: connection,
-        }).select('timeNumber status');
-        console.log(chats);
+        });
         app_1.io.emit(`updateCheckedChats${senderUsername}`, {
             ids,
             connection,
+            chats,
         });
     }
     catch (error) {
