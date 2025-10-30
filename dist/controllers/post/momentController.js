@@ -47,6 +47,15 @@ const getMoments = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
         const followerId = req.query.myId;
         delete req.query.myId;
         const result = yield (0, query_1.queryData)(momentModel_1.Moment, req);
+        const results = result.results;
+        const now = new Date();
+        for (const el of results) {
+            const createdAt = new Date(el.createdAt);
+            const ageInHours = (now.getTime() - createdAt.getTime()) / (1000 * 60 * 60);
+            if (ageInHours > 24) {
+                yield momentModel_1.Moment.deleteOne({ _id: el._id });
+            }
+        }
         res.status(200).json(result);
     }
     catch (error) {

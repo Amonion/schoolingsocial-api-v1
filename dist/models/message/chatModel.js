@@ -72,6 +72,7 @@ const FriendSchema = new mongoose_1.Schema({
     content: { type: String },
     contentType: { type: String },
     timeNumber: { type: Number },
+    media: { type: Array },
     unreadMessages: { type: Array },
     receiverTime: { type: Date, default: Date.now },
     senderTime: { type: Date, default: Date.now },

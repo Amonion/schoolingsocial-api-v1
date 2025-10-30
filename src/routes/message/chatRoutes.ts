@@ -7,11 +7,20 @@ import {
   updateEmail,
   deleteEmail,
 } from '../../controllers/message/emailController'
-import { getChats, getFriends } from '../../controllers/message/chatController'
+import {
+  createChatWithFile,
+  getChats,
+  getFriends,
+  updateChatWithFile,
+} from '../../controllers/message/chatController'
 
 const router = express.Router()
 
-router.route('/').get(getChats)
+router
+  .route('/')
+  .get(getChats)
+  .post(upload.any(), createChatWithFile)
+  .patch(upload.any(), updateChatWithFile)
 router.route('/friends').get(getFriends)
 
 router

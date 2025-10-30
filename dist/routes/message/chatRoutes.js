@@ -9,7 +9,11 @@ const upload = (0, multer_1.default)();
 const emailController_1 = require("../../controllers/message/emailController");
 const chatController_1 = require("../../controllers/message/chatController");
 const router = express_1.default.Router();
-router.route('/').get(chatController_1.getChats);
+router
+    .route('/')
+    .get(chatController_1.getChats)
+    .post(upload.any(), chatController_1.createChatWithFile)
+    .patch(upload.any(), chatController_1.updateChatWithFile);
 router.route('/friends').get(chatController_1.getFriends);
 router
     .route('/:id')

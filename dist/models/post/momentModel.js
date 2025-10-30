@@ -41,6 +41,11 @@ const MomentSchema = new mongoose_1.Schema({
     picture: { type: String },
     displayName: { type: String },
     createdAt: { type: Date, default: Date.now },
+    expiresAt: {
+        type: Date,
+        default: () => new Date(Date.now() + 24 * 60 * 60 * 1000),
+        index: { expireAfterSeconds: 0 },
+    },
 }, {
     timestamps: true,
 });

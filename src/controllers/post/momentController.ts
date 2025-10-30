@@ -39,6 +39,18 @@ export const getMoments = async (req: Request, res: Response) => {
     const followerId = req.query.myId
     delete req.query.myId
     const result = await queryData<IMoment>(Moment, req)
+    const results = result.results
+    const now = new Date()
+
+    for (const el of results) {
+      const createdAt = new Date(el.createdAt)
+      const ageInHours =
+        (now.getTime() - createdAt.getTime()) / (1000 * 60 * 60)
+
+      if (ageInHours > 24) {
+        await Moment.deleteOne({ _id: el._id })
+      }
+    }
     res.status(200).json(result)
   } catch (error) {
     handleError(res, undefined, undefined, error)

@@ -6,12 +6,10 @@ import { deleteFileFromS3 } from '../../utils/fileUpload'
 import { io } from '../../app'
 import { UserStat } from '../../models/users/usersStatMode'
 import { Expo } from 'expo-server-sdk'
-import { User } from '../../models/users/user'
 import {
   sendPersonalNotification,
   sendSocialNotification,
 } from '../../utils/sendNotification'
-import { BioUser } from '../../models/users/bioUser'
 import { SocialNotification } from '../../models/message/socialNotificationModel'
 const expo = new Expo()
 
@@ -136,7 +134,6 @@ export const sendChatPushNotification = async (chatData: ChatData) => {
 export const createChat = async (data: IChat) => {
   try {
     const connection = data.connection
-
     const prev = await Chat.findOne({
       connection: connection,
     }).sort({ createdAt: -1 })
@@ -216,6 +213,38 @@ export const createChat = async (data: IChat) => {
     }
   } catch (error) {
     console.log(error)
+  }
+}
+
+export const createChatWithFile = async (req: Request, res: Response) => {
+  try {
+    const data = req.body
+    createChat(data)
+    const chat = await Chat.findOne({ timeNumber: data.timeNumber })
+    res.status(200).json({ chat })
+  } catch (error) {
+    console.log(error)
+  }
+}
+
+export const updateChatWithFile = async (req: Request, res: Response) => {
+  try {
+    const data = req.body
+    const chat = await Chat.findOneAndUpdate(
+      { timeNumber: data.timeNumber },
+      {
+        media: data.media,
+      },
+      { new: true }
+    )
+
+    io.emit(`updateChatWithFile${data.receiverUsername}`, {
+      chat,
+    })
+
+    res.status(200).json({ chat })
+  } catch (err) {
+    throw err
   }
 }
 
@@ -351,8 +380,6 @@ export const readChats = async (data: Receive) => {
     const senderUsername = data.senderUsername
     const ids = data.ids
 
-    console.log(data)
-
     await Chat.updateMany(
       { timeNumber: { $in: ids }, connection: connection },
       { $set: { status: 'read', isRead: true } }
@@ -367,30 +394,52 @@ export const readChats = async (data: Receive) => {
       { $set: { status: 'read' }, updatedAt: new Date() }
     )
 
-    const unreadCount = await Chat.countDocuments({
+    const unreadSenderCount = await Chat.countDocuments({
+      connection: connection,
+      isRead: false,
+      senderUsername: senderUsername,
+    })
+    const unreadReceiverCount = await Chat.countDocuments({
       connection: connection,
       isRead: false,
       receiverUsername: receiverUsername,
     })
 
-    const friend = await Friend.findOneAndUpdate(
+    const senderFriend = await Friend.findOneAndUpdate(
+      {
+        connection,
+        'unreadMessages.username': senderUsername,
+      },
+      {
+        $set: {
+          'unreadMessages.$.unread': unreadSenderCount,
+        },
+      },
+      { new: true }
+    )
+    const receiverFriend = await Friend.findOneAndUpdate(
       {
         connection,
         'unreadMessages.username': receiverUsername,
       },
       {
         $set: {
-          'unreadMessages.$.unread': unreadCount,
+          'unreadMessages.$.unread': unreadReceiverCount,
         },
       },
       { new: true }
     )
 
-    console.log('Unread messages are: ', unreadCount)
-
-    io.emit(`updateChatToRead${senderUsername}`, {
+    io.emit(`updateChatToRead${connection}`, {
       chats,
-      friend,
+      friend: senderFriend,
+      connection,
+      senderUsername,
+      receiverUsername,
+    })
+    io.emit(`updateChatToRead${connection}`, {
+      chats,
+      friend: receiverFriend,
       connection,
       senderUsername,
       receiverUsername,
@@ -415,6 +464,44 @@ export const checkChatStatus = async (data: Receive) => {
       ids,
       connection,
       chats,
+    })
+  } catch (error) {
+    console.log(error)
+  }
+}
+
+export const deleteChat = async (data: Delete) => {
+  try {
+    if (data.isSender) {
+      const item = await Chat.findOneAndDelete({
+        connection: data.connection,
+        timeNumber: data.id,
+      })
+      if (!item) {
+        return { message: 'This chat has been deleted' }
+      }
+
+      if (item.media.length > 0) {
+        for (let i = 0; i < item.media.length; i++) {
+          const el = item.media[i]
+          deleteFileFromS3(el.source)
+        }
+      }
+      await Chat.findOneAndDelete({ timeNumber: data.id })
+      io.emit(`deleteResponse${data.receiverUsername}`, {
+        id: data.id,
+        day: data.day,
+      })
+    } else {
+      await Chat.findOneAndUpdate(
+        { connection: data.connection, timeNumber: data.id },
+        { deletedUsername: data.username }
+      )
+    }
+
+    io.emit(`deleteResponse${data.username}`, {
+      id: data.id,
+      day: data.day,
     })
   } catch (error) {
     console.log(error)
@@ -779,43 +866,12 @@ export const addSearchedChats = async (req: Request, res: Response) => {
 interface Delete {
   id: string
   connection: string
+  timeNumber: number
   day: string
   senderId: string
   receiverUsername: string
   username: string
   isSender: boolean
-}
-
-export const deleteChat = async (data: Delete) => {
-  try {
-    if (data.isSender) {
-      const item = await Chat.findById(data.id)
-      if (!item) {
-        return { message: 'This post has been deleted' }
-      }
-
-      if (item.media.length > 0) {
-        for (let i = 0; i < item.media.length; i++) {
-          const el = item.media[i]
-          deleteFileFromS3(el.source)
-        }
-      }
-      await Chat.findByIdAndDelete(data.id)
-      io.emit(`deleteResponse${data.receiverUsername}`, {
-        id: data.id,
-        day: data.day,
-      })
-    } else {
-      await Chat.findByIdAndUpdate(data.id, { deletedUsername: data.username })
-    }
-
-    io.emit(`deleteResponse${data.username}`, {
-      id: data.id,
-      day: data.day,
-    })
-  } catch (error) {
-    console.log(error)
-  }
 }
 
 export const deleteChats = async (req: Request, res: Response) => {

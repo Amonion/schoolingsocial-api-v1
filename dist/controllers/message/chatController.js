@@ -9,7 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.deleteChats = exports.deleteChat = exports.addSearchedChats = exports.unSaveChats = exports.pinChats = exports.saveChats = exports.getSaveChats = exports.friendsChats = exports.searchFavChats = exports.searchChats = exports.createChatMobile = exports.checkChatStatus = exports.readChats = exports.getFriends = exports.getChats = exports.sendPendingChats = exports.updateDeliveredChat = exports.createChat = exports.sendChatPushNotification = void 0;
+exports.deleteChats = exports.addSearchedChats = exports.unSaveChats = exports.pinChats = exports.saveChats = exports.getSaveChats = exports.friendsChats = exports.searchFavChats = exports.searchChats = exports.createChatMobile = exports.deleteChat = exports.checkChatStatus = exports.readChats = exports.getFriends = exports.getChats = exports.sendPendingChats = exports.updateDeliveredChat = exports.updateChatWithFile = exports.createChatWithFile = exports.createChat = exports.sendChatPushNotification = void 0;
 const chatModel_1 = require("../../models/message/chatModel");
 const errorHandler_1 = require("../../utils/errorHandler");
 const query_1 = require("../../utils/query");
@@ -164,6 +164,34 @@ const createChat = (data) => __awaiter(void 0, void 0, void 0, function* () {
     }
 });
 exports.createChat = createChat;
+const createChatWithFile = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const data = req.body;
+        (0, exports.createChat)(data);
+        const chat = yield chatModel_1.Chat.findOne({ timeNumber: data.timeNumber });
+        res.status(200).json({ chat });
+    }
+    catch (error) {
+        console.log(error);
+    }
+});
+exports.createChatWithFile = createChatWithFile;
+const updateChatWithFile = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const data = req.body;
+        const chat = yield chatModel_1.Chat.findOneAndUpdate({ timeNumber: data.timeNumber }, {
+            media: data.media,
+        }, { new: true });
+        app_1.io.emit(`updateChatWithFile${data.receiverUsername}`, {
+            chat,
+        });
+        res.status(200).json({ chat });
+    }
+    catch (err) {
+        throw err;
+    }
+});
+exports.updateChatWithFile = updateChatWithFile;
 const updateDeliveredChat = (data) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const connection = data.connection;
@@ -274,30 +302,48 @@ const readChats = (data) => __awaiter(void 0, void 0, void 0, function* () {
         const receiverUsername = data.receiverUsername;
         const senderUsername = data.senderUsername;
         const ids = data.ids;
-        console.log(data);
         yield chatModel_1.Chat.updateMany({ timeNumber: { $in: ids }, connection: connection }, { $set: { status: 'read', isRead: true } });
         const chats = yield chatModel_1.Chat.find({
             timeNumber: { $in: ids },
             connection,
         });
         yield chatModel_1.Friend.updateMany({ timeNumber: { $in: ids }, connection: connection }, { $set: { status: 'read' }, updatedAt: new Date() });
-        const unreadCount = yield chatModel_1.Chat.countDocuments({
+        const unreadSenderCount = yield chatModel_1.Chat.countDocuments({
+            connection: connection,
+            isRead: false,
+            senderUsername: senderUsername,
+        });
+        const unreadReceiverCount = yield chatModel_1.Chat.countDocuments({
             connection: connection,
             isRead: false,
             receiverUsername: receiverUsername,
         });
-        const friend = yield chatModel_1.Friend.findOneAndUpdate({
+        const senderFriend = yield chatModel_1.Friend.findOneAndUpdate({
+            connection,
+            'unreadMessages.username': senderUsername,
+        }, {
+            $set: {
+                'unreadMessages.$.unread': unreadSenderCount,
+            },
+        }, { new: true });
+        const receiverFriend = yield chatModel_1.Friend.findOneAndUpdate({
             connection,
             'unreadMessages.username': receiverUsername,
         }, {
             $set: {
-                'unreadMessages.$.unread': unreadCount,
+                'unreadMessages.$.unread': unreadReceiverCount,
             },
         }, { new: true });
-        console.log('Unread messages are: ', unreadCount);
-        app_1.io.emit(`updateChatToRead${senderUsername}`, {
+        app_1.io.emit(`updateChatToRead${connection}`, {
             chats,
-            friend,
+            friend: senderFriend,
+            connection,
+            senderUsername,
+            receiverUsername,
+        });
+        app_1.io.emit(`updateChatToRead${connection}`, {
+            chats,
+            friend: receiverFriend,
             connection,
             senderUsername,
             receiverUsername,
@@ -328,6 +374,41 @@ const checkChatStatus = (data) => __awaiter(void 0, void 0, void 0, function* ()
     }
 });
 exports.checkChatStatus = checkChatStatus;
+const deleteChat = (data) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        if (data.isSender) {
+            const item = yield chatModel_1.Chat.findOneAndDelete({
+                connection: data.connection,
+                timeNumber: data.id,
+            });
+            if (!item) {
+                return { message: 'This chat has been deleted' };
+            }
+            if (item.media.length > 0) {
+                for (let i = 0; i < item.media.length; i++) {
+                    const el = item.media[i];
+                    (0, fileUpload_1.deleteFileFromS3)(el.source);
+                }
+            }
+            yield chatModel_1.Chat.findOneAndDelete({ timeNumber: data.id });
+            app_1.io.emit(`deleteResponse${data.receiverUsername}`, {
+                id: data.id,
+                day: data.day,
+            });
+        }
+        else {
+            yield chatModel_1.Chat.findOneAndUpdate({ connection: data.connection, timeNumber: data.id }, { deletedUsername: data.username });
+        }
+        app_1.io.emit(`deleteResponse${data.username}`, {
+            id: data.id,
+            day: data.day,
+        });
+    }
+    catch (error) {
+        console.log(error);
+    }
+});
+exports.deleteChat = deleteChat;
 //////////////////////  ABOVE UPDATED CHATS //////////////////////
 const createChatMobile = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
@@ -643,38 +724,6 @@ const addSearchedChats = (req, res) => __awaiter(void 0, void 0, void 0, functio
     }
 });
 exports.addSearchedChats = addSearchedChats;
-const deleteChat = (data) => __awaiter(void 0, void 0, void 0, function* () {
-    try {
-        if (data.isSender) {
-            const item = yield chatModel_1.Chat.findById(data.id);
-            if (!item) {
-                return { message: 'This post has been deleted' };
-            }
-            if (item.media.length > 0) {
-                for (let i = 0; i < item.media.length; i++) {
-                    const el = item.media[i];
-                    (0, fileUpload_1.deleteFileFromS3)(el.source);
-                }
-            }
-            yield chatModel_1.Chat.findByIdAndDelete(data.id);
-            app_1.io.emit(`deleteResponse${data.receiverUsername}`, {
-                id: data.id,
-                day: data.day,
-            });
-        }
-        else {
-            yield chatModel_1.Chat.findByIdAndUpdate(data.id, { deletedUsername: data.username });
-        }
-        app_1.io.emit(`deleteResponse${data.username}`, {
-            id: data.id,
-            day: data.day,
-        });
-    }
-    catch (error) {
-        console.log(error);
-    }
-});
-exports.deleteChat = deleteChat;
 const deleteChats = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const chats = req.body;
