@@ -65,9 +65,6 @@ export const loginUser = async (req: Request, res: Response): Promise<void> => {
     })
 
     user.password = undefined
-
-    console.log(user)
-
     res.status(200).json({
       message: 'Login successful',
       user,

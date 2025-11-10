@@ -18,6 +18,7 @@ const computation_1 = require("../../utils/computation");
 const user_1 = require("../../models/users/user");
 const query_1 = require("../../utils/query");
 const postController_1 = require("./postController");
+const newsModel_1 = require("../../models/place/newsModel");
 /////////////////////////////// POST /////////////////////////////////
 const createComment = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
@@ -50,26 +51,43 @@ const createComment = (req, res) => __awaiter(void 0, void 0, void 0, function* 
             status: data.status,
             isVerified: sender.isVerified,
         };
-        const post = yield postModel_1.Post.findById(data.postId);
+        if (data.commentSource && data.commentSource === 'news') {
+            const news = yield newsModel_1.News.findById(data.postId);
+            const score = (0, computation_1.postScore)('comments', news.score);
+            if (data.replyToId) {
+                yield newsModel_1.News.updateOne({ _id: data.replyToId }, {
+                    $inc: { replies: 1, score: 3 },
+                });
+            }
+            else if (data.replyToId !== data.postId) {
+                yield newsModel_1.News.findByIdAndUpdate(data.postId, {
+                    $inc: { replies: 1 },
+                    $set: { score: score },
+                });
+            }
+        }
+        else {
+            const post = yield postModel_1.Post.findById(data.postId);
+            const score = (0, computation_1.postScore)('comments', post.score);
+            if (data.replyToId) {
+                yield postModel_1.Post.updateOne({ _id: data.replyToId }, {
+                    $inc: { replies: 1, score: 3 },
+                });
+            }
+            else if (data.replyToId !== data.postId) {
+                yield postModel_1.Post.findByIdAndUpdate(data.postId, {
+                    $inc: { replies: 1 },
+                    $set: { score: score },
+                });
+            }
+            yield statModel_1.View.create({
+                postId: post._id,
+                userId: sender._id,
+            });
+        }
         const comment = yield postModel_1.Post.create(form);
         yield user_1.User.updateOne({ _id: sender._id }, {
             $inc: { comments: 1 },
-        });
-        const score = (0, computation_1.postScore)('comments', post.score);
-        if (data.replyToId) {
-            yield postModel_1.Post.updateOne({ _id: data.replyToId }, {
-                $inc: { replies: 1, score: 3 },
-            });
-        }
-        else if (data.replyToId !== data.postId) {
-            yield postModel_1.Post.findByIdAndUpdate(data.postId, {
-                $inc: { replies: 1 },
-                $set: { score: score },
-            });
-        }
-        yield statModel_1.View.create({
-            postId: post._id,
-            userId: sender._id,
         });
         res.status(200).json({
             data: comment,

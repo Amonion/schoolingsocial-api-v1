@@ -4,21 +4,26 @@ const upload = multer()
 
 import {
   getNewsById,
-  getNews,
   updateNews,
   deleteNews,
   createNews,
-  getHomeFeed,
+  getInitialNews,
   searchNews,
   massDeleteNews,
+  updateNewsViews,
+  toggleSaveNews,
+  toggleLikeNews,
 } from '../../controllers/news/newsController'
 
 const router = express.Router()
 
 router.route('/mass-delete').patch(massDeleteNews)
 router.route('/search').get(searchNews)
-router.route('/feed').get(getHomeFeed).post(upload.any(), createNews)
-router.route('/').get(getNews).post(upload.any(), createNews)
+router.route('/feed').get(getInitialNews).post(upload.any(), createNews)
+router.route('/').get(getInitialNews).post(upload.any(), createNews)
+router.route('/views').patch(upload.any(), updateNewsViews)
+router.route('/bookmark').patch(upload.any(), toggleSaveNews)
+router.route('/like').patch(upload.any(), toggleLikeNews)
 router
   .route('/:id')
   .get(getNewsById)

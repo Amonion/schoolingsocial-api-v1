@@ -22,7 +22,7 @@ import { SocialNotification } from '../../models/message/socialNotificationModel
 import { Interest } from '../../models/post/interestModel'
 import { Follower, Mute, Pin } from '../../models/post/postStateModel'
 import { getFilteredPosts } from '../post/postController'
-import { getFeaturedNews } from '../news/newsController'
+import { getNews } from '../news/newsController'
 
 export const createUser = async (
   req: Request,
@@ -111,7 +111,7 @@ export const createUserAccount = async (
       throw new Error('User not found')
     }
 
-    const news = await getFeaturedNews(user.country, user.state)
+    const news = await getNews({ country: user.country, state: user.state })
 
     const postResult = await getFilteredPosts({
       topics: [],

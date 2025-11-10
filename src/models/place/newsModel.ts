@@ -1,6 +1,7 @@
 import mongoose, { Schema } from 'mongoose'
 
 export interface INews extends Document {
+  _id: string
   title: string
   content: string
   author: string
@@ -10,9 +11,10 @@ export interface INews extends Document {
   level: string
   country: string
   views: number
-  saves: number
+  bookmarks: number
+  score: number
   likes: number
-  comments: number
+  replies: number
   tags: string[]
   picture: string
   video: string
@@ -20,6 +22,10 @@ export interface INews extends Document {
   subtitle: string
   source: string
   isFeatured: boolean
+  liked: boolean
+  viewed: boolean
+  bookmarked: boolean
+  isMain: boolean
   isRead: boolean
   seoDescription: string
 }
@@ -35,16 +41,18 @@ const NewsSchema: Schema = new Schema(
     state: { type: String },
     country: { type: String },
     tags: { type: Array },
-    comments: { type: Number },
+    replies: { type: Number },
     views: { type: Number },
     likes: { type: Number },
-    saves: { type: Number },
+    bookmarks: { type: Number },
+    score: { type: Number, default: 1 },
     picture: { type: String },
     video: { type: String },
     category: { type: String },
     subtitle: { type: String },
     source: { type: String },
     isFeatured: { type: Boolean },
+    isMain: { type: Boolean },
     isRead: { type: Boolean },
     seoDescription: { type: String },
     createdAt: { type: Date, default: Date.now },

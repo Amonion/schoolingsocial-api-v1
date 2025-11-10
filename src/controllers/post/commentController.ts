@@ -7,6 +7,7 @@ import { postScore } from '../../utils/computation'
 import { User } from '../../models/users/user'
 import { queryData } from '../../utils/query'
 import { processPosts } from './postController'
+import { News } from '../../models/place/newsModel'
 
 /////////////////////////////// POST /////////////////////////////////
 export const createComment = async (req: Request, res: Response) => {
@@ -43,7 +44,45 @@ export const createComment = async (req: Request, res: Response) => {
       isVerified: sender.isVerified,
     }
 
-    const post = await Post.findById(data.postId)
+    if (data.commentSource && data.commentSource === 'news') {
+      const news = await News.findById(data.postId)
+      const score = postScore('comments', news.score)
+      if (data.replyToId) {
+        await News.updateOne(
+          { _id: data.replyToId },
+          {
+            $inc: { replies: 1, score: 3 },
+          }
+        )
+      } else if (data.replyToId !== data.postId) {
+        await News.findByIdAndUpdate(data.postId, {
+          $inc: { replies: 1 },
+          $set: { score: score },
+        })
+      }
+    } else {
+      const post = await Post.findById(data.postId)
+      const score = postScore('comments', post.score)
+
+      if (data.replyToId) {
+        await Post.updateOne(
+          { _id: data.replyToId },
+          {
+            $inc: { replies: 1, score: 3 },
+          }
+        )
+      } else if (data.replyToId !== data.postId) {
+        await Post.findByIdAndUpdate(data.postId, {
+          $inc: { replies: 1 },
+          $set: { score: score },
+        })
+      }
+      await View.create({
+        postId: post._id,
+        userId: sender._id,
+      })
+    }
+
     const comment = await Post.create(form)
     await User.updateOne(
       { _id: sender._id },
@@ -51,24 +90,6 @@ export const createComment = async (req: Request, res: Response) => {
         $inc: { comments: 1 },
       }
     )
-    const score = postScore('comments', post.score)
-    if (data.replyToId) {
-      await Post.updateOne(
-        { _id: data.replyToId },
-        {
-          $inc: { replies: 1, score: 3 },
-        }
-      )
-    } else if (data.replyToId !== data.postId) {
-      await Post.findByIdAndUpdate(data.postId, {
-        $inc: { replies: 1 },
-        $set: { score: score },
-      })
-    }
-    await View.create({
-      postId: post._id,
-      userId: sender._id,
-    })
 
     res.status(200).json({
       data: comment,

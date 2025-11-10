@@ -9,6 +9,7 @@ import competitionRoutes from './routes/exam/competitionRoutes'
 import companyRoutes from './routes/appRoutes/companyRoutes'
 import questionRoutes from './routes/exam/questionRoutes'
 import messageRoutes from './routes/message/messageRoutes'
+import emailRoutes from './routes/message/emailRoutes'
 import newsRoutes from './routes/news/newsRoutes'
 import placeRoutes from './routes/place/placeRoutes'
 import postRoutes from './routes/post/postRoutes'
@@ -148,6 +149,7 @@ app.use('/api/v1/courses', courseRoutes)
 app.use('/api/v1/chats', chatRoutes)
 app.use('/api/v1/company', companyRoutes)
 app.use('/api/v1/documents', placeDocumentRoutes)
+app.use('/api/v1/emails', emailRoutes)
 app.use('/api/v1/messages', messageRoutes)
 app.use('/api/v1/news', newsRoutes)
 app.use('/api/v1/offices', officeRoutes)

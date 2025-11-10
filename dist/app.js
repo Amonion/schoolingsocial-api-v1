@@ -24,6 +24,7 @@ const competitionRoutes_1 = __importDefault(require("./routes/exam/competitionRo
 const companyRoutes_1 = __importDefault(require("./routes/appRoutes/companyRoutes"));
 const questionRoutes_1 = __importDefault(require("./routes/exam/questionRoutes"));
 const messageRoutes_1 = __importDefault(require("./routes/message/messageRoutes"));
+const emailRoutes_1 = __importDefault(require("./routes/message/emailRoutes"));
 const newsRoutes_1 = __importDefault(require("./routes/news/newsRoutes"));
 const placeRoutes_1 = __importDefault(require("./routes/place/placeRoutes"));
 const postRoutes_1 = __importDefault(require("./routes/post/postRoutes"));
@@ -142,6 +143,7 @@ app.use('/api/v1/courses', courseRoutes_1.default);
 app.use('/api/v1/chats', chatRoutes_1.default);
 app.use('/api/v1/company', companyRoutes_1.default);
 app.use('/api/v1/documents', placeDocumentRoutes_1.default);
+app.use('/api/v1/emails', emailRoutes_1.default);
 app.use('/api/v1/messages', messageRoutes_1.default);
 app.use('/api/v1/news', newsRoutes_1.default);
 app.use('/api/v1/offices', officeRoutes_1.default);

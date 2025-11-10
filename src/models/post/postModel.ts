@@ -73,7 +73,7 @@ const PostSchema: Schema = new Schema(
     commentMedia: { type: String },
     media: { type: Array },
     polls: { type: Array },
-    users: { type: Array },
+    userId: { type: String },
     comments: { type: Array },
     content: { type: String },
     country: { type: String },
