@@ -13,6 +13,7 @@ import {
   updateNewsViews,
   toggleSaveNews,
   toggleLikeNews,
+  getNews,
 } from '../../controllers/news/newsController'
 
 const router = express.Router()
@@ -20,7 +21,7 @@ const router = express.Router()
 router.route('/mass-delete').patch(massDeleteNews)
 router.route('/search').get(searchNews)
 router.route('/feed').get(getInitialNews).post(upload.any(), createNews)
-router.route('/').get(getInitialNews).post(upload.any(), createNews)
+router.route('/').get(getNews).post(upload.any(), createNews)
 router.route('/views').patch(upload.any(), updateNewsViews)
 router.route('/bookmark').patch(upload.any(), toggleSaveNews)
 router.route('/like').patch(upload.any(), toggleLikeNews)

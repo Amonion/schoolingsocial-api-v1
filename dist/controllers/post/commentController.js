@@ -9,7 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getComments = exports.createComment = void 0;
+exports.toggleHateComment = exports.toggleLikeComment = exports.processComment = exports.getComments = exports.createComment = void 0;
 const postModel_1 = require("../../models/post/postModel");
 const fileUpload_1 = require("../../utils/fileUpload");
 const errorHandler_1 = require("../../utils/errorHandler");
@@ -17,8 +17,8 @@ const statModel_1 = require("../../models/users/statModel");
 const computation_1 = require("../../utils/computation");
 const user_1 = require("../../models/users/user");
 const query_1 = require("../../utils/query");
-const postController_1 = require("./postController");
 const newsModel_1 = require("../../models/place/newsModel");
+const commentModel_1 = require("../../models/post/commentModel");
 /////////////////////////////// POST /////////////////////////////////
 const createComment = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
@@ -35,7 +35,6 @@ const createComment = (req, res) => __awaiter(void 0, void 0, void 0, function* 
             picture: sender.picture,
             username: sender.username,
             displayName: sender.displayName,
-            polls: data.polls,
             users: data.users,
             replyTo: data.replyTo,
             uniqueId: data.uniqueId,
@@ -43,7 +42,6 @@ const createComment = (req, res) => __awaiter(void 0, void 0, void 0, function* 
             postId: data.postId,
             level: data.level,
             replyToId: data.replyToId,
-            postType: 'comment',
             content: data.content,
             createdAt: data.createdAt,
             commentMedia: req.body.commentMedia,
@@ -85,7 +83,7 @@ const createComment = (req, res) => __awaiter(void 0, void 0, void 0, function* 
                 userId: sender._id,
             });
         }
-        const comment = yield postModel_1.Post.create(form);
+        const comment = yield commentModel_1.Comment.create(form);
         yield user_1.User.updateOne({ _id: sender._id }, {
             $inc: { comments: 1 },
         });
@@ -103,8 +101,8 @@ const getComments = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
     try {
         const followerId = String(req.query.myId);
         delete req.query.myId;
-        const response = yield (0, query_1.queryData)(postModel_1.Post, req);
-        const results = yield (0, postController_1.processPosts)(response.results, followerId, 'user');
+        const response = yield (0, query_1.queryData)(commentModel_1.Comment, req);
+        const results = yield (0, exports.processComment)(response.results, followerId);
         res.status(200).json({ results, count: response.count });
     }
     catch (error) {
@@ -113,3 +111,106 @@ const getComments = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
     }
 });
 exports.getComments = getComments;
+const processComment = (comments, userId) => __awaiter(void 0, void 0, void 0, function* () {
+    const commentsIds = comments.map((item) => item._id);
+    const likedComments = yield statModel_1.Like.find({
+        userId: userId,
+        postId: { $in: commentsIds },
+    }).select('postId');
+    const hatedComments = yield statModel_1.Hate.find({
+        userId: userId,
+        postId: { $in: commentsIds },
+    }).select('postId');
+    const likedCommentIds = likedComments.map((like) => like.postId.toString());
+    const hatedCommentIds = hatedComments.map((like) => like.postId.toString());
+    const updateComments = [];
+    for (let i = 0; i < comments.length; i++) {
+        const el = comments[i];
+        if (likedCommentIds && likedCommentIds.includes(el._id.toString())) {
+            el.liked = true;
+        }
+        if (hatedCommentIds && hatedCommentIds.includes(el._id.toString())) {
+            el.liked = true;
+        }
+        updateComments.push(el);
+    }
+    const results = updateComments;
+    return results;
+});
+exports.processComment = processComment;
+const toggleLikeComment = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const { userId, id } = req.body;
+        let updateQuery = {};
+        let score = 0;
+        const comment = yield commentModel_1.Comment.findById(id);
+        if (!comment) {
+            return res.status(404).json({ message: 'comment not found' });
+        }
+        const like = yield statModel_1.Like.findOne({ postId: id, userId });
+        if (like) {
+            updateQuery.$inc = { likes: -1 };
+            yield statModel_1.Like.deleteOne({ postId: id, userId });
+            score = comment.score - 2;
+        }
+        else {
+            score = (0, computation_1.postScore)('likes', comment.score);
+            updateQuery.$inc = { likes: 1 };
+            yield statModel_1.Like.create({ postId: id, userId });
+            const hate = yield statModel_1.Hate.findOne({ postId: id, userId });
+            if (hate) {
+                updateQuery.$inc.hates = -1;
+                yield statModel_1.Hate.deleteOne({ postId: id, userId });
+            }
+        }
+        yield commentModel_1.Comment.findByIdAndUpdate(comment._id, {
+            $set: { score: score },
+        });
+        yield commentModel_1.Comment.findByIdAndUpdate(id, updateQuery, {
+            new: true,
+        });
+        return res.status(200).json({ message: null });
+    }
+    catch (error) {
+        (0, errorHandler_1.handleError)(res, undefined, undefined, error);
+    }
+});
+exports.toggleLikeComment = toggleLikeComment;
+const toggleHateComment = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const { userId, id } = req.body;
+        let updateQuery = { $inc: {}, $set: {} };
+        let score = 0;
+        const comment = yield commentModel_1.Comment.findById(id);
+        if (!comment) {
+            return res.status(404).json({ message: 'comment not found' });
+        }
+        const hate = yield statModel_1.Hate.findOne({ postId: id, userId });
+        if (hate) {
+            // Remove hate
+            updateQuery.$inc.hates = -1;
+            yield statModel_1.Hate.deleteOne({ postId: id, userId });
+            score = comment.score - 2;
+        }
+        else {
+            // Add hate
+            score = (0, computation_1.postScore)('hates', comment.score);
+            updateQuery.$inc.hates = 1;
+            yield statModel_1.Hate.create({ postId: id, userId });
+            // Remove like if exists
+            const like = yield statModel_1.Like.findOne({ postId: id, userId });
+            if (like) {
+                updateQuery.$inc.likes = -1;
+                yield statModel_1.Like.deleteOne({ postId: id, userId });
+            }
+        }
+        // Merge score into one update query
+        updateQuery.$set.score = score;
+        yield commentModel_1.Comment.findByIdAndUpdate(id, updateQuery, { new: true });
+        return res.status(200).json({ message: null });
+    }
+    catch (error) {
+        (0, errorHandler_1.handleError)(res, undefined, undefined, error);
+    }
+});
+exports.toggleHateComment = toggleHateComment;

@@ -33,42 +33,36 @@ var __importStar = (this && this.__importStar) || (function () {
     };
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.News = void 0;
+exports.Comment = void 0;
 const mongoose_1 = __importStar(require("mongoose"));
-const NewsSchema = new mongoose_1.Schema({
-    title: { type: String },
-    content: { type: String },
-    author: { type: String },
-    priority: { type: String },
-    publishedAt: { type: Date },
-    isPublished: { type: Boolean },
-    state: { type: String },
-    country: { type: String },
-    tags: { type: Array },
-    replies: { type: Number, default: 1 },
-    views: { type: Number, default: 1 },
-    likes: { type: Number, default: 1 },
-    bookmarks: { type: Number, default: 1 },
-    score: { type: Number, default: 1 },
+const CommentSchema = new mongoose_1.Schema({
+    displayName: { type: String },
+    username: { type: String },
     picture: { type: String },
-    video: { type: String },
-    category: { type: String },
-    subtitle: { type: String },
-    source: { type: String },
-    isFeatured: { type: Boolean },
-    isMain: { type: Boolean },
+    commentMedia: { type: String },
+    media: { type: Array },
+    userId: { type: String },
+    comments: { type: Array },
+    content: { type: String },
+    replyTo: { type: String },
+    uniqueId: { type: String },
+    postId: { type: String },
+    replyToId: { type: String },
+    isVerified: { type: Boolean },
+    replies: { type: Number },
+    level: { type: Number },
+    likes: { type: Number },
+    hates: { type: Number },
     liked: { type: Boolean },
-    bookmarked: { type: Boolean },
-    viewed: { type: Boolean },
-    isRead: { type: Boolean },
-    seoDescription: { type: String },
+    hated: { type: Boolean },
+    score: { type: Number },
+    pinnedAt: { type: Date, default: null },
     createdAt: { type: Date, default: Date.now },
 }, {
     timestamps: true,
 });
-NewsSchema.index({ priority: 1, createdAt: -1 });
-NewsSchema.index({ priority: 1, country: 1, createdAt: -1 });
-NewsSchema.index({ priority: 1, state: 1, createdAt: -1 });
-NewsSchema.index({ category: 1, createdAt: -1 });
-NewsSchema.index({ tags: 1, createdAt: -1 });
-exports.News = mongoose_1.default.model('News', NewsSchema);
+CommentSchema.index({ country: 1 });
+CommentSchema.index({ createdAt: -1 });
+CommentSchema.index({ score: -1 });
+CommentSchema.index({ country: 1, score: -1, createdAt: -1 });
+exports.Comment = mongoose_1.default.model('Comment', CommentSchema);

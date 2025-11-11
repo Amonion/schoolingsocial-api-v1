@@ -105,7 +105,7 @@ const createUserAccount = (req, res) => __awaiter(void 0, void 0, void 0, functi
         if (!user) {
             throw new Error('User not found');
         }
-        const news = yield (0, newsController_1.getNews)({ country: user.country, state: user.state });
+        const news = yield (0, newsController_1.getNewsFeed)({ country: user.country, state: user.state });
         const postResult = yield (0, postController_1.getFilteredPosts)({
             topics: [],
             countries: [country],

@@ -56,7 +56,16 @@ export const massDeleteNews = async (
   }
 }
 
-export const getNews = async ({
+export const getNews = async (req: Request, res: Response) => {
+  try {
+    const result = await queryData<INews>(News, req)
+    res.status(200).json(result)
+  } catch (error) {
+    handleError(res, undefined, undefined, error)
+  }
+}
+
+export const getNewsFeed = async ({
   country,
   state,
   limit = 20,
@@ -137,7 +146,6 @@ export const getNews = async ({
 export const toggleLikeNews = async (req: Request, res: Response) => {
   try {
     const { userId, id } = req.body
-    let updateQuery: any = {}
     let score = 0
 
     const news = await News.findById(id)
@@ -148,13 +156,29 @@ export const toggleLikeNews = async (req: Request, res: Response) => {
 
     const like = await Like.findOne({ postId: id, userId })
     if (like) {
-      updateQuery.$inc = { likes: -1 }
       await Like.deleteOne({ postId: id, userId })
-      score = news.score - 2
+      score = Math.max(0, news.score - 2)
+
+      await News.updateOne({ _id: id }, [
+        {
+          $set: {
+            likes: { $max: [{ $subtract: ['$likes', 1] }, 0] },
+            score: score,
+          },
+        },
+      ])
     } else {
       score = postScore('likes', news.score)
-      updateQuery.$inc = { likes: 1 }
+
       await Like.create({ postId: id, userId })
+      await News.updateOne({ _id: id }, [
+        {
+          $set: {
+            likes: { $add: ['$likes', 1] },
+            score: score,
+          },
+        },
+      ])
     }
 
     await News.updateOne(
@@ -163,10 +187,6 @@ export const toggleLikeNews = async (req: Request, res: Response) => {
         $set: { score: score },
       }
     )
-
-    await News.findByIdAndUpdate(id, updateQuery, {
-      new: true,
-    })
     return res.status(200).json({ message: null })
   } catch (error: any) {
     handleError(res, undefined, undefined, error)
@@ -186,13 +206,29 @@ export const toggleSaveNews = async (req: Request, res: Response) => {
 
     const save = await Bookmark.findOne({ postId: id, userId })
     if (save) {
-      await News.findByIdAndUpdate(id, { $inc: { bookmarks: -1 } })
       await Bookmark.deleteOne({ postId: id, userId })
-      score = news.score - 5
+      score = Math.max(0, news.score - 5)
+
+      await News.updateOne({ _id: id }, [
+        {
+          $set: {
+            bookmarks: { $max: [{ $subtract: ['$bookmarks', 1] }, 0] },
+            score: score,
+          },
+        },
+      ])
     } else {
       score = postScore('bookmarks', news.score)
-      await News.findByIdAndUpdate(id, { $inc: { bookmarks: 1 } })
+
       await Bookmark.create({ postId: id, userId })
+      await News.updateOne({ _id: id }, [
+        {
+          $set: {
+            bookmarks: { $add: ['$bookmarks', 1] },
+            score: score,
+          },
+        },
+      ])
     }
 
     await News.updateOne(
@@ -267,9 +303,10 @@ export const getInitialNews = async (req: Request, res: Response) => {
     const limit = parseInt(req.query.page_size as string, 10) || 20
     const skip = parseInt(req.query.page as string, 10) || 0
 
-    const news = await getNews({ country, state, limit, skip })
+    const news = await getNewsFeed({ country, state, limit, skip })
 
     const results = await processNews(news, String(req.query.userId))
+    // console.log(results)
     res.status(200).json({ results })
   } catch (error) {
     console.error(error)

@@ -9,7 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.processNews = exports.searchNews = exports.getInitialNews = exports.deleteNews = exports.updateNewsViews = exports.updateNews = exports.toggleSaveNews = exports.toggleLikeNews = exports.getNews = exports.massDeleteNews = exports.getNewsById = exports.createNews = void 0;
+exports.processNews = exports.searchNews = exports.getInitialNews = exports.deleteNews = exports.updateNewsViews = exports.updateNews = exports.toggleSaveNews = exports.toggleLikeNews = exports.getNewsFeed = exports.getNews = exports.massDeleteNews = exports.getNewsById = exports.createNews = void 0;
 const newsModel_1 = require("../../models/place/newsModel");
 const query_1 = require("../../utils/query");
 const errorHandler_1 = require("../../utils/errorHandler");
@@ -41,7 +41,17 @@ const massDeleteNews = (req, res) => __awaiter(void 0, void 0, void 0, function*
     }
 });
 exports.massDeleteNews = massDeleteNews;
-const getNews = (_a) => __awaiter(void 0, [_a], void 0, function* ({ country, state, limit = 20, isFeatured, isMain, skip = 0, }) {
+const getNews = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const result = yield (0, query_1.queryData)(newsModel_1.News, req);
+        res.status(200).json(result);
+    }
+    catch (error) {
+        (0, errorHandler_1.handleError)(res, undefined, undefined, error);
+    }
+});
+exports.getNews = getNews;
+const getNewsFeed = (_a) => __awaiter(void 0, [_a], void 0, function* ({ country, state, limit = 20, isFeatured, isMain, skip = 0, }) {
     const buildMatch = (priority, extra) => {
         const baseMatch = Object.assign({ priority: { $regex: new RegExp(`^${priority}$`, 'i') }, isPublished: true }, extra);
         if (isFeatured || isMain) {
@@ -102,11 +112,10 @@ const getNews = (_a) => __awaiter(void 0, [_a], void 0, function* ({ country, st
     const news = yield newsModel_1.News.aggregate(pipeline);
     return news;
 });
-exports.getNews = getNews;
+exports.getNewsFeed = getNewsFeed;
 const toggleLikeNews = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const { userId, id } = req.body;
-        let updateQuery = {};
         let score = 0;
         const news = yield newsModel_1.News.findById(id);
         if (!news) {
@@ -114,20 +123,31 @@ const toggleLikeNews = (req, res) => __awaiter(void 0, void 0, void 0, function*
         }
         const like = yield statModel_1.Like.findOne({ postId: id, userId });
         if (like) {
-            updateQuery.$inc = { likes: -1 };
             yield statModel_1.Like.deleteOne({ postId: id, userId });
-            score = news.score - 2;
+            score = Math.max(0, news.score - 2);
+            yield newsModel_1.News.updateOne({ _id: id }, [
+                {
+                    $set: {
+                        likes: { $max: [{ $subtract: ['$likes', 1] }, 0] },
+                        score: score,
+                    },
+                },
+            ]);
         }
         else {
             score = (0, computation_1.postScore)('likes', news.score);
-            updateQuery.$inc = { likes: 1 };
             yield statModel_1.Like.create({ postId: id, userId });
+            yield newsModel_1.News.updateOne({ _id: id }, [
+                {
+                    $set: {
+                        likes: { $add: ['$likes', 1] },
+                        score: score,
+                    },
+                },
+            ]);
         }
         yield newsModel_1.News.updateOne({ _id: news._id }, {
             $set: { score: score },
-        });
-        yield newsModel_1.News.findByIdAndUpdate(id, updateQuery, {
-            new: true,
         });
         return res.status(200).json({ message: null });
     }
@@ -146,14 +166,28 @@ const toggleSaveNews = (req, res) => __awaiter(void 0, void 0, void 0, function*
         }
         const save = yield statModel_1.Bookmark.findOne({ postId: id, userId });
         if (save) {
-            yield newsModel_1.News.findByIdAndUpdate(id, { $inc: { bookmarks: -1 } });
             yield statModel_1.Bookmark.deleteOne({ postId: id, userId });
-            score = news.score - 5;
+            score = Math.max(0, news.score - 5);
+            yield newsModel_1.News.updateOne({ _id: id }, [
+                {
+                    $set: {
+                        bookmarks: { $max: [{ $subtract: ['$bookmarks', 1] }, 0] },
+                        score: score,
+                    },
+                },
+            ]);
         }
         else {
             score = (0, computation_1.postScore)('bookmarks', news.score);
-            yield newsModel_1.News.findByIdAndUpdate(id, { $inc: { bookmarks: 1 } });
             yield statModel_1.Bookmark.create({ postId: id, userId });
+            yield newsModel_1.News.updateOne({ _id: id }, [
+                {
+                    $set: {
+                        bookmarks: { $add: ['$bookmarks', 1] },
+                        score: score,
+                    },
+                },
+            ]);
         }
         yield newsModel_1.News.updateOne({ _id: news._id }, {
             $set: { score: score },
@@ -211,8 +245,9 @@ const getInitialNews = (req, res) => __awaiter(void 0, void 0, void 0, function*
         const state = String(req.query.state || '');
         const limit = parseInt(req.query.page_size, 10) || 20;
         const skip = parseInt(req.query.page, 10) || 0;
-        const news = yield (0, exports.getNews)({ country, state, limit, skip });
+        const news = yield (0, exports.getNewsFeed)({ country, state, limit, skip });
         const results = yield (0, exports.processNews)(news, String(req.query.userId));
+        // console.log(results)
         res.status(200).json({ results });
     }
     catch (error) {

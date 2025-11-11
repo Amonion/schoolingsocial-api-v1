@@ -13,6 +13,7 @@ import emailRoutes from './routes/message/emailRoutes'
 import newsRoutes from './routes/news/newsRoutes'
 import placeRoutes from './routes/place/placeRoutes'
 import postRoutes from './routes/post/postRoutes'
+import commentRoutes from './routes/post/commentRoutes'
 import chatRoutes from './routes/message/chatRoutes'
 import courseRoutes from './routes/school/courseRoutes'
 import departmentRoutes from './routes/school/departmentRoutes'
@@ -144,6 +145,7 @@ app.use('/api/v1/intelligence', aiRoutes)
 app.use('/api/v1/ads', adsRoutes)
 app.use('/api/v1/banks', bankRoutes)
 app.use('/api/v1/competitions', competitionRoutes)
+app.use('/api/v1/comments', commentRoutes)
 app.use('/api/v1/questions', questionRoutes)
 app.use('/api/v1/courses', courseRoutes)
 app.use('/api/v1/chats', chatRoutes)

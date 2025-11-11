@@ -1,13 +1,13 @@
 import { Request, Response } from 'express'
-import { IPost, Post } from '../../models/post/postModel'
+import { Post } from '../../models/post/postModel'
 import { uploadFilesToS3 } from '../../utils/fileUpload'
 import { handleError } from '../../utils/errorHandler'
-import { View } from '../../models/users/statModel'
+import { Like, Bookmark, View, Hate } from '../../models/users/statModel'
 import { postScore } from '../../utils/computation'
 import { User } from '../../models/users/user'
 import { queryData } from '../../utils/query'
-import { processPosts } from './postController'
 import { News } from '../../models/place/newsModel'
+import { Comment, IComment } from '../../models/post/commentModel'
 
 /////////////////////////////// POST /////////////////////////////////
 export const createComment = async (req: Request, res: Response) => {
@@ -27,7 +27,6 @@ export const createComment = async (req: Request, res: Response) => {
       picture: sender.picture,
       username: sender.username,
       displayName: sender.displayName,
-      polls: data.polls,
       users: data.users,
       replyTo: data.replyTo,
       uniqueId: data.uniqueId,
@@ -35,7 +34,6 @@ export const createComment = async (req: Request, res: Response) => {
       postId: data.postId,
       level: data.level,
       replyToId: data.replyToId,
-      postType: 'comment',
       content: data.content,
       createdAt: data.createdAt,
       commentMedia: req.body.commentMedia,
@@ -83,7 +81,7 @@ export const createComment = async (req: Request, res: Response) => {
       })
     }
 
-    const comment = await Post.create(form)
+    const comment = await Comment.create(form)
     await User.updateOne(
       { _id: sender._id },
       {
@@ -104,11 +102,128 @@ export const getComments = async (req: Request, res: Response) => {
   try {
     const followerId = String(req.query.myId)
     delete req.query.myId
-    const response = await queryData<IPost>(Post, req)
-    const results = await processPosts(response.results, followerId, 'user')
+    const response = await queryData<IComment>(Comment, req)
+    const results = await processComment(response.results, followerId)
     res.status(200).json({ results, count: response.count })
   } catch (error) {
     console.log(error)
+    handleError(res, undefined, undefined, error)
+  }
+}
+
+export const processComment = async (comments: IComment[], userId: string) => {
+  const commentsIds = comments.map((item) => item._id)
+
+  const likedComments = await Like.find({
+    userId: userId,
+    postId: { $in: commentsIds },
+  }).select('postId')
+
+  const hatedComments = await Hate.find({
+    userId: userId,
+    postId: { $in: commentsIds },
+  }).select('postId')
+
+  const likedCommentIds = likedComments.map((like) => like.postId.toString())
+  const hatedCommentIds = hatedComments.map((like) => like.postId.toString())
+  const updateComments = []
+
+  for (let i = 0; i < comments.length; i++) {
+    const el = comments[i]
+
+    if (likedCommentIds && likedCommentIds.includes(el._id.toString())) {
+      el.liked = true
+    }
+    if (hatedCommentIds && hatedCommentIds.includes(el._id.toString())) {
+      el.liked = true
+    }
+
+    updateComments.push(el)
+  }
+
+  const results = updateComments
+  return results
+}
+
+export const toggleLikeComment = async (req: Request, res: Response) => {
+  try {
+    const { userId, id } = req.body
+    let updateQuery: any = {}
+    let score = 0
+
+    const comment = await Comment.findById(id)
+
+    if (!comment) {
+      return res.status(404).json({ message: 'comment not found' })
+    }
+
+    const like = await Like.findOne({ postId: id, userId })
+    if (like) {
+      updateQuery.$inc = { likes: -1 }
+      await Like.deleteOne({ postId: id, userId })
+      score = comment.score - 2
+    } else {
+      score = postScore('likes', comment.score)
+      updateQuery.$inc = { likes: 1 }
+      await Like.create({ postId: id, userId })
+      const hate = await Hate.findOne({ postId: id, userId })
+      if (hate) {
+        updateQuery.$inc.hates = -1
+        await Hate.deleteOne({ postId: id, userId })
+      }
+    }
+
+    await Comment.findByIdAndUpdate(comment._id, {
+      $set: { score: score },
+    })
+
+    await Comment.findByIdAndUpdate(id, updateQuery, {
+      new: true,
+    })
+    return res.status(200).json({ message: null })
+  } catch (error: any) {
+    handleError(res, undefined, undefined, error)
+  }
+}
+
+export const toggleHateComment = async (req: Request, res: Response) => {
+  try {
+    const { userId, id } = req.body
+    let updateQuery: any = { $inc: {}, $set: {} }
+    let score = 0
+
+    const comment = await Comment.findById(id)
+    if (!comment) {
+      return res.status(404).json({ message: 'comment not found' })
+    }
+
+    const hate = await Hate.findOne({ postId: id, userId })
+    if (hate) {
+      // Remove hate
+      updateQuery.$inc.hates = -1
+      await Hate.deleteOne({ postId: id, userId })
+      score = comment.score - 2
+    } else {
+      // Add hate
+      score = postScore('hates', comment.score)
+      updateQuery.$inc.hates = 1
+      await Hate.create({ postId: id, userId })
+
+      // Remove like if exists
+      const like = await Like.findOne({ postId: id, userId })
+      if (like) {
+        updateQuery.$inc.likes = -1
+        await Like.deleteOne({ postId: id, userId })
+      }
+    }
+
+    // Merge score into one update query
+    updateQuery.$set.score = score
+
+    await Comment.findByIdAndUpdate(id, updateQuery, { new: true })
+
+    return res.status(200).json({ message: null })
+  } catch (error: any) {
     handleError(res, undefined, undefined, error)
   }
 }
