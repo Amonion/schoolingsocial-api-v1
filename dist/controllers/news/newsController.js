@@ -247,7 +247,6 @@ const getInitialNews = (req, res) => __awaiter(void 0, void 0, void 0, function*
         const skip = parseInt(req.query.page, 10) || 0;
         const news = yield (0, exports.getNewsFeed)({ country, state, limit, skip });
         const results = yield (0, exports.processNews)(news, String(req.query.userId));
-        // console.log(results)
         res.status(200).json({ results });
     }
     catch (error) {
@@ -267,7 +266,7 @@ const processNews = (news, userId) => __awaiter(void 0, void 0, void 0, function
         postId: { $in: newsIds },
     }).select('postId');
     const bookmarkedPosts = yield statModel_1.Bookmark.find({
-        bookmarkUserId: userId,
+        userId: userId,
         postId: { $in: newsIds },
     }).select('postId');
     const viewedNews = yield statModel_1.View.find({

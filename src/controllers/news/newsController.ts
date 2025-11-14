@@ -306,7 +306,6 @@ export const getInitialNews = async (req: Request, res: Response) => {
     const news = await getNewsFeed({ country, state, limit, skip })
 
     const results = await processNews(news, String(req.query.userId))
-    // console.log(results)
     res.status(200).json({ results })
   } catch (error) {
     console.error(error)
@@ -327,7 +326,7 @@ export const processNews = async (news: INews[], userId: string) => {
   }).select('postId')
 
   const bookmarkedPosts = await Bookmark.find({
-    bookmarkUserId: userId,
+    userId: userId,
     postId: { $in: newsIds },
   }).select('postId')
 
@@ -340,6 +339,7 @@ export const processNews = async (news: INews[], userId: string) => {
   const bookmarkedPostIds = bookmarkedPosts.map((bookmark) =>
     bookmark.postId.toString()
   )
+
   const viewedPostIds = viewedNews.map((view) => view.postId.toString())
   const updatedPosts = []
 

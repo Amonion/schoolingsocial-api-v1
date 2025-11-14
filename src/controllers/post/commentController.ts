@@ -103,7 +103,7 @@ export const getComments = async (req: Request, res: Response) => {
     const followerId = String(req.query.myId)
     delete req.query.myId
     const response = await queryData<IComment>(Comment, req)
-    const results = await processComment(response.results, followerId)
+    const results = await processComments(response.results, followerId)
     res.status(200).json({ results, count: response.count })
   } catch (error) {
     console.log(error)
@@ -111,7 +111,7 @@ export const getComments = async (req: Request, res: Response) => {
   }
 }
 
-export const processComment = async (comments: IComment[], userId: string) => {
+export const processComments = async (comments: IComment[], userId: string) => {
   const commentsIds = comments.map((item) => item._id)
 
   const likedComments = await Like.find({

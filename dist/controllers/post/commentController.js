@@ -9,7 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.toggleHateComment = exports.toggleLikeComment = exports.processComment = exports.getComments = exports.createComment = void 0;
+exports.toggleHateComment = exports.toggleLikeComment = exports.processComments = exports.getComments = exports.createComment = void 0;
 const postModel_1 = require("../../models/post/postModel");
 const fileUpload_1 = require("../../utils/fileUpload");
 const errorHandler_1 = require("../../utils/errorHandler");
@@ -102,7 +102,7 @@ const getComments = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
         const followerId = String(req.query.myId);
         delete req.query.myId;
         const response = yield (0, query_1.queryData)(commentModel_1.Comment, req);
-        const results = yield (0, exports.processComment)(response.results, followerId);
+        const results = yield (0, exports.processComments)(response.results, followerId);
         res.status(200).json({ results, count: response.count });
     }
     catch (error) {
@@ -111,7 +111,7 @@ const getComments = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
     }
 });
 exports.getComments = getComments;
-const processComment = (comments, userId) => __awaiter(void 0, void 0, void 0, function* () {
+const processComments = (comments, userId) => __awaiter(void 0, void 0, void 0, function* () {
     const commentsIds = comments.map((item) => item._id);
     const likedComments = yield statModel_1.Like.find({
         userId: userId,
@@ -137,7 +137,7 @@ const processComment = (comments, userId) => __awaiter(void 0, void 0, void 0, f
     const results = updateComments;
     return results;
 });
-exports.processComment = processComment;
+exports.processComments = processComments;
 const toggleLikeComment = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const { userId, id } = req.body;
