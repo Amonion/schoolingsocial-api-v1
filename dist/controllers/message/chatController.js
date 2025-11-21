@@ -38,8 +38,9 @@ const sendCreatedChat = (post, connection, totalUnread) => __awaiter(void 0, voi
         isFriends: friend.isFriends,
     });
     if (friend && friend.isFriends) {
+        console.log('Sending to receiver: ', post.receiverUsername);
         /////////////// WHEN USER IS IN CHAT ROOM OR NOT //////////////
-        app_1.io.emit(`addCreatedChat${post.senderUsername}`, {
+        app_1.io.emit(`addCreatedChat${post.receiverUsername}`, {
             connection,
             chat: post,
             pending: true,
@@ -334,6 +335,7 @@ const readChats = (data) => __awaiter(void 0, void 0, void 0, function* () {
                 'unreadMessages.$.unread': unreadReceiverCount,
             },
         }, { new: true });
+        console.log('Sender username: ', senderUsername, ' Receiver username: ', receiverUsername);
         app_1.io.emit(`updateChatToRead${connection}`, {
             chats,
             friend: senderFriend,

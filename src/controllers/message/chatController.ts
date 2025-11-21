@@ -64,8 +64,9 @@ const sendCreatedChat = async (
   })
 
   if (friend && friend.isFriends) {
+    console.log('Sending to receiver: ', post.receiverUsername)
     /////////////// WHEN USER IS IN CHAT ROOM OR NOT //////////////
-    io.emit(`addCreatedChat${post.senderUsername}`, {
+    io.emit(`addCreatedChat${post.receiverUsername}`, {
       connection,
       chat: post,
       pending: true,
@@ -428,6 +429,13 @@ export const readChats = async (data: Receive) => {
         },
       },
       { new: true }
+    )
+
+    console.log(
+      'Sender username: ',
+      senderUsername,
+      ' Receiver username: ',
+      receiverUsername
     )
 
     io.emit(`updateChatToRead${connection}`, {
