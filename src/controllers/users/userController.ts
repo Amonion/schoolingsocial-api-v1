@@ -143,14 +143,16 @@ export const getAUser = async (
     if (!user) {
       return res.status(404).json({ message: 'User not found' })
     }
+
     const followerId = req.query.userId
     const follow = await Follower.findOne({
       userId: user?._id,
       followerId: followerId,
     })
+
     const followedUser = {
       ...user.toObject(),
-      isFollowed: !!follow,
+      followed: !!follow,
     }
     res.status(200).json({ data: followedUser })
   } catch (error) {
@@ -339,10 +341,9 @@ export const getChatUser = async (
 export const followUserAccount = async (req: Request, res: Response) => {
   try {
     const { follow } = await followAccount(req, res)
-    let isFollowed = req.body.isFollowed
     let followers = await Follower.countDocuments({ userId: req.params.id })
 
-    isFollowed = follow ? false : true
+    const isFollowed = follow ? false : true
     res.status(200).json({
       isFollowed: isFollowed,
       followers: followers,

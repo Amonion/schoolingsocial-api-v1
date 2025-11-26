@@ -14,6 +14,7 @@ export interface IUser extends Document {
   intro: string
   isFirstTime: boolean
   isVerified: boolean
+  followed: boolean
   media: string
   officeNum: number
   online: boolean
@@ -57,6 +58,7 @@ const UserSchema: Schema = new Schema(
     intro: { type: String },
     isFirstTime: { type: Boolean, default: true },
     isVerified: { type: Boolean },
+    followed: { type: Boolean },
     media: { type: String },
     officeNum: { type: Number },
     online: { type: Boolean, default: true },

@@ -20,7 +20,7 @@ var __rest = (this && this.__rest) || function (s, e) {
     return t;
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.processPosts = exports.followUser = exports.searchPosts = exports.getPostStat = exports.updatePostViews = exports.updatePostStat = exports.toggleHatePost = exports.toggleLikePost = exports.deletePost = exports.updatePost = exports.getBookMarkedPosts = exports.getMutedUsers = exports.getBlockedUsers = exports.getFollowers = exports.getFollowings = exports.getFilteredPosts = exports.getPosts = exports.getUserPosts = exports.getPostById = exports.repostPost = exports.muteUser = exports.blockUser = exports.pinPost = exports.updatePoll = exports.createPost = void 0;
+exports.processPosts = exports.followUser = exports.searchPosts = exports.getPostStat = exports.updatePostViews = exports.updatePostStat = exports.toggleBookmarkedPosts = exports.toggleLikePost = exports.deletePost = exports.updatePost = exports.getBookMarkedPosts = exports.getMutedUsers = exports.getBlockedUsers = exports.getFollowers = exports.getFollowings = exports.getFilteredPosts = exports.getPosts = exports.getUserPosts = exports.getPostById = exports.repostPost = exports.muteUser = exports.blockUser = exports.pinPost = exports.updatePoll = exports.createPost = void 0;
 const postModel_1 = require("../../models/post/postModel");
 const fileUpload_1 = require("../../utils/fileUpload");
 const errorHandler_1 = require("../../utils/errorHandler");
@@ -456,72 +456,16 @@ const getMutedUsers = (req, res) => __awaiter(void 0, void 0, void 0, function* 
 exports.getMutedUsers = getMutedUsers;
 const getBookMarkedPosts = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const bookmarkUserId = String(req.query.myId);
-        const bookmarks = yield statModel_1.Bookmark.find({ bookmarkUserId: bookmarkUserId });
+        const userId = String(req.query.myId);
+        const bookmarks = yield statModel_1.Bookmark.find({ userId: userId });
         // const followers = await Follower.find({ followerId: followerId });
         const bookmarksPostIds = bookmarks.map((post) => post.postId);
         // delete req.query.myId;
         const mongoQuery = Object.assign(Object.assign({}, req.query), { _id: { in: bookmarksPostIds } });
         req.query = mongoQuery;
         delete req.query.myId;
-        const processedPosts = yield processFetchedPosts(req, bookmarkUserId);
+        const processedPosts = yield processFetchedPosts(req, userId);
         res.status(200).json(processedPosts);
-        // const posts = response.results;
-        // const postIds = posts.map((post) => post._id);
-        // const userIds = [...new Set(posts.map((post) => post.userId))];
-        // const userObjects = userIds.map((userId) => ({ userId, followerId }));
-        // const queryConditions = userObjects.map(({ userId, followerId }) => ({
-        //   userId,
-        //   followerId,
-        // }));
-        // const follows = await Follower.find(
-        //   { $or: queryConditions },
-        //   { userId: 1, _id: 0 }
-        // );
-        // const followedUserIds = new Set(follows.map((user) => user.userId));
-        // posts.map((post) => {
-        //   if (followedUserIds.has(post.userId)) {
-        //     post.followed = true;
-        //   }
-        //   return post;
-        // });
-        // const likedPosts = await Like.find({
-        //   userId: followerId,
-        //   postId: { $in: postIds },
-        // }).select("postId");
-        // const bookmarkedPosts = await Bookmark.find({
-        //   userId: followerId,
-        //   postId: { $in: postIds },
-        // }).select("postId");
-        // const viewedPosts = await View.find({
-        //   userId: followerId,
-        //   postId: { $in: postIds },
-        // }).select("postId");
-        // const likedPostIds = likedPosts.map((like) => like.postId.toString());
-        // const bookmarkedPostIds = bookmarkedPosts.map((bookmark) =>
-        //   bookmark.postId.toString()
-        // );
-        // const viewedPostIds = viewedPosts.map((view) => view.postId.toString());
-        // const updatedPosts = [];
-        // for (let i = 0; i < posts.length; i++) {
-        //   const el = posts[i];
-        //   if (likedPostIds.includes(el._id.toString())) {
-        //     el.liked = true;
-        //   }
-        //   if (bookmarkedPostIds.includes(el._id.toString())) {
-        //     el.bookmarked = true;
-        //   }
-        //   if (viewedPostIds.includes(el._id.toString())) {
-        //     el.viewed = true;
-        //   }
-        //   updatedPosts.push(el);
-        // }
-        // res.status(200).json({
-        //   count: response.count,
-        //   page: response.page,
-        //   page_size: response.page_size,
-        //   results: updatedPosts,
-        // });
     }
     catch (error) {
         (0, errorHandler_1.handleError)(res, undefined, undefined, error);
@@ -618,34 +562,41 @@ const toggleLikePost = (req, res) => __awaiter(void 0, void 0, void 0, function*
     }
 });
 exports.toggleLikePost = toggleLikePost;
-const toggleHatePost = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+const toggleBookmarkedPosts = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const { userId, id } = req.body;
-        let updateQuery = {};
         let score = 0;
         const post = yield postModel_1.Post.findById(id);
         if (!post) {
-            return res.status(404).json({ message: 'Post not found' });
+            return res.status(404).json({ message: 'post not found' });
         }
-        const hate = yield statModel_1.Hate.findOne({ postId: id, userId });
-        if (hate) {
-            updateQuery.$inc = { hates: -1 };
-            yield statModel_1.Hate.deleteOne({ postId: id, userId });
+        const save = yield statModel_1.Bookmark.findOne({ postId: id, userId });
+        if (save) {
+            yield statModel_1.Bookmark.deleteOne({ postId: id, userId });
+            score = Math.max(0, post.score - 5);
+            yield postModel_1.Post.updateOne({ _id: id }, [
+                {
+                    $set: {
+                        bookmarks: { $max: [{ $subtract: ['$bookmarks', 1] }, 0] },
+                        score: score,
+                    },
+                },
+            ]);
         }
         else {
-            updateQuery.$inc = { hates: 1 };
-            yield statModel_1.Hate.create({ postId: id, userId });
-            const like = yield statModel_1.Like.findOne({ postId: id, userId });
-            if (like) {
-                updateQuery.$inc.likes = -1;
-                yield statModel_1.Like.deleteOne({ postId: id, userId });
-            }
+            score = (0, computation_1.postScore)('bookmarks', post.score);
+            yield statModel_1.Bookmark.create({ postId: id, userId });
+            yield postModel_1.Post.updateOne({ _id: id }, [
+                {
+                    $set: {
+                        bookmarks: { $add: ['$bookmarks', 1] },
+                        score: score,
+                    },
+                },
+            ]);
         }
         yield postModel_1.Post.updateOne({ _id: post._id }, {
             $set: { score: score },
-        });
-        yield postModel_1.Post.findByIdAndUpdate(id, updateQuery, {
-            new: true,
         });
         return res.status(200).json({ message: null });
     }
@@ -653,7 +604,7 @@ const toggleHatePost = (req, res) => __awaiter(void 0, void 0, void 0, function*
         (0, errorHandler_1.handleError)(res, undefined, undefined, error);
     }
 });
-exports.toggleHatePost = toggleHatePost;
+exports.toggleBookmarkedPosts = toggleBookmarkedPosts;
 const updatePostStat = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const { userId, id } = req.body;
@@ -840,12 +791,8 @@ const processFetchedPosts = (req, followerId) => __awaiter(void 0, void 0, void 
         userId: followerId,
         postId: { $in: postIds },
     }).select('postId');
-    const hatedPosts = yield statModel_1.Hate.find({
-        userId: followerId,
-        postId: { $in: postIds },
-    }).select('postId');
     const bookmarkedPosts = yield statModel_1.Bookmark.find({
-        bookmarkUserId: followerId,
+        userId: followerId,
         postId: { $in: postIds },
     }).select('postId');
     const viewedPosts = yield statModel_1.View.find({
@@ -859,7 +806,6 @@ const processFetchedPosts = (req, followerId) => __awaiter(void 0, void 0, void 
     }));
     const mutedUserIds = mutedUsers.map((mute) => mute.accountUserId.toString());
     const likedPostIds = likedPosts.map((like) => like.postId.toString());
-    const hatedPostIds = hatedPosts.map((hate) => hate.postId.toString());
     const bookmarkedPostIds = bookmarkedPosts.map((bookmark) => bookmark.postId.toString());
     const viewedPostIds = viewedPosts.map((view) => view.postId.toString());
     const updatedPosts = [];
@@ -889,9 +835,6 @@ const processFetchedPosts = (req, followerId) => __awaiter(void 0, void 0, void 
         }
         if (likedPostIds && likedPostIds.includes(el._id.toString())) {
             el.liked = true;
-        }
-        if (hatedPostIds && hatedPostIds.includes(el._id.toString())) {
-            el.hated = true;
         }
         if (bookmarkedPostIds && bookmarkedPostIds.includes(el._id.toString())) {
             el.bookmarked = true;
@@ -930,6 +873,10 @@ const processPosts = (posts, followerId, source) => __awaiter(void 0, void 0, vo
         }
         return post;
     });
+    const followedUsers = yield postStateModel_1.Follower.find({
+        followerId: followerId,
+        userId: { $in: userIds },
+    }).select('userId');
     const blockedUsers = yield postStateModel_1.Block.find({
         userId: followerId,
         accountUserId: { $in: postUserIds },
@@ -950,12 +897,8 @@ const processPosts = (posts, followerId, source) => __awaiter(void 0, void 0, vo
         userId: followerId,
         postId: { $in: postIds },
     }).select('postId');
-    const hatedPosts = yield statModel_1.Hate.find({
-        userId: followerId,
-        postId: { $in: postIds },
-    }).select('postId');
     const bookmarkedPosts = yield statModel_1.Bookmark.find({
-        bookmarkUserId: followerId,
+        userId: followerId,
         postId: { $in: postIds },
     }).select('postId');
     const viewedPosts = yield statModel_1.View.find({
@@ -969,7 +912,6 @@ const processPosts = (posts, followerId, source) => __awaiter(void 0, void 0, vo
     }));
     const mutedUserIds = mutedUsers.map((mute) => mute.accountUserId.toString());
     const likedPostIds = likedPosts.map((like) => like.postId.toString());
-    const hatedPostIds = hatedPosts.map((hate) => hate.postId.toString());
     const bookmarkedPostIds = bookmarkedPosts.map((bookmark) => bookmark.postId.toString());
     const viewedPostIds = viewedPosts.map((view) => view.postId.toString());
     const updatedPosts = [];
@@ -999,9 +941,6 @@ const processPosts = (posts, followerId, source) => __awaiter(void 0, void 0, vo
         }
         if (likedPostIds && likedPostIds.includes(el._id.toString())) {
             el.liked = true;
-        }
-        if (hatedPostIds && hatedPostIds.includes(el._id.toString())) {
-            el.hated = true;
         }
         if (bookmarkedPostIds && bookmarkedPostIds.includes(el._id.toString())) {
             el.bookmarked = true;

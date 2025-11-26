@@ -138,7 +138,7 @@ const getAUser = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
             userId: user === null || user === void 0 ? void 0 : user._id,
             followerId: followerId,
         });
-        const followedUser = Object.assign(Object.assign({}, user.toObject()), { isFollowed: !!follow });
+        const followedUser = Object.assign(Object.assign({}, user.toObject()), { followed: !!follow });
         res.status(200).json({ data: followedUser });
     }
     catch (error) {
@@ -310,9 +310,8 @@ exports.getChatUser = getChatUser;
 const followUserAccount = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const { follow } = yield (0, query_1.followAccount)(req, res);
-        let isFollowed = req.body.isFollowed;
         let followers = yield postStateModel_1.Follower.countDocuments({ userId: req.params.id });
-        isFollowed = follow ? false : true;
+        const isFollowed = follow ? false : true;
         res.status(200).json({
             isFollowed: isFollowed,
             followers: followers,

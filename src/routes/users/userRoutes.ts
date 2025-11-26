@@ -70,6 +70,7 @@ router
   .patch(upload.any(), updateBioUserBank)
 
 router.route('/approve-user/:username').patch(upload.any(), approveUser)
+router.route('/follow/:id').patch(upload.any(), followUserAccount)
 
 router
   .route('/settings/:id')
@@ -83,7 +84,6 @@ router.route('/').get(getUsers).post(upload.any(), createUser)
 
 // router.route('/auth/:id').get(getAuthUser)
 
-// router.route('/follow/:id').patch(upload.any(), followUserAccount)
 // router.route('/staffs').get(getStaffs)
 // router.route('/staffs/:id').get(getStaffById).patch(upload.any(), updateStaff)
 

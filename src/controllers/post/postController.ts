@@ -539,8 +539,8 @@ export const getMutedUsers = async (req: Request, res: Response) => {
 
 export const getBookMarkedPosts = async (req: Request, res: Response) => {
   try {
-    const bookmarkUserId = String(req.query.myId)
-    const bookmarks = await Bookmark.find({ bookmarkUserId: bookmarkUserId })
+    const userId = String(req.query.myId)
+    const bookmarks = await Bookmark.find({ userId: userId })
 
     // const followers = await Follower.find({ followerId: followerId });
     const bookmarksPostIds = bookmarks.map((post) => post.postId)
@@ -553,79 +553,8 @@ export const getBookMarkedPosts = async (req: Request, res: Response) => {
     req.query = mongoQuery
     delete req.query.myId
 
-    const processedPosts = await processFetchedPosts(req, bookmarkUserId)
+    const processedPosts = await processFetchedPosts(req, userId)
     res.status(200).json(processedPosts)
-
-    // const posts = response.results;
-    // const postIds = posts.map((post) => post._id);
-
-    // const userIds = [...new Set(posts.map((post) => post.userId))];
-    // const userObjects = userIds.map((userId) => ({ userId, followerId }));
-
-    // const queryConditions = userObjects.map(({ userId, followerId }) => ({
-    //   userId,
-    //   followerId,
-    // }));
-
-    // const follows = await Follower.find(
-    //   { $or: queryConditions },
-    //   { userId: 1, _id: 0 }
-    // );
-    // const followedUserIds = new Set(follows.map((user) => user.userId));
-
-    // posts.map((post) => {
-    //   if (followedUserIds.has(post.userId)) {
-    //     post.followed = true;
-    //   }
-    //   return post;
-    // });
-
-    // const likedPosts = await Like.find({
-    //   userId: followerId,
-    //   postId: { $in: postIds },
-    // }).select("postId");
-
-    // const bookmarkedPosts = await Bookmark.find({
-    //   userId: followerId,
-    //   postId: { $in: postIds },
-    // }).select("postId");
-
-    // const viewedPosts = await View.find({
-    //   userId: followerId,
-    //   postId: { $in: postIds },
-    // }).select("postId");
-
-    // const likedPostIds = likedPosts.map((like) => like.postId.toString());
-
-    // const bookmarkedPostIds = bookmarkedPosts.map((bookmark) =>
-    //   bookmark.postId.toString()
-    // );
-
-    // const viewedPostIds = viewedPosts.map((view) => view.postId.toString());
-
-    // const updatedPosts = [];
-
-    // for (let i = 0; i < posts.length; i++) {
-    //   const el = posts[i];
-    //   if (likedPostIds.includes(el._id.toString())) {
-    //     el.liked = true;
-    //   }
-    //   if (bookmarkedPostIds.includes(el._id.toString())) {
-    //     el.bookmarked = true;
-    //   }
-    //   if (viewedPostIds.includes(el._id.toString())) {
-    //     el.viewed = true;
-    //   }
-
-    //   updatedPosts.push(el);
-    // }
-
-    // res.status(200).json({
-    //   count: response.count,
-    //   page: response.page,
-    //   page_size: response.page_size,
-    //   results: updatedPosts,
-    // });
   } catch (error) {
     handleError(res, undefined, undefined, error)
   }
@@ -740,30 +669,42 @@ export const toggleLikePost = async (req: Request, res: Response) => {
   }
 }
 
-export const toggleHatePost = async (req: Request, res: Response) => {
+export const toggleBookmarkedPosts = async (req: Request, res: Response) => {
   try {
     const { userId, id } = req.body
-    let updateQuery: any = {}
     let score = 0
 
     const post = await Post.findById(id)
 
     if (!post) {
-      return res.status(404).json({ message: 'Post not found' })
+      return res.status(404).json({ message: 'post not found' })
     }
 
-    const hate = await Hate.findOne({ postId: id, userId })
-    if (hate) {
-      updateQuery.$inc = { hates: -1 }
-      await Hate.deleteOne({ postId: id, userId })
+    const save = await Bookmark.findOne({ postId: id, userId })
+    if (save) {
+      await Bookmark.deleteOne({ postId: id, userId })
+      score = Math.max(0, post.score - 5)
+
+      await Post.updateOne({ _id: id }, [
+        {
+          $set: {
+            bookmarks: { $max: [{ $subtract: ['$bookmarks', 1] }, 0] },
+            score: score,
+          },
+        },
+      ])
     } else {
-      updateQuery.$inc = { hates: 1 }
-      await Hate.create({ postId: id, userId })
-      const like = await Like.findOne({ postId: id, userId })
-      if (like) {
-        updateQuery.$inc.likes = -1
-        await Like.deleteOne({ postId: id, userId })
-      }
+      score = postScore('bookmarks', post.score)
+
+      await Bookmark.create({ postId: id, userId })
+      await Post.updateOne({ _id: id }, [
+        {
+          $set: {
+            bookmarks: { $add: ['$bookmarks', 1] },
+            score: score,
+          },
+        },
+      ])
     }
 
     await Post.updateOne(
@@ -773,9 +714,6 @@ export const toggleHatePost = async (req: Request, res: Response) => {
       }
     )
 
-    await Post.findByIdAndUpdate(id, updateQuery, {
-      new: true,
-    })
     return res.status(200).json({ message: null })
   } catch (error: any) {
     handleError(res, undefined, undefined, error)
@@ -994,13 +932,8 @@ const processFetchedPosts = async (req: Request, followerId: string) => {
     postId: { $in: postIds },
   }).select('postId')
 
-  const hatedPosts = await Hate.find({
-    userId: followerId,
-    postId: { $in: postIds },
-  }).select('postId')
-
   const bookmarkedPosts = await Bookmark.find({
-    bookmarkUserId: followerId,
+    userId: followerId,
     postId: { $in: postIds },
   }).select('postId')
 
@@ -1021,7 +954,6 @@ const processFetchedPosts = async (req: Request, followerId: string) => {
   const mutedUserIds = mutedUsers.map((mute) => mute.accountUserId.toString())
 
   const likedPostIds = likedPosts.map((like) => like.postId.toString())
-  const hatedPostIds = hatedPosts.map((hate) => hate.postId.toString())
 
   const bookmarkedPostIds = bookmarkedPosts.map((bookmark) =>
     bookmark.postId.toString()
@@ -1067,10 +999,6 @@ const processFetchedPosts = async (req: Request, followerId: string) => {
 
     if (likedPostIds && likedPostIds.includes(el._id.toString())) {
       el.liked = true
-    }
-
-    if (hatedPostIds && hatedPostIds.includes(el._id.toString())) {
-      el.hated = true
     }
 
     if (bookmarkedPostIds && bookmarkedPostIds.includes(el._id.toString())) {
@@ -1128,6 +1056,11 @@ export const processPosts = async (
     return post
   })
 
+  const followedUsers = await Follower.find({
+    followerId: followerId,
+    userId: { $in: userIds },
+  }).select('userId')
+
   const blockedUsers = await Block.find({
     userId: followerId,
     accountUserId: { $in: postUserIds },
@@ -1153,13 +1086,8 @@ export const processPosts = async (
     postId: { $in: postIds },
   }).select('postId')
 
-  const hatedPosts = await Hate.find({
-    userId: followerId,
-    postId: { $in: postIds },
-  }).select('postId')
-
   const bookmarkedPosts = await Bookmark.find({
-    bookmarkUserId: followerId,
+    userId: followerId,
     postId: { $in: postIds },
   }).select('postId')
 
@@ -1180,7 +1108,6 @@ export const processPosts = async (
   const mutedUserIds = mutedUsers.map((mute) => mute.accountUserId.toString())
 
   const likedPostIds = likedPosts.map((like) => like.postId.toString())
-  const hatedPostIds = hatedPosts.map((hate) => hate.postId.toString())
 
   const bookmarkedPostIds = bookmarkedPosts.map((bookmark) =>
     bookmark.postId.toString()
@@ -1226,10 +1153,6 @@ export const processPosts = async (
 
     if (likedPostIds && likedPostIds.includes(el._id.toString())) {
       el.liked = true
-    }
-
-    if (hatedPostIds && hatedPostIds.includes(el._id.toString())) {
-      el.hated = true
     }
 
     if (bookmarkedPostIds && bookmarkedPostIds.includes(el._id.toString())) {

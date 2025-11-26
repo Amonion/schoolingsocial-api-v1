@@ -34,6 +34,7 @@ router
     .get(bioUserController_1.getBioUserBank)
     .patch(upload.any(), bioUserController_1.updateBioUserBank);
 router.route('/approve-user/:username').patch(upload.any(), bioUserController_1.approveUser);
+router.route('/follow/:id').patch(upload.any(), userController_1.followUserAccount);
 router
     .route('/settings/:id')
     .get(userController_1.getUserSettings)
@@ -43,7 +44,6 @@ router.route('/:username').get(userController_1.getAUser).patch(upload.any(), us
 router.route('/').get(userController_1.getUsers).post(upload.any(), userController_1.createUser);
 ///////////// NEW USER ROUTES ////////////////
 // router.route('/auth/:id').get(getAuthUser)
-// router.route('/follow/:id').patch(upload.any(), followUserAccount)
 // router.route('/staffs').get(getStaffs)
 // router.route('/staffs/:id').get(getStaffById).patch(upload.any(), updateStaff)
 // router.route('/info').get(getStaffs)
