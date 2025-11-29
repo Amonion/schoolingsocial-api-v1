@@ -487,7 +487,7 @@ const followAccount = (req, res) => __awaiter(void 0, void 0, void 0, function* 
     if (follow) {
         yield postStateModel_1.Follower.findByIdAndDelete(follow._id);
         yield user_1.User.findByIdAndUpdate(req.params.id, { $inc: { followers: -1 } });
-        yield user_1.User.findByIdAndUpdate(follower === null || follower === void 0 ? void 0 : follower._id, { $inc: { following: -1 } });
+        yield user_1.User.findByIdAndUpdate(follower === null || follower === void 0 ? void 0 : follower._id, { $inc: { followings: -1 } });
         if (post) {
             yield postModel_1.Post.findByIdAndUpdate(post._id, {
                 $inc: { unfollowers: 1 },
@@ -514,7 +514,7 @@ const followAccount = (req, res) => __awaiter(void 0, void 0, void 0, function* 
             postId: post ? post._id : undefined,
         });
         yield user_1.User.findByIdAndUpdate(req.params.id, { $inc: { followers: 1 } });
-        yield user_1.User.findByIdAndUpdate(follower === null || follower === void 0 ? void 0 : follower._id, { $inc: { following: 1 } });
+        const item = yield user_1.User.findByIdAndUpdate(follower === null || follower === void 0 ? void 0 : follower._id, { $inc: { followings: 1 } }, { new: true });
         if (post) {
             yield postModel_1.Post.findByIdAndUpdate(post._id, {
                 $inc: { followers: 1 },

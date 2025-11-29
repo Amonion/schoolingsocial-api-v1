@@ -569,7 +569,7 @@ export const followAccount = async (req: Request, res: Response) => {
   if (follow) {
     await Follower.findByIdAndDelete(follow._id)
     await User.findByIdAndUpdate(req.params.id, { $inc: { followers: -1 } })
-    await User.findByIdAndUpdate(follower?._id, { $inc: { following: -1 } })
+    await User.findByIdAndUpdate(follower?._id, { $inc: { followings: -1 } })
     if (post) {
       await Post.findByIdAndUpdate(post._id, {
         $inc: { unfollowers: 1 },
@@ -595,7 +595,12 @@ export const followAccount = async (req: Request, res: Response) => {
       postId: post ? post._id : undefined,
     })
     await User.findByIdAndUpdate(req.params.id, { $inc: { followers: 1 } })
-    await User.findByIdAndUpdate(follower?._id, { $inc: { following: 1 } })
+    const item = await User.findByIdAndUpdate(
+      follower?._id,
+      { $inc: { followings: 1 } },
+      { new: true }
+    )
+
     if (post) {
       await Post.findByIdAndUpdate(post._id, {
         $inc: { followers: 1 },

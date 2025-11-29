@@ -40,6 +40,7 @@ const PostSchema = new mongoose_1.Schema({
     username: { type: String },
     bioUserId: { type: String },
     picture: { type: String },
+    userMedia: { type: String },
     commentMedia: { type: String },
     media: { type: Array },
     polls: { type: Array },

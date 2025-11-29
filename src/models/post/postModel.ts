@@ -23,6 +23,7 @@ export interface IPost extends Document {
   createdAt: Date
   pinnedAt: Date
   username: string
+  userMedia: string
   repostedUsername: string
   userId: string
   sender: IUser
@@ -70,6 +71,7 @@ const PostSchema: Schema = new Schema(
     username: { type: String },
     bioUserId: { type: String },
     picture: { type: String },
+    userMedia: { type: String },
     commentMedia: { type: String },
     media: { type: Array },
     polls: { type: Array },

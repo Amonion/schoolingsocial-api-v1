@@ -26,6 +26,8 @@ export interface IUser extends Document {
   picture: string
   posts: number
   country: string
+  countryFlag: string
+  countrySymbol: string
   state: string
   signupIp: string
   lat: number
@@ -75,6 +77,8 @@ const UserSchema: Schema = new Schema(
     posts: { type: Number },
     postMedia: { type: Number },
     country: { type: String },
+    countryFlag: { type: String },
+    countrySymbol: { type: String },
     state: { type: String },
     signupIp: { type: String },
     lng: { type: Number },

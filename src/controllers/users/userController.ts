@@ -56,9 +56,9 @@ export const createUser = async (
       signupIp,
       lat: req.body.lat,
       lng: req.body.lng,
-      signupCountry: place?.country.trim(),
-      signupCountryFlag: place?.countryFlag.trim(),
-      signupCountrySymbol: place?.countrySymbol.trim(),
+      country: place?.country.trim(),
+      countryFlag: place?.countryFlag.trim(),
+      countrySymbol: place?.countrySymbol.trim(),
       password: await bcrypt.hash(req.body.password, 10),
     })
     await newUser.save()

@@ -61,9 +61,9 @@ const createUser = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
             signupIp,
             lat: req.body.lat,
             lng: req.body.lng,
-            signupCountry: place === null || place === void 0 ? void 0 : place.country.trim(),
-            signupCountryFlag: place === null || place === void 0 ? void 0 : place.countryFlag.trim(),
-            signupCountrySymbol: place === null || place === void 0 ? void 0 : place.countrySymbol.trim(),
+            country: place === null || place === void 0 ? void 0 : place.country.trim(),
+            countryFlag: place === null || place === void 0 ? void 0 : place.countryFlag.trim(),
+            countrySymbol: place === null || place === void 0 ? void 0 : place.countrySymbol.trim(),
             password: yield bcryptjs_1.default.hash(req.body.password, 10),
         });
         yield newUser.save();

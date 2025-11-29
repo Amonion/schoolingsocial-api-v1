@@ -72,6 +72,8 @@ const UserSchema = new mongoose_1.Schema({
     posts: { type: Number },
     postMedia: { type: Number },
     country: { type: String },
+    countryFlag: { type: String },
+    countrySymbol: { type: String },
     state: { type: String },
     signupIp: { type: String },
     lng: { type: Number },

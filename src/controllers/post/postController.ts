@@ -46,6 +46,7 @@ export const createPost = async (data: IPost) => {
       postType: data.postType,
       status: data.status,
       content: data.content,
+      userMedia: data.userMedia,
       country: data.country,
       createdAt: data.createdAt,
       media: data.media,
@@ -249,11 +250,9 @@ export const muteUser = async (req: Request, res: Response) => {
       userId: userId,
     })
 
-    console.log(req.body)
-
     if (mutedUser) {
       await Mute.findByIdAndDelete(mutedUser._id)
-      await User.findByIdAndUpdate(accountUserId, { $inc: { mutes: -1 } })
+      await User.findByIdAndUpdate(userId, { $inc: { mutes: -1 } })
     } else {
       await Mute.create({
         userId,
@@ -270,7 +269,7 @@ export const muteUser = async (req: Request, res: Response) => {
         accountIsVerified,
         postId: req.params.id,
       })
-      await User.findByIdAndUpdate(accountUserId, { $inc: { mutes: 1 } })
+      await User.findByIdAndUpdate(userId, { $inc: { mutes: 1 } })
       await Post.findByIdAndUpdate(req.params.id, { $inc: { mutes: 1 } })
     }
 
@@ -358,9 +357,16 @@ export const getPostById = async (
 export const getUserPosts = async (req: Request, res: Response) => {
   try {
     const followerId = String(req.query.myId)
+    const myPost = req.query.myPost ? String(req.query.myPost) : ''
     delete req.query.myId
+    delete req.query.myPost
     const response = await queryData(Post, req)
-    const results = await processPosts(response.results, followerId, 'user')
+    const results = await processPosts(
+      response.results,
+      followerId,
+      'user',
+      myPost
+    )
     res.status(200).json({ results, count: response.count })
   } catch (error) {
     handleError(res, undefined, undefined, error)
@@ -419,7 +425,6 @@ export const getFilteredPosts = async (
         : threeDaysAgo.getDate() - 3
     )
     filter.createdAt = { $gte: threeDaysAgo }
-    filter.postType = 'main'
     const sortOptions: Record<string, 1 | -1> = { score: -1, createdAt: -1 }
     const skip = (page - 1) * limit
 
@@ -473,9 +478,7 @@ export const getFollowings = async (req: Request, res: Response) => {
 
     res.status(200).json({
       count: followersResponse.count,
-      page: followersResponse.page,
-      page_size: followersResponse.page_size,
-      results: updatedFollowers,
+      followings: updatedFollowers,
     })
   } catch (error) {
     handleError(res, undefined, undefined, error)
@@ -865,7 +868,6 @@ export const followUser = async (req: Request, res: Response) => {
     const post = req.body.post
     post.followed = follow ? false : true
     post.isActive = false
-
     res.status(200).json({
       message: message,
       data: post,
@@ -1030,7 +1032,8 @@ const processFetchedPosts = async (req: Request, followerId: string) => {
 export const processPosts = async (
   posts: IPost[],
   followerId: string,
-  source: string
+  source: string,
+  myPost?: string
 ) => {
   const postIds = posts.map((post) => post._id)
   const postUserIds = posts.map((post) => post.userId)
@@ -1068,8 +1071,7 @@ export const processPosts = async (
 
   const mutedUsers = await Mute.find({
     userId: followerId,
-    accountUserId: { $in: postUserIds },
-  }).select('accountUserId')
+  }).select('postId')
 
   const pinnedPosts = await Pin.find({
     userId: followerId,
@@ -1105,7 +1107,7 @@ export const processPosts = async (
     pollIndex: poll.pollIndex,
   }))
 
-  const mutedUserIds = mutedUsers.map((mute) => mute.accountUserId.toString())
+  const mutedUserIds = mutedUsers.map((mute) => mute.postId.toString())
 
   const likedPostIds = likedPosts.map((like) => like.postId.toString())
 
@@ -1121,13 +1123,31 @@ export const processPosts = async (
     pinnedPosts.map((pin) => [pin.postId.toString(), pin.createdAt])
   )
 
+  if (source === 'user' && myPost) {
+    const pins = await Pin.find({
+      userId: followerId,
+    }).select('postId')
+
+    const pinPostIds = pins.map((pin) => pin.postId.toString())
+
+    const pinPosts = await Post.find({
+      _id: { $in: pinPostIds },
+    })
+
+    for (let i = 0; i < pinPosts.length; i++) {
+      const el = pinPosts[i]
+      el.isPinned = true
+      updatedPosts.push(el)
+    }
+  }
+
   for (let i = 0; i < posts.length; i++) {
     const el = posts[i]
     const postIdStr = el._id.toString()
     const pinnedAtValue = pinnedMap.get(postIdStr)
     const userIdStr = el.userId?.toString()
 
-    if (mutedUsers.length > 0 && mutedUserIds.includes(userIdStr)) {
+    if (mutedUsers.length > 0 && mutedUserIds.includes(postIdStr)) {
       continue
     }
 
