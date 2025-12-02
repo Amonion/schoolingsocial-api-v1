@@ -168,7 +168,6 @@ exports.createChat = createChat;
 const createChatWithFile = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const data = req.body;
-        (0, exports.createChat)(data);
         const chat = yield chatModel_1.Chat.findOne({ timeNumber: data.timeNumber });
         res.status(200).json({ chat });
     }
@@ -183,6 +182,7 @@ const updateChatWithFile = (req, res) => __awaiter(void 0, void 0, void 0, funct
         const chat = yield chatModel_1.Chat.findOneAndUpdate({ timeNumber: data.timeNumber }, {
             media: data.media,
         }, { new: true });
+        console.log('The uploaded chat is: ', chat, data.receiverName);
         app_1.io.emit(`updateChatWithFile${data.receiverUsername}`, {
             chat,
         });
@@ -728,11 +728,14 @@ const addSearchedChats = (req, res) => __awaiter(void 0, void 0, void 0, functio
 exports.addSearchedChats = addSearchedChats;
 const deleteChats = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const chats = req.body;
+        const timeNumbers = req.body.timeNumbers;
+        const chats = yield chatModel_1.Chat.find({
+            timeNumber: { $inc: timeNumbers },
+        });
         const senderUsername = req.query.senderUsername;
         for (let i = 0; i < chats.length; i++) {
             const el = chats[i];
-            const isSender = el.username === senderUsername ? true : false;
+            const isSender = el.senderUsername === senderUsername ? true : false;
             if (isSender) {
                 if (el.media.length > 0) {
                     for (let i = 0; i < el.media.length; i++) {
@@ -748,11 +751,7 @@ const deleteChats = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
                 });
             }
         }
-        const results = chats.map((item) => item._id);
-        res.status(200).json({
-            results,
-            message: 'Chats deleted successfully.',
-        });
+        res.status(200).json();
     }
     catch (error) {
         (0, errorHandler_1.handleError)(res, undefined, undefined, error);

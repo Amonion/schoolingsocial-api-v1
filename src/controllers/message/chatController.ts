@@ -220,7 +220,6 @@ export const createChat = async (data: IChat) => {
 export const createChatWithFile = async (req: Request, res: Response) => {
   try {
     const data = req.body
-    createChat(data)
     const chat = await Chat.findOne({ timeNumber: data.timeNumber })
     res.status(200).json({ chat })
   } catch (error) {
@@ -238,6 +237,8 @@ export const updateChatWithFile = async (req: Request, res: Response) => {
       },
       { new: true }
     )
+
+    console.log('The uploaded chat is: ', chat, data.receiverName)
 
     io.emit(`updateChatWithFile${data.receiverUsername}`, {
       chat,
@@ -884,11 +885,14 @@ interface Delete {
 
 export const deleteChats = async (req: Request, res: Response) => {
   try {
-    const chats = req.body
+    const timeNumbers = req.body.timeNumbers
+    const chats = await Chat.find({
+      timeNumber: { $inc: timeNumbers },
+    })
     const senderUsername = req.query.senderUsername
     for (let i = 0; i < chats.length; i++) {
       const el = chats[i]
-      const isSender = el.username === senderUsername ? true : false
+      const isSender = el.senderUsername === senderUsername ? true : false
       if (isSender) {
         if (el.media.length > 0) {
           for (let i = 0; i < el.media.length; i++) {
@@ -904,12 +908,7 @@ export const deleteChats = async (req: Request, res: Response) => {
       }
     }
 
-    const results = chats.map((item: IChat) => item._id)
-
-    res.status(200).json({
-      results,
-      message: 'Chats deleted successfully.',
-    })
+    res.status(200).json()
   } catch (error) {
     handleError(res, undefined, undefined, error)
   }

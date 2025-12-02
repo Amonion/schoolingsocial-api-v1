@@ -6,7 +6,6 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = __importDefault(require("express"));
 const multer_1 = __importDefault(require("multer"));
 const upload = (0, multer_1.default)();
-const emailController_1 = require("../../controllers/message/emailController");
 const chatController_1 = require("../../controllers/message/chatController");
 const router = express_1.default.Router();
 router
@@ -15,9 +14,5 @@ router
     .post(upload.any(), chatController_1.createChatWithFile)
     .patch(upload.any(), chatController_1.updateChatWithFile);
 router.route('/friends').get(chatController_1.getFriends);
-router
-    .route('/:id')
-    .get(emailController_1.getEmailById)
-    .patch(upload.any(), emailController_1.updateEmail)
-    .delete(emailController_1.deleteEmail);
+router.route('/mass-delete').post(upload.any(), chatController_1.deleteChats);
 exports.default = router;
