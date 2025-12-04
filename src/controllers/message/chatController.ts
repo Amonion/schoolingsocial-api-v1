@@ -39,6 +39,7 @@ interface ChatData {
 const sendCreatedChat = async (
   post: IChat,
   connection: string,
+  isFile?: boolean,
   totalUnread?: number
 ) => {
   const friend = await Friend.findOneAndUpdate(
@@ -64,15 +65,16 @@ const sendCreatedChat = async (
   })
 
   if (friend && friend.isFriends) {
-    console.log('Sending to receiver: ', post.receiverUsername)
     /////////////// WHEN USER IS IN CHAT ROOM OR NOT //////////////
-    io.emit(`addCreatedChat${post.receiverUsername}`, {
-      connection,
-      chat: post,
-      pending: true,
-      isFriends: friend.isFriends,
-      friend,
-    })
+    if (!isFile) {
+      io.emit(`addCreatedChat${post.receiverUsername}`, {
+        connection,
+        chat: post,
+        pending: true,
+        isFriends: friend.isFriends,
+        friend,
+      })
+    }
   } else {
     const notification = await SocialNotification.findOne({
       senderUsername: post.senderUsername,
@@ -132,7 +134,7 @@ export const sendChatPushNotification = async (chatData: ChatData) => {
   }
 }
 
-export const createChat = async (data: IChat) => {
+export const createChat = async (data: IChat, isFile: boolean = false) => {
   try {
     const connection = data.connection
     const prev = await Chat.findOne({
@@ -193,7 +195,7 @@ export const createChat = async (data: IChat) => {
         isRead: false,
         receiverUsername: data.receiverUsername,
       })
-      sendCreatedChat(post, connection, totalUread)
+      sendCreatedChat(post, connection, isFile, totalUread)
     } else {
       await Friend.findOneAndUpdate(
         { connection },
@@ -210,7 +212,7 @@ export const createChat = async (data: IChat) => {
         { new: true, upsert: true }
       )
       const post = await Chat.create(data)
-      sendCreatedChat(post, connection)
+      sendCreatedChat(post, connection, isFile)
     }
   } catch (error) {
     console.log(error)
@@ -219,9 +221,8 @@ export const createChat = async (data: IChat) => {
 
 export const createChatWithFile = async (req: Request, res: Response) => {
   try {
-    const data = req.body
-    const chat = await Chat.findOne({ timeNumber: data.timeNumber })
-    res.status(200).json({ chat })
+    createChat(req.body, true)
+    res.status(200).json()
   } catch (error) {
     console.log(error)
   }
@@ -237,12 +238,37 @@ export const updateChatWithFile = async (req: Request, res: Response) => {
       },
       { new: true }
     )
-
-    console.log('The uploaded chat is: ', chat, data.receiverName)
-
-    io.emit(`updateChatWithFile${data.receiverUsername}`, {
-      chat,
+    const totalUnread = await Chat.countDocuments({
+      isRead: false,
+      receiverUsername: chat.receiverUsername,
     })
+
+    const connection = chat.connection
+
+    const friend = await Friend.findOneAndUpdate(
+      {
+        connection,
+        'unreadMessages.username': chat.receiverUsername,
+      },
+      {
+        $set: {
+          'unreadMessages.$.unread': totalUnread,
+        },
+      },
+      { new: true }
+    )
+
+    io.emit(`addCreatedChat${chat.receiverUsername}`, {
+      connection,
+      chat,
+      pending: false,
+      isFriends: friend.isFriends,
+      friend,
+    })
+
+    // io.emit(`updateChatWithFile${chat.receiverUsername}`, {
+    //   chat,
+    // })
 
     res.status(200).json({ chat })
   } catch (err) {
@@ -311,14 +337,14 @@ export const sendPendingChats = async (data: PendingChat) => {
               receiverUsername: chat.receiverUsername,
             })
           : 0
-        sendCreatedChat(post, connection, totalUread)
+        sendCreatedChat(post, connection, false, totalUread)
       } else {
         const post = await Chat.findOneAndUpdate(
           { timeNumber: chat.timeNumber, connection: chat.connection },
           chat,
           { new: true, upsert: true }
         )
-        sendCreatedChat(post, connection)
+        sendCreatedChat(post, connection, false)
       }
     }
   } catch (error) {
@@ -476,6 +502,38 @@ export const checkChatStatus = async (data: Receive) => {
     })
   } catch (error) {
     console.log(error)
+  }
+}
+
+export const deleteChats = async (req: Request, res: Response) => {
+  try {
+    const timeNumbers = req.body.timeNumbers
+    const chats = await Chat.find({
+      timeNumber: { $in: timeNumbers },
+    })
+
+    const senderUsername = req.body.username
+    for (let i = 0; i < chats.length; i++) {
+      const el = chats[i]
+      const isSender = el.senderUsername === senderUsername ? true : false
+      if (isSender) {
+        if (el.media.length > 0) {
+          for (let i = 0; i < el.media.length; i++) {
+            const item = el.media[i]
+            deleteFileFromS3(item.source)
+          }
+        }
+        await Chat.findByIdAndDelete(el._id)
+      } else {
+        await Chat.findByIdAndUpdate(el._id, {
+          deletedUsername: senderUsername,
+        })
+      }
+    }
+
+    res.status(200).json()
+  } catch (error) {
+    handleError(res, undefined, undefined, error)
   }
 }
 
@@ -881,35 +939,4 @@ interface Delete {
   receiverUsername: string
   username: string
   isSender: boolean
-}
-
-export const deleteChats = async (req: Request, res: Response) => {
-  try {
-    const timeNumbers = req.body.timeNumbers
-    const chats = await Chat.find({
-      timeNumber: { $inc: timeNumbers },
-    })
-    const senderUsername = req.query.senderUsername
-    for (let i = 0; i < chats.length; i++) {
-      const el = chats[i]
-      const isSender = el.senderUsername === senderUsername ? true : false
-      if (isSender) {
-        if (el.media.length > 0) {
-          for (let i = 0; i < el.media.length; i++) {
-            const item = el.media[i]
-            deleteFileFromS3(item.source)
-          }
-        }
-        await Chat.findByIdAndDelete(el._id)
-      } else {
-        await Chat.findByIdAndUpdate(el._id, {
-          deletedUsername: senderUsername,
-        })
-      }
-    }
-
-    res.status(200).json()
-  } catch (error) {
-    handleError(res, undefined, undefined, error)
-  }
 }

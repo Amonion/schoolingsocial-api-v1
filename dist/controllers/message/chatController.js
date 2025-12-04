@@ -9,7 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.deleteChats = exports.addSearchedChats = exports.unSaveChats = exports.pinChats = exports.saveChats = exports.getSaveChats = exports.friendsChats = exports.searchFavChats = exports.searchChats = exports.createChatMobile = exports.deleteChat = exports.checkChatStatus = exports.readChats = exports.getFriends = exports.getChats = exports.sendPendingChats = exports.updateDeliveredChat = exports.updateChatWithFile = exports.createChatWithFile = exports.createChat = exports.sendChatPushNotification = void 0;
+exports.addSearchedChats = exports.unSaveChats = exports.pinChats = exports.saveChats = exports.getSaveChats = exports.friendsChats = exports.searchFavChats = exports.searchChats = exports.createChatMobile = exports.deleteChat = exports.deleteChats = exports.checkChatStatus = exports.readChats = exports.getFriends = exports.getChats = exports.sendPendingChats = exports.updateDeliveredChat = exports.updateChatWithFile = exports.createChatWithFile = exports.createChat = exports.sendChatPushNotification = void 0;
 const chatModel_1 = require("../../models/message/chatModel");
 const errorHandler_1 = require("../../utils/errorHandler");
 const query_1 = require("../../utils/query");
@@ -20,7 +20,7 @@ const expo_server_sdk_1 = require("expo-server-sdk");
 const sendNotification_1 = require("../../utils/sendNotification");
 const socialNotificationModel_1 = require("../../models/message/socialNotificationModel");
 const expo = new expo_server_sdk_1.Expo();
-const sendCreatedChat = (post, connection, totalUnread) => __awaiter(void 0, void 0, void 0, function* () {
+const sendCreatedChat = (post, connection, isFile, totalUnread) => __awaiter(void 0, void 0, void 0, function* () {
     const friend = yield chatModel_1.Friend.findOneAndUpdate({
         connection,
         'unreadMessages.username': post.receiverUsername,
@@ -38,15 +38,16 @@ const sendCreatedChat = (post, connection, totalUnread) => __awaiter(void 0, voi
         isFriends: friend.isFriends,
     });
     if (friend && friend.isFriends) {
-        console.log('Sending to receiver: ', post.receiverUsername);
         /////////////// WHEN USER IS IN CHAT ROOM OR NOT //////////////
-        app_1.io.emit(`addCreatedChat${post.receiverUsername}`, {
-            connection,
-            chat: post,
-            pending: true,
-            isFriends: friend.isFriends,
-            friend,
-        });
+        if (!isFile) {
+            app_1.io.emit(`addCreatedChat${post.receiverUsername}`, {
+                connection,
+                chat: post,
+                pending: true,
+                isFriends: friend.isFriends,
+                friend,
+            });
+        }
     }
     else {
         const notification = yield socialNotificationModel_1.SocialNotification.findOne({
@@ -103,7 +104,7 @@ const sendChatPushNotification = (chatData) => __awaiter(void 0, void 0, void 0,
     }
 });
 exports.sendChatPushNotification = sendChatPushNotification;
-const createChat = (data) => __awaiter(void 0, void 0, void 0, function* () {
+const createChat = (data_1, ...args_1) => __awaiter(void 0, [data_1, ...args_1], void 0, function* (data, isFile = false) {
     try {
         const connection = data.connection;
         const prev = yield chatModel_1.Chat.findOne({
@@ -143,7 +144,7 @@ const createChat = (data) => __awaiter(void 0, void 0, void 0, function* () {
                 isRead: false,
                 receiverUsername: data.receiverUsername,
             });
-            sendCreatedChat(post, connection, totalUread);
+            sendCreatedChat(post, connection, isFile, totalUread);
         }
         else {
             yield chatModel_1.Friend.findOneAndUpdate({ connection }, {
@@ -157,7 +158,7 @@ const createChat = (data) => __awaiter(void 0, void 0, void 0, function* () {
                 },
             }, { new: true, upsert: true });
             const post = yield chatModel_1.Chat.create(data);
-            sendCreatedChat(post, connection);
+            sendCreatedChat(post, connection, isFile);
         }
     }
     catch (error) {
@@ -167,9 +168,8 @@ const createChat = (data) => __awaiter(void 0, void 0, void 0, function* () {
 exports.createChat = createChat;
 const createChatWithFile = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const data = req.body;
-        const chat = yield chatModel_1.Chat.findOne({ timeNumber: data.timeNumber });
-        res.status(200).json({ chat });
+        (0, exports.createChat)(req.body, true);
+        res.status(200).json();
     }
     catch (error) {
         console.log(error);
@@ -182,10 +182,29 @@ const updateChatWithFile = (req, res) => __awaiter(void 0, void 0, void 0, funct
         const chat = yield chatModel_1.Chat.findOneAndUpdate({ timeNumber: data.timeNumber }, {
             media: data.media,
         }, { new: true });
-        console.log('The uploaded chat is: ', chat, data.receiverName);
-        app_1.io.emit(`updateChatWithFile${data.receiverUsername}`, {
-            chat,
+        const totalUnread = yield chatModel_1.Chat.countDocuments({
+            isRead: false,
+            receiverUsername: chat.receiverUsername,
         });
+        const connection = chat.connection;
+        const friend = yield chatModel_1.Friend.findOneAndUpdate({
+            connection,
+            'unreadMessages.username': chat.receiverUsername,
+        }, {
+            $set: {
+                'unreadMessages.$.unread': totalUnread,
+            },
+        }, { new: true });
+        app_1.io.emit(`addCreatedChat${chat.receiverUsername}`, {
+            connection,
+            chat,
+            pending: false,
+            isFriends: friend.isFriends,
+            friend,
+        });
+        // io.emit(`updateChatWithFile${chat.receiverUsername}`, {
+        //   chat,
+        // })
         res.status(200).json({ chat });
     }
     catch (err) {
@@ -236,11 +255,11 @@ const sendPendingChats = (data) => __awaiter(void 0, void 0, void 0, function* (
                         receiverUsername: chat.receiverUsername,
                     })
                     : 0;
-                sendCreatedChat(post, connection, totalUread);
+                sendCreatedChat(post, connection, false, totalUread);
             }
             else {
                 const post = yield chatModel_1.Chat.findOneAndUpdate({ timeNumber: chat.timeNumber, connection: chat.connection }, chat, { new: true, upsert: true });
-                sendCreatedChat(post, connection);
+                sendCreatedChat(post, connection, false);
             }
         }
     }
@@ -376,6 +395,38 @@ const checkChatStatus = (data) => __awaiter(void 0, void 0, void 0, function* ()
     }
 });
 exports.checkChatStatus = checkChatStatus;
+const deleteChats = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const timeNumbers = req.body.timeNumbers;
+        const chats = yield chatModel_1.Chat.find({
+            timeNumber: { $in: timeNumbers },
+        });
+        const senderUsername = req.body.username;
+        for (let i = 0; i < chats.length; i++) {
+            const el = chats[i];
+            const isSender = el.senderUsername === senderUsername ? true : false;
+            if (isSender) {
+                if (el.media.length > 0) {
+                    for (let i = 0; i < el.media.length; i++) {
+                        const item = el.media[i];
+                        (0, fileUpload_1.deleteFileFromS3)(item.source);
+                    }
+                }
+                yield chatModel_1.Chat.findByIdAndDelete(el._id);
+            }
+            else {
+                yield chatModel_1.Chat.findByIdAndUpdate(el._id, {
+                    deletedUsername: senderUsername,
+                });
+            }
+        }
+        res.status(200).json();
+    }
+    catch (error) {
+        (0, errorHandler_1.handleError)(res, undefined, undefined, error);
+    }
+});
+exports.deleteChats = deleteChats;
 const deleteChat = (data) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         if (data.isSender) {
@@ -726,35 +777,3 @@ const addSearchedChats = (req, res) => __awaiter(void 0, void 0, void 0, functio
     }
 });
 exports.addSearchedChats = addSearchedChats;
-const deleteChats = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    try {
-        const timeNumbers = req.body.timeNumbers;
-        const chats = yield chatModel_1.Chat.find({
-            timeNumber: { $inc: timeNumbers },
-        });
-        const senderUsername = req.query.senderUsername;
-        for (let i = 0; i < chats.length; i++) {
-            const el = chats[i];
-            const isSender = el.senderUsername === senderUsername ? true : false;
-            if (isSender) {
-                if (el.media.length > 0) {
-                    for (let i = 0; i < el.media.length; i++) {
-                        const item = el.media[i];
-                        (0, fileUpload_1.deleteFileFromS3)(item.source);
-                    }
-                }
-                yield chatModel_1.Chat.findByIdAndDelete(el._id);
-            }
-            else {
-                yield chatModel_1.Chat.findByIdAndUpdate(el._id, {
-                    deletedUsername: senderUsername,
-                });
-            }
-        }
-        res.status(200).json();
-    }
-    catch (error) {
-        (0, errorHandler_1.handleError)(res, undefined, undefined, error);
-    }
-});
-exports.deleteChats = deleteChats;

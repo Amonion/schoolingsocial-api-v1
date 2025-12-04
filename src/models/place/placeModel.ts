@@ -1,10 +1,23 @@
 import mongoose, { Schema } from 'mongoose'
-import {
-  IPlace,
-  IAdCategory,
-  IBank,
-  IDocument,
-} from '../../utils/teamInterface'
+import { IAdCategory, IBank, IDocument } from '../../utils/teamInterface'
+
+export interface IPlace extends Document {
+  continent: string
+  country: string
+  countryCapital: string
+  state: string
+  area: string
+  landmark: string
+  zipCode: string
+  countryCode: string
+  countryFlag: string
+  stateCapital: string
+  stateLogo: string
+  countrySymbol: string
+  currency: string
+  currencySymbol: string
+  createdAt: Date
+}
 
 const PlaceSchema: Schema = new Schema(
   {
