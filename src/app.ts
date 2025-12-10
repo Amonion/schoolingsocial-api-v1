@@ -47,6 +47,7 @@ import { getPresignedUrl, removeFile } from './utils/fileUpload'
 import { geoipMiddleware } from './middlewares/geoipMiddleware'
 import { UsersSocket } from './routes/socket/usersSocket'
 import { createMoment, updateMoment } from './controllers/post/momentController'
+import { getTotalVerifyingUsers } from './controllers/users/bioUserController'
 
 dotenv.config()
 
@@ -129,6 +130,10 @@ io.on('connection', (socket) => {
         break
       case 'users':
         await UsersSocket(data)
+        break
+      case 'verifying_users':
+        // console.log(data)
+        await getTotalVerifyingUsers(data.user)
         break
       default:
         break

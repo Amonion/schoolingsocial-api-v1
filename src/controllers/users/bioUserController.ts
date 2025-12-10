@@ -15,7 +15,7 @@ import { BioUserBank } from '../../models/users/bioUserBank'
 import { queryData, search } from '../../utils/query'
 import { Faculty } from '../../models/school/facultyModel'
 import { Department } from '../../models/school/departmentModel'
-import { User } from '../../models/users/user'
+import { IUser, User } from '../../models/users/user'
 import { Post } from '../../models/post/postModel'
 import { sendPersonalNotification } from '../../utils/sendNotification'
 import { Place } from '../../models/place/placeModel'
@@ -594,6 +594,17 @@ export const getBioUserPastSchools = async (
     res.status(200).json({ pastSchools })
   } catch (error) {
     handleError(res, undefined, undefined, error)
+  }
+}
+
+export const getTotalVerifyingUsers = async (user: IUser) => {
+  try {
+    const verifyingUsers = await BioUserState.countDocuments({
+      isOnVerification: true,
+    })
+    io.emit(`verifying_users${user.username}`, { verifyingUsers })
+  } catch (error) {
+    console.log(error)
   }
 }
 

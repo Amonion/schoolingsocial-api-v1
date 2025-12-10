@@ -20,7 +20,7 @@ var __rest = (this && this.__rest) || function (s, e) {
     return t;
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.searchBioUserState = exports.searchBioUserSchoolInfo = exports.checkIsUserVerified = exports.getBioUsersState = exports.getBioUserSchoolByUsername = exports.getBioUserByUsername = exports.searchBioUsersSchool = exports.getBioUserPastSchools = exports.getBioUsers = exports.getBioUser = exports.getBioUserBank = exports.approveUser = exports.updateBioUserBank = exports.updateBioUserSettings = exports.updateBioSchool = exports.updateBioUserSchool = exports.updateBio = exports.updateBioUser = void 0;
+exports.searchBioUserState = exports.searchBioUserSchoolInfo = exports.checkIsUserVerified = exports.getBioUsersState = exports.getBioUserSchoolByUsername = exports.getBioUserByUsername = exports.searchBioUsersSchool = exports.getTotalVerifyingUsers = exports.getBioUserPastSchools = exports.getBioUsers = exports.getBioUser = exports.getBioUserBank = exports.approveUser = exports.updateBioUserBank = exports.updateBioUserSettings = exports.updateBioSchool = exports.updateBioUserSchool = exports.updateBio = exports.updateBioUser = void 0;
 const bioUser_1 = require("../../models/users/bioUser");
 const fileUpload_1 = require("../../utils/fileUpload");
 const app_1 = require("../../app");
@@ -487,6 +487,18 @@ const getBioUserPastSchools = (req, res) => __awaiter(void 0, void 0, void 0, fu
     }
 });
 exports.getBioUserPastSchools = getBioUserPastSchools;
+const getTotalVerifyingUsers = (user) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const verifyingUsers = yield bioUserState_1.BioUserState.countDocuments({
+            isOnVerification: true,
+        });
+        app_1.io.emit(`verifying_users${user.username}`, { verifyingUsers });
+    }
+    catch (error) {
+        console.log(error);
+    }
+});
+exports.getTotalVerifyingUsers = getTotalVerifyingUsers;
 const searchBioUsersSchool = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     return (0, query_1.search)(bioUserSchoolInfo_1.BioUserSchoolInfo, req, res);
 });

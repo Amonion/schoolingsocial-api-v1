@@ -55,6 +55,7 @@ const fileUpload_1 = require("./utils/fileUpload");
 const geoipMiddleware_1 = require("./middlewares/geoipMiddleware");
 const usersSocket_1 = require("./routes/socket/usersSocket");
 const momentController_1 = require("./controllers/post/momentController");
+const bioUserController_1 = require("./controllers/users/bioUserController");
 dotenv_1.default.config();
 const app = (0, express_1.default)();
 exports.app = app;
@@ -125,6 +126,10 @@ io.on('connection', (socket) => {
                 break;
             case 'users':
                 yield (0, usersSocket_1.UsersSocket)(data);
+                break;
+            case 'verifying_users':
+                // console.log(data)
+                yield (0, bioUserController_1.getTotalVerifyingUsers)(data.user);
                 break;
             default:
                 break;
