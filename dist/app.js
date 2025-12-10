@@ -43,6 +43,8 @@ const placeDocumentRoutes_1 = __importDefault(require("./routes/place/placeDocum
 const placePaymentRoutes_1 = __importDefault(require("./routes/place/placePaymentRoutes"));
 const notificationRoutes_1 = __importDefault(require("./routes/message/notificationRoutes"));
 const userCompetitionRoutes_1 = __importDefault(require("./routes/users/userCompetitionRoutes"));
+const bioUserRoutes_1 = __importDefault(require("./routes/users/bioUserRoutes"));
+const bioUserSchoolRoutes_1 = __importDefault(require("./routes/users/bioUserSchoolRoutes"));
 const userRoutes_1 = __importDefault(require("./routes/users/userRoutes"));
 const transactionRoutes_1 = __importDefault(require("./routes/finance/transactionRoutes"));
 const utilityRoutes_1 = __importDefault(require("./routes/utility/utilityRoutes"));
@@ -58,12 +60,6 @@ const app = (0, express_1.default)();
 exports.app = app;
 const server = http_1.default.createServer(app);
 exports.server = server;
-app.use(geoipMiddleware_1.geoipMiddleware);
-const requestLogger = (req, res, next) => {
-    console.log(`[${new Date().toISOString()}] ${req.method} ${req.url} from ${req.country}`);
-    next();
-};
-app.use(requestLogger);
 app.use((0, cors_1.default)({
     origin: [
         'http://localhost:3000',
@@ -76,6 +72,13 @@ app.use((0, cors_1.default)({
     credentials: true,
     allowedHeaders: ['Content-Type', 'Authorization', 'socket-id'],
 }));
+app.options('*', (0, cors_1.default)());
+app.use(geoipMiddleware_1.geoipMiddleware);
+const requestLogger = (req, res, next) => {
+    console.log(`[${new Date().toISOString()}] ${req.method} ${req.url} from ${req.country}`);
+    next();
+};
+app.use(requestLogger);
 const io = new socket_io_1.Server(server, {
     cors: {
         origin: [
@@ -138,6 +141,8 @@ app.use('/api/v1/academic-levels', academicLevelRoutes_1.default);
 app.use('/api/v1/intelligence', aiRoutes_1.default);
 app.use('/api/v1/ads', adsRoutes_1.default);
 app.use('/api/v1/banks', bankRoutes_1.default);
+app.use('/api/v1/biousers', bioUserRoutes_1.default);
+app.use('/api/v1/biousers-school', bioUserSchoolRoutes_1.default);
 app.use('/api/v1/competitions', competitionRoutes_1.default);
 app.use('/api/v1/comments', commentRoutes_1.default);
 app.use('/api/v1/questions', questionRoutes_1.default);

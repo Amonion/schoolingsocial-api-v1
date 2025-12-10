@@ -5,7 +5,10 @@ import { io } from '../../app'
 import { BioUserState, IBioUserState } from '../../models/users/bioUserState'
 import { handleError } from '../../utils/errorHandler'
 import { School } from '../../models/school/schoolModel'
-import { BioUserSchoolInfo } from '../../models/users/bioUserSchoolInfo'
+import {
+  BioUserSchoolInfo,
+  PastSchool,
+} from '../../models/users/bioUserSchoolInfo'
 import { AcademicLevel } from '../../models/school/academicLevelModel'
 import { BioUserSettings } from '../../models/users/bioUserSettings'
 import { BioUserBank } from '../../models/users/bioUserBank'
@@ -24,7 +27,10 @@ export const updateBioUser = async (
 ): Promise<void> => {
   switch (req.body.action) {
     case 'Contact':
-      const result = await BioUser.findOne({ phone: req.body.phone })
+      const result = await BioUser.findOne({
+        phone: req.body.phone,
+        _id: { $ne: req.params.id },
+      })
       if (result) {
         res.status(400).json({
           message: `Sorry a user with this phone number: ${result.phone} already exist`,
@@ -184,7 +190,7 @@ export const updateBioUserSchool = async (
 
       req.body.isEducation = true
       if (req.body.isNew && req.body.inSchool) {
-        const academicLevel = JSON.parse(req.body.schoolAcademicLevel)
+        const academicLevel = req.body.schoolAcademicLevel
         const result = await School.findOne({
           isNew: true,
           name: req.body.schoolName,
@@ -247,9 +253,23 @@ export const updateBioUserSchool = async (
           const el = pasts[i]
           const level = await AcademicLevel.findOne({
             country: el.schoolCountry,
-            level: el.academicLevel,
+            level: el.level,
           })
-          if (!el.schoolUsername) {
+          const { _id, ...rest } = el
+          if (_id) {
+            await PastSchool.findByIdAndUpdate(_id, rest)
+          } else {
+            await PastSchool.findOneAndUpdate(
+              {
+                bioUserId: el.bioUserId,
+                schoolName: el.schoolName,
+              },
+              { $set: rest },
+              { upsert: true }
+            )
+          }
+
+          if (!el.schoolUsername && level) {
             const form = {
               institutions: [level?.institution],
               levels: [level],
@@ -276,9 +296,12 @@ export const updateBioUserSchool = async (
       })
       pastSchools[req.body.number].schoolCertificate = req.body.certificate
       pastSchools[req.body.number].schoolTempCertificate = undefined
-      req.body.pastSchools = pastSchools
+      for (let i = 0; i < pastSchools.length; i++) {
+        const el = pastSchools[i]
+        const { _id, ...rest } = el
+        await PastSchool.findByIdAndUpdate(_id, rest)
+      }
       req.body.isEducationDocument = true
-      // req.body.pastSchools = JSON.stringify(pastSchools);
       updateBioSchool(req, res)
       break
     default:
@@ -292,6 +315,8 @@ export const updateBioSchool = async (
   res: Response
 ): Promise<void> => {
   try {
+    const pastSchools = await PastSchool.find({ bioUserId: req.params.id })
+
     const bioUserSchoolInfo = await BioUserSchoolInfo.findOneAndUpdate(
       { bioUserId: req.params.id },
       req.body,
@@ -325,7 +350,7 @@ export const updateBioSchool = async (
     res.status(200).json({
       bioUserState,
       bioUserSchoolInfo,
-      results: req.body.pastSchool,
+      pastSchools: pastSchools,
       message: 'your account is updated  successfully',
     })
   } catch (error) {
@@ -557,6 +582,21 @@ export const getBioUsers = async (
     handleError(res, undefined, undefined, error)
   }
 }
+
+export const getBioUserPastSchools = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
+  try {
+    const pastSchools = await PastSchool.find({
+      bioUserUsername: req.params.username,
+    })
+    res.status(200).json({ pastSchools })
+  } catch (error) {
+    handleError(res, undefined, undefined, error)
+  }
+}
+
 export const searchBioUsersSchool = async (req: Request, res: Response) => {
   return search(BioUserSchoolInfo, req, res)
 }
@@ -661,4 +701,8 @@ const sendVerificationProcessingNotifications = async (id: string) => {
 
 export const searchBioUserSchoolInfo = (req: Request, res: Response) => {
   return search(BioUserSchoolInfo, req, res)
+}
+
+export const searchBioUserState = (req: Request, res: Response) => {
+  return search(BioUserState, req, res)
 }

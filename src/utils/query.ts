@@ -435,6 +435,7 @@ function buildSearchQuery<T>(req: any): FilterQuery<T> {
   applyInFilter('examCountries')
   applyInFilter('examStates')
   applyInFilter('isVerified')
+  applyInFilter('isOnVerification')
   applyInFilter('postType')
   applyInFilter('userType')
 

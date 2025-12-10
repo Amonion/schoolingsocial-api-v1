@@ -12,7 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.followUserAccount = exports.getChatUser = exports.getExistingUsername = exports.deleteUser = exports.getUsers = exports.deleteMyData = exports.searchAccounts = exports.getUserSettings = exports.updateUserSettings = exports.updateUser = exports.getAUser = exports.createUserAccount = exports.createUser = void 0;
+exports.followUserAccount = exports.getChatUser = exports.getExistingUsername = exports.deleteUser = exports.getUsers = exports.deleteMyData = exports.searchAccounts = exports.getUserSettings = exports.updateUserSettings = exports.unSuspendUsers = exports.suspendUsers = exports.updateUser = exports.getAUser = exports.createUserAccount = exports.createUser = void 0;
 const errorHandler_1 = require("../../utils/errorHandler");
 const query_1 = require("../../utils/query");
 const fileUpload_1 = require("../../utils/fileUpload");
@@ -174,6 +174,28 @@ const updateUser = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
     }
 });
 exports.updateUser = updateUser;
+const suspendUsers = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        yield user_1.User.updateMany({ _id: { $in: req.body.usersIds } }, { isSuspended: true });
+        const result = yield (0, query_1.queryData)(user_1.User, req);
+        res.status(200).json(result);
+    }
+    catch (error) {
+        (0, errorHandler_1.handleError)(res, undefined, undefined, error);
+    }
+});
+exports.suspendUsers = suspendUsers;
+const unSuspendUsers = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        yield user_1.User.updateMany({ _id: { $in: req.body.usersIds } }, { isSuspended: false });
+        const result = yield (0, query_1.queryData)(user_1.User, req);
+        res.status(200).json(result);
+    }
+    catch (error) {
+        (0, errorHandler_1.handleError)(res, undefined, undefined, error);
+    }
+});
+exports.unSuspendUsers = unSuspendUsers;
 const updateUserSettings = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const userSettings = JSON.parse(req.body.userSettingsForm);

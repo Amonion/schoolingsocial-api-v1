@@ -9,6 +9,7 @@ const upload = (0, multer_1.default)();
 const emailController_1 = require("../../controllers/message/emailController");
 const router = express_1.default.Router();
 router.route('/').get(emailController_1.getEmails).post(upload.any(), emailController_1.createEmail);
+router.route('/search').get(emailController_1.searchEmail);
 router
     .route('/:id')
     .get(emailController_1.getEmailById)

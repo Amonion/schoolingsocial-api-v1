@@ -9,7 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.deleteEmail = exports.updateEmail = exports.sendEmailToUsers = exports.getEmails = exports.getEmailById = exports.createEmail = void 0;
+exports.searchEmail = exports.deleteEmail = exports.updateEmail = exports.sendEmailToUsers = exports.getEmails = exports.getEmailById = exports.createEmail = void 0;
 const emailModel_1 = require("../../models/message/emailModel");
 const errorHandler_1 = require("../../utils/errorHandler");
 const query_1 = require("../../utils/query");
@@ -127,3 +127,7 @@ const deleteEmail = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
     }
 });
 exports.deleteEmail = deleteEmail;
+const searchEmail = (req, res) => {
+    return (0, query_1.search)(emailModel_1.Email, req, res);
+};
+exports.searchEmail = searchEmail;

@@ -194,6 +194,32 @@ export const updateUser = async (req: Request, res: Response) => {
   }
 }
 
+export const suspendUsers = async (req: Request, res: Response) => {
+  try {
+    await User.updateMany(
+      { _id: { $in: req.body.usersIds } },
+      { isSuspended: true }
+    )
+    const result = await queryData<IUser>(User, req)
+    res.status(200).json(result)
+  } catch (error) {
+    handleError(res, undefined, undefined, error)
+  }
+}
+
+export const unSuspendUsers = async (req: Request, res: Response) => {
+  try {
+    await User.updateMany(
+      { _id: { $in: req.body.usersIds } },
+      { isSuspended: false }
+    )
+    const result = await queryData<IUser>(User, req)
+    res.status(200).json(result)
+  } catch (error) {
+    handleError(res, undefined, undefined, error)
+  }
+}
+
 export const updateUserSettings = async (req: Request, res: Response) => {
   try {
     const userSettings = JSON.parse(req.body.userSettingsForm)

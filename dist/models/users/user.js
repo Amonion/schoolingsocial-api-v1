@@ -55,6 +55,7 @@ const UserSchema = new mongoose_1.Schema({
     intro: { type: String },
     isFirstTime: { type: Boolean, default: true },
     isVerified: { type: Boolean },
+    isSuspended: { type: Boolean },
     followed: { type: Boolean },
     media: { type: String },
     officeNum: { type: Number },

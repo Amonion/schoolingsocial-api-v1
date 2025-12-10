@@ -1,7 +1,7 @@
 import { Request, Response } from 'express'
 import { Email, IEmail } from '../../models/message/emailModel'
 import { handleError } from '../../utils/errorHandler'
-import { queryData, createItem } from '../../utils/query'
+import { queryData, createItem, search } from '../../utils/query'
 import { sendEmail } from '../../utils/sendEmail'
 import { User } from '../../models/users/user'
 
@@ -125,4 +125,8 @@ export const deleteEmail = async (req: Request, res: Response) => {
   } catch (error) {
     handleError(res, undefined, undefined, error)
   }
+}
+
+export const searchEmail = (req: Request, res: Response) => {
+  return search(Email, req, res)
 }

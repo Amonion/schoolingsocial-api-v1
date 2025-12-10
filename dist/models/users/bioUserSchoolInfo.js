@@ -33,7 +33,7 @@ var __importStar = (this && this.__importStar) || (function () {
     };
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.BioUserSchoolInfo = void 0;
+exports.PastSchool = exports.BioUserSchoolInfo = void 0;
 const mongoose_1 = __importStar(require("mongoose"));
 const BioUserSchoolInfoSchema = new mongoose_1.Schema({
     admittedAt: { type: Date },
@@ -74,8 +74,49 @@ const BioUserSchoolInfoSchema = new mongoose_1.Schema({
     schoolState: { type: String },
     schoolUsername: { type: String },
     schoolYear: { type: String },
-    pastSchools: { type: Array, default: [] },
 }, {
     timestamps: true,
 });
 exports.BioUserSchoolInfo = mongoose_1.default.model('BioUserSchoolInfo', BioUserSchoolInfoSchema);
+const PastSchoolSchema = new mongoose_1.Schema({
+    admittedAt: { type: Date },
+    bioUserDisplayName: { type: String },
+    bioUserIntro: { type: String },
+    bioUserMedia: { type: String },
+    bioUserPicture: { type: String },
+    bioUserUsername: { type: String },
+    bioUserId: { type: String },
+    createdAt: { type: Date, default: Date.now },
+    graduatedAt: { type: Date },
+    isAdvanced: { type: Boolean },
+    isSchoolVerified: { type: Boolean },
+    isVerified: { type: Boolean },
+    schoolArea: { type: String },
+    schoolArm: { type: String },
+    schoolCertificate: { type: String },
+    schoolClass: { type: String },
+    schoolLevel: { type: String },
+    schoolLevelName: { type: String },
+    schoolClassLevel: { type: String },
+    schoolContinent: { type: String },
+    schoolCountry: { type: String },
+    schoolCountryFlag: { type: String },
+    schoolCountrySymbol: { type: String },
+    schoolDepartment: { type: String },
+    schoolDepartmentId: { type: String },
+    schoolDepartmentUsername: { type: String },
+    schoolFaculty: { type: String },
+    schoolFacultyId: { type: String },
+    schoolFacultyUsername: { type: String },
+    schoolId: { type: String },
+    schoolLogo: { type: String },
+    schoolName: { type: String },
+    schoolPicture: { type: String },
+    schoolPlaceId: { type: String },
+    schoolState: { type: String },
+    schoolUsername: { type: String },
+    schoolYear: { type: String },
+}, {
+    timestamps: true,
+});
+exports.PastSchool = mongoose_1.default.model('PastSchool', PastSchoolSchema);

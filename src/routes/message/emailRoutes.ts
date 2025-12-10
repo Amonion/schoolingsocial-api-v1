@@ -8,11 +8,13 @@ import {
   updateEmail,
   deleteEmail,
   createEmail,
+  searchEmail,
 } from '../../controllers/message/emailController'
 
 const router = express.Router()
 
 router.route('/').get(getEmails).post(upload.any(), createEmail)
+router.route('/search').get(searchEmail)
 
 router
   .route('/:id')

@@ -101,6 +101,7 @@ const BioUserSchema: Schema = new Schema(
     signupDevice: { type: String },
     signupIp: { type: String },
     signupOS: { type: String },
+    status: { type: String, default: 'User' },
     lng: { type: Number },
     lat: { type: Number },
   },

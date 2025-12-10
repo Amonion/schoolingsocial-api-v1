@@ -28,6 +28,8 @@ import placeDocumentRoutes from './routes/place/placeDocumentRoutes'
 import placePaymentRoutes from './routes/place/placePaymentRoutes'
 import notificationRoutes from './routes/message/notificationRoutes'
 import userCompetitionRoutes from './routes/users/userCompetitionRoutes'
+import bioUserRoutes from './routes/users/bioUserRoutes'
+import bioUserSchoolRoutes from './routes/users/bioUserSchoolRoutes'
 import userRoutes from './routes/users/userRoutes'
 import transactionRoutes from './routes/finance/transactionRoutes'
 import utilityRoutes from './routes/utility/utilityRoutes'
@@ -51,19 +53,6 @@ dotenv.config()
 const app: Application = express()
 const server = http.createServer(app)
 
-app.use(geoipMiddleware)
-
-const requestLogger: RequestHandler = (req, res, next) => {
-  console.log(
-    `[${new Date().toISOString()}] ${req.method} ${req.url} from ${
-      (req as any).country
-    }`
-  )
-  next()
-}
-
-app.use(requestLogger)
-
 app.use(
   cors({
     origin: [
@@ -78,6 +67,20 @@ app.use(
     allowedHeaders: ['Content-Type', 'Authorization', 'socket-id'],
   })
 )
+app.options('*', cors())
+
+app.use(geoipMiddleware)
+
+const requestLogger: RequestHandler = (req, res, next) => {
+  console.log(
+    `[${new Date().toISOString()}] ${req.method} ${req.url} from ${
+      (req as any).country
+    }`
+  )
+  next()
+}
+
+app.use(requestLogger)
 
 const io = new Server(server, {
   cors: {
@@ -144,6 +147,8 @@ app.use('/api/v1/academic-levels', academicLevelRoutes)
 app.use('/api/v1/intelligence', aiRoutes)
 app.use('/api/v1/ads', adsRoutes)
 app.use('/api/v1/banks', bankRoutes)
+app.use('/api/v1/biousers', bioUserRoutes)
+app.use('/api/v1/biousers-school', bioUserSchoolRoutes)
 app.use('/api/v1/competitions', competitionRoutes)
 app.use('/api/v1/comments', commentRoutes)
 app.use('/api/v1/questions', questionRoutes)

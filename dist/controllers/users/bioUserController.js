@@ -20,7 +20,7 @@ var __rest = (this && this.__rest) || function (s, e) {
     return t;
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.searchBioUserSchoolInfo = exports.checkIsUserVerified = exports.getBioUsersState = exports.getBioUserSchoolByUsername = exports.getBioUserByUsername = exports.searchBioUsersSchool = exports.getBioUsers = exports.getBioUser = exports.getBioUserBank = exports.approveUser = exports.updateBioUserBank = exports.updateBioUserSettings = exports.updateBioSchool = exports.updateBioUserSchool = exports.updateBio = exports.updateBioUser = void 0;
+exports.searchBioUserState = exports.searchBioUserSchoolInfo = exports.checkIsUserVerified = exports.getBioUsersState = exports.getBioUserSchoolByUsername = exports.getBioUserByUsername = exports.searchBioUsersSchool = exports.getBioUserPastSchools = exports.getBioUsers = exports.getBioUser = exports.getBioUserBank = exports.approveUser = exports.updateBioUserBank = exports.updateBioUserSettings = exports.updateBioSchool = exports.updateBioUserSchool = exports.updateBio = exports.updateBioUser = void 0;
 const bioUser_1 = require("../../models/users/bioUser");
 const fileUpload_1 = require("../../utils/fileUpload");
 const app_1 = require("../../app");
@@ -43,7 +43,10 @@ const updateBioUser = (req, res) => __awaiter(void 0, void 0, void 0, function* 
     var _a, _b;
     switch (req.body.action) {
         case 'Contact':
-            const result = yield bioUser_1.BioUser.findOne({ phone: req.body.phone });
+            const result = yield bioUser_1.BioUser.findOne({
+                phone: req.body.phone,
+                _id: { $ne: req.params.id },
+            });
             if (result) {
                 res.status(400).json({
                     message: `Sorry a user with this phone number: ${result.phone} already exist`,
@@ -169,7 +172,7 @@ const updateBioUserSchool = (req, res) => __awaiter(void 0, void 0, void 0, func
             }
             req.body.isEducation = true;
             if (req.body.isNew && req.body.inSchool) {
-                const academicLevel = JSON.parse(req.body.schoolAcademicLevel);
+                const academicLevel = req.body.schoolAcademicLevel;
                 const result = yield schoolModel_1.School.findOne({
                     isNew: true,
                     name: req.body.schoolName,
@@ -227,9 +230,19 @@ const updateBioUserSchool = (req, res) => __awaiter(void 0, void 0, void 0, func
                     const el = pasts[i];
                     const level = yield academicLevelModel_1.AcademicLevel.findOne({
                         country: el.schoolCountry,
-                        level: el.academicLevel,
+                        level: el.level,
                     });
-                    if (!el.schoolUsername) {
+                    const { _id } = el, rest = __rest(el, ["_id"]);
+                    if (_id) {
+                        yield bioUserSchoolInfo_1.PastSchool.findByIdAndUpdate(_id, rest);
+                    }
+                    else {
+                        yield bioUserSchoolInfo_1.PastSchool.findOneAndUpdate({
+                            bioUserId: el.bioUserId,
+                            schoolName: el.schoolName,
+                        }, { $set: rest }, { upsert: true });
+                    }
+                    if (!el.schoolUsername && level) {
                         const form = {
                             institutions: [level === null || level === void 0 ? void 0 : level.institution],
                             levels: [level],
@@ -256,9 +269,12 @@ const updateBioUserSchool = (req, res) => __awaiter(void 0, void 0, void 0, func
             });
             pastSchools[req.body.number].schoolCertificate = req.body.certificate;
             pastSchools[req.body.number].schoolTempCertificate = undefined;
-            req.body.pastSchools = pastSchools;
+            for (let i = 0; i < pastSchools.length; i++) {
+                const el = pastSchools[i];
+                const { _id } = el, rest = __rest(el, ["_id"]);
+                yield bioUserSchoolInfo_1.PastSchool.findByIdAndUpdate(_id, rest);
+            }
             req.body.isEducationDocument = true;
-            // req.body.pastSchools = JSON.stringify(pastSchools);
             (0, exports.updateBioSchool)(req, res);
             break;
         default:
@@ -269,6 +285,7 @@ const updateBioUserSchool = (req, res) => __awaiter(void 0, void 0, void 0, func
 exports.updateBioUserSchool = updateBioUserSchool;
 const updateBioSchool = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
+        const pastSchools = yield bioUserSchoolInfo_1.PastSchool.find({ bioUserId: req.params.id });
         const bioUserSchoolInfo = yield bioUserSchoolInfo_1.BioUserSchoolInfo.findOneAndUpdate({ bioUserId: req.params.id }, req.body, {
             new: true,
         });
@@ -286,7 +303,7 @@ const updateBioSchool = (req, res) => __awaiter(void 0, void 0, void 0, function
         res.status(200).json({
             bioUserState,
             bioUserSchoolInfo,
-            results: req.body.pastSchool,
+            pastSchools: pastSchools,
             message: 'your account is updated  successfully',
         });
     }
@@ -458,6 +475,18 @@ const getBioUsers = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
     }
 });
 exports.getBioUsers = getBioUsers;
+const getBioUserPastSchools = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const pastSchools = yield bioUserSchoolInfo_1.PastSchool.find({
+            bioUserUsername: req.params.username,
+        });
+        res.status(200).json({ pastSchools });
+    }
+    catch (error) {
+        (0, errorHandler_1.handleError)(res, undefined, undefined, error);
+    }
+});
+exports.getBioUserPastSchools = getBioUserPastSchools;
 const searchBioUsersSchool = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     return (0, query_1.search)(bioUserSchoolInfo_1.BioUserSchoolInfo, req, res);
 });
@@ -548,3 +577,7 @@ const searchBioUserSchoolInfo = (req, res) => {
     return (0, query_1.search)(bioUserSchoolInfo_1.BioUserSchoolInfo, req, res);
 };
 exports.searchBioUserSchoolInfo = searchBioUserSchoolInfo;
+const searchBioUserState = (req, res) => {
+    return (0, query_1.search)(bioUserState_1.BioUserState, req, res);
+};
+exports.searchBioUserState = searchBioUserState;

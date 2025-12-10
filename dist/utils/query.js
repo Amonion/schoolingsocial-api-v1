@@ -376,6 +376,7 @@ function buildSearchQuery(req) {
     applyInFilter('examCountries');
     applyInFilter('examStates');
     applyInFilter('isVerified');
+    applyInFilter('isOnVerification');
     applyInFilter('postType');
     applyInFilter('userType');
     if (cleanedQuery.publishedAt) {
