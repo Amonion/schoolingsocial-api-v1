@@ -1,11 +1,13 @@
 import mongoose, { Schema } from 'mongoose'
 
 export interface IStaff extends Document {
-  userId: string
-  areaId: string
+  bioUserId: string
   salary: number
   level: number
-  username: string
+  bioUserUsername: string
+  firstName: string
+  lastName: string
+  middleName: string
   picture: string
   email: string
   phone: string

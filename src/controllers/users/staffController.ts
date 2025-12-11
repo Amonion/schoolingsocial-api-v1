@@ -5,38 +5,73 @@ import { uploadFilesToS3 } from '../../utils/fileUpload'
 import { sendEmail } from '../../utils/sendEmail'
 import { BioUser } from '../../models/users/bioUser'
 import { IStaff, Staff } from '../../models/users/staffModel'
+import { User } from '../../models/users/user'
 
-export const makeStaff = async (req: Request, res: Response): Promise<void> => {
-  try {
-    const user = await BioUser.findById(req.params.d)
-    const userObj = user.toObject()
-    const { _id, __v, ...safeData } = userObj
-    const staff = await Staff.create(safeData)
-    await sendEmail('', req.body.email, 'welcome')
-    res.status(200).json({
-      staff,
-      message: 'User created successfully',
-    })
-  } catch (error: any) {
-    handleError(res, undefined, undefined, error)
-  }
-}
-
-export const removeStaff = async (
+export const makeUserStaff = async (
   req: Request,
   res: Response
 ): Promise<void> => {
   try {
-    const user = await BioUser.findById(req.params.d)
-    const userObj = user.toObject()
-    const { _id, __v, ...safeData } = userObj
-    const staff = await Staff.create(safeData)
-    await sendEmail('', req.body.email, 'welcome')
+    for (let i = 0; i < req.body.usersIds.length; i++) {
+      const id = req.body.usersIds[i]
+      const bioUser = await BioUser.findById(id)
+      await Staff.findOneAndUpdate(
+        { bioUserId: id },
+        {
+          firstName: bioUser.firstName,
+          middleName: bioUser.middleName,
+          lastName: bioUser.lastName,
+          bioUserUsername: bioUser.bioUserUsername,
+          bioUserDisplayName: bioUser.bioUserDisplayName,
+          picture: bioUser.bioUserPicture,
+        },
+        { upsert: true }
+      )
+      await User.updateMany(
+        { bioUserId: id },
+        {
+          status: 'Staff',
+        },
+        {
+          runValidators: false,
+        }
+      )
+    }
+
     res.status(200).json({
-      staff,
-      message: 'User created successfully',
+      message: 'The users have been successfully made staffs.',
     })
-  } catch (error: any) {
+  } catch (error) {
+    handleError(res, undefined, undefined, error)
+  }
+}
+
+export const makeStaffUser = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
+  try {
+    for (let i = 0; i < req.body.usersIds.length; i++) {
+      const id = req.body.usersIds[i]
+      await Staff.findOneAndUpdate(
+        { bioUserId: id },
+        {
+          isActive: false,
+        }
+      )
+      await User.updateMany(
+        { bioUserId: id },
+        {
+          status: 'User',
+        },
+        {
+          runValidators: false,
+        }
+      )
+    }
+    const result = await queryData<IStaff>(Staff, req)
+    res.status(200).json(result)
+  } catch (error) {
     handleError(res, undefined, undefined, error)
   }
 }

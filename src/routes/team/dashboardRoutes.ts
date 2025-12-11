@@ -2,7 +2,7 @@ import express from 'express'
 import multer from 'multer'
 const upload = multer()
 
-import { getAdStats } from '../../controllers/team/dashboardController'
+import { getAdStats } from '../../controllers/company/dashboardController'
 
 const router = express.Router()
 

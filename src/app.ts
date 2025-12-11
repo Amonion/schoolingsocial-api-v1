@@ -6,7 +6,8 @@ import bodyParser from 'body-parser'
 import dotenv from 'dotenv'
 import { handleError } from './utils/errorHandler'
 import competitionRoutes from './routes/exam/competitionRoutes'
-import companyRoutes from './routes/appRoutes/companyRoutes'
+import companyRoutes from './routes/company/companyRoutes'
+import staffRoutes from './routes/company/staffRoutes'
 import questionRoutes from './routes/exam/questionRoutes'
 import messageRoutes from './routes/message/messageRoutes'
 import emailRoutes from './routes/message/emailRoutes'
@@ -19,7 +20,7 @@ import courseRoutes from './routes/school/courseRoutes'
 import departmentRoutes from './routes/school/departmentRoutes'
 import facultyRoutes from './routes/school/facultyRoutes'
 import schoolRoutes from './routes/school/schoolRoutes'
-import statRoutes from './routes/team/statRoutes'
+import statRoutes from './routes/company/statRoutes'
 import adsRoutes from './routes/place/adsRoutes'
 import academicLevelRoutes from './routes/place/academicLevelRoutes'
 import bankRoutes from './routes/place/bankRoutes'
@@ -171,6 +172,7 @@ app.use('/api/v1/posts', postRoutes)
 app.use('/api/v1/departments', departmentRoutes)
 app.use('/api/v1/faculties', facultyRoutes)
 app.use('/api/v1/schools', schoolRoutes)
+app.use('/api/v1/staffs', staffRoutes)
 app.use('/api/v1/utilities', utilityRoutes)
 app.use('/api/v1/user-competitions', userCompetitionRoutes)
 app.use('/api/v1/notifications', notificationRoutes)
