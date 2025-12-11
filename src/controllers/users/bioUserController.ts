@@ -446,6 +446,10 @@ export const approveUser = async (
       }
     )
 
+    const verifyingUsers = await BioUserState.countDocuments({
+      isOnVerification: true,
+    })
+
     if (authorityName) {
       const country = await Place.findOne({ area: bioUser.homeArea })
       const office = await Office.findOneAndUpdate(
@@ -536,6 +540,7 @@ export const approveUser = async (
       data: bioUser,
       bioUserSchoolInfo,
       bioUserState,
+      verifyingUsers,
       message: 'The user has been verified successfully.',
     })
   } catch (error) {

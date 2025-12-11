@@ -366,6 +366,9 @@ const approveUser = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
         const bioUserState = yield bioUserState_1.BioUserState.findOneAndUpdate({ bioUserUsername: req.params.username }, req.body, {
             new: true,
         });
+        const verifyingUsers = yield bioUserState_1.BioUserState.countDocuments({
+            isOnVerification: true,
+        });
         if (authorityName) {
             const country = yield placeModel_1.Place.findOne({ area: bioUser.homeArea });
             const office = yield officeModel_1.Office.findOneAndUpdate({ bioUserId: req.body.bioUserId, officeId: req.params.id }, {
@@ -433,6 +436,7 @@ const approveUser = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
             data: bioUser,
             bioUserSchoolInfo,
             bioUserState,
+            verifyingUsers,
             message: 'The user has been verified successfully.',
         });
     }
