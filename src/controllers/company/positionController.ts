@@ -1,8 +1,7 @@
 import { Request, Response } from 'express'
 import { handleError } from '../../utils/errorHandler'
-import { Position } from '../../models/team/companyModel'
-import { IPosition } from '../../utils/teamInterface'
-import { queryData, updateItem, createItem } from '../../utils/query'
+import { IPosition, Position } from '../../models/team/companyModel'
+import { queryData, updateItem, createItem, search } from '../../utils/query'
 
 //-----------------POSITION--------------------//
 export const createPosition = async (
@@ -58,4 +57,8 @@ export const deletePositions = async (req: Request, res: Response) => {
   } catch (error) {
     handleError(res, undefined, undefined, error)
   }
+}
+
+export const searchPositions = async (req: Request, res: Response) => {
+  return search(Position, req, res)
 }

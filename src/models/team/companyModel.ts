@@ -1,5 +1,15 @@
 import mongoose, { Schema } from 'mongoose'
-import { IExpenses, IPosition, IPolicy } from '../../utils/teamInterface'
+import { IExpenses, IPolicy } from '../../utils/teamInterface'
+
+export interface IPosition extends Document {
+  level: number
+  position: string
+  duties: string
+  region: string
+  salary: number
+  role: string
+  createdAt: Date
+}
 
 export interface ICompany extends Document {
   name: string

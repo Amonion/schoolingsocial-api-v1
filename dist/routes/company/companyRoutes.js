@@ -14,6 +14,7 @@ router.route('/policy').get(companyController_1.getPolcies).post(upload.any(), c
 router.route('/expenses').get(companyController_1.getExpenses).post(upload.any(), companyController_1.createExpenses);
 router.route('/positions').get(companyController_1.getPositions).post(upload.any(), companyController_1.createPosition);
 router.route('/positions/mass-delete').patch(positionController_1.deletePositions);
+router.route('/positions/search').get(positionController_1.searchPositions);
 router
     .route('/positions/:id')
     .get(companyController_1.getPositionById)

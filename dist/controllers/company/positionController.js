@@ -9,7 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.deletePositions = exports.updatePosition = exports.getPositions = exports.getPositionById = exports.createPosition = void 0;
+exports.searchPositions = exports.deletePositions = exports.updatePosition = exports.getPositions = exports.getPositionById = exports.createPosition = void 0;
 const errorHandler_1 = require("../../utils/errorHandler");
 const companyModel_1 = require("../../models/team/companyModel");
 const query_1 = require("../../utils/query");
@@ -61,3 +61,7 @@ const deletePositions = (req, res) => __awaiter(void 0, void 0, void 0, function
     }
 });
 exports.deletePositions = deletePositions;
+const searchPositions = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    return (0, query_1.search)(companyModel_1.Position, req, res);
+});
+exports.searchPositions = searchPositions;

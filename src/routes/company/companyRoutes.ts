@@ -20,7 +20,10 @@ import {
   getPolicyById,
   deletePolicy,
 } from '../../controllers/company/companyController'
-import { deletePositions } from '../../controllers/company/positionController'
+import {
+  deletePositions,
+  searchPositions,
+} from '../../controllers/company/positionController'
 
 const router = express.Router()
 
@@ -29,6 +32,7 @@ router.route('/policy').get(getPolcies).post(upload.any(), createPolicy)
 router.route('/expenses').get(getExpenses).post(upload.any(), createExpenses)
 router.route('/positions').get(getPositions).post(upload.any(), createPosition)
 router.route('/positions/mass-delete').patch(deletePositions)
+router.route('/positions/search').get(searchPositions)
 
 router
   .route('/positions/:id')

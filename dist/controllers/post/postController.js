@@ -20,7 +20,7 @@ var __rest = (this && this.__rest) || function (s, e) {
     return t;
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.processPosts = exports.followUser = exports.searchPosts = exports.getPostStat = exports.updatePostViews = exports.updatePostStat = exports.toggleBookmarkedPosts = exports.toggleLikePost = exports.deletePost = exports.updatePost = exports.getBookMarkedPosts = exports.getMutedUsers = exports.getBlockedUsers = exports.getFollowers = exports.getFollowings = exports.getFilteredPosts = exports.getPosts = exports.getUserPosts = exports.getPostById = exports.repostPost = exports.muteUser = exports.blockUser = exports.pinPost = exports.updatePoll = exports.createPost = void 0;
+exports.processPosts = exports.followUser = exports.getSearchedPosts = exports.searchPosts = exports.getPostStat = exports.updatePostViews = exports.updatePostStat = exports.toggleBookmarkedPosts = exports.toggleLikePost = exports.deletePost = exports.updatePost = exports.getBookMarkedPosts = exports.getMutedUsers = exports.getBlockedUsers = exports.getFollowers = exports.getFollowings = exports.getFilteredPosts = exports.getPosts = exports.getUserPosts = exports.getPostById = exports.repostPost = exports.muteUser = exports.blockUser = exports.pinPost = exports.updatePoll = exports.createPost = void 0;
 const postModel_1 = require("../../models/post/postModel");
 const fileUpload_1 = require("../../utils/fileUpload");
 const errorHandler_1 = require("../../utils/errorHandler");
@@ -725,10 +725,23 @@ const getPostStat = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
     }
 });
 exports.getPostStat = getPostStat;
-const searchPosts = (req, res) => {
+const searchPosts = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     return (0, query_1.search)(postModel_1.Post, req, res);
-};
+});
 exports.searchPosts = searchPosts;
+const getSearchedPosts = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const { results, count } = yield (0, query_1.searchRecord)(postModel_1.Post, req, res);
+        const followerId = String(req.query.myId);
+        const posts = yield (0, exports.processPosts)(results, followerId, 'post');
+        res.status(200).json({ results: posts, count });
+    }
+    catch (error) {
+        (0, errorHandler_1.handleError)(res, undefined, undefined, error);
+    }
+    // return search(Post, req, res)
+});
+exports.getSearchedPosts = getSearchedPosts;
 //-----------------FOLLOW USER--------------------//
 const followUser = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {

@@ -8,7 +8,6 @@ const multer_1 = __importDefault(require("multer"));
 const upload = (0, multer_1.default)();
 const postController_1 = require("../../controllers/post/postController");
 const uploadController_1 = require("../../controllers/users/uploadController");
-const commentController_1 = require("../../controllers/post/commentController");
 const momentController_1 = require("../../controllers/post/momentController");
 const router = express_1.default.Router();
 router.route('/follow/:id').patch(upload.any(), postController_1.followUser);
@@ -32,8 +31,8 @@ router
     .get(postController_1.getBookMarkedPosts)
     .patch(upload.any(), postController_1.toggleBookmarkedPosts);
 router.route('/search').get(postController_1.searchPosts);
+router.route('/get').get(postController_1.getSearchedPosts);
 // router.route('/check-nsfw').post(uploadFile.single('file'), checkNudeMedia)
-router.route('/comments').get(commentController_1.getComments).post(upload.any(), commentController_1.createComment);
 router.route('/moments').get(momentController_1.getMoments);
 router.route('/moments/:id').delete(momentController_1.deleteMoment);
 router

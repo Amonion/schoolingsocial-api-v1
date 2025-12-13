@@ -121,161 +121,6 @@ const buildFilterQuery = (req: Request): Record<string, any> => {
   return filters
 }
 
-// const buildFilterQuery = (req: Request): Record<string, any> => {
-//   const filters: Record<string, any> = {}
-//   const orFilters: any[] = []
-
-//   const operators: Record<string, string> = {
-//     lt: '$lt',
-//     lte: '$lte',
-//     gt: '$gt',
-//     gte: '$gte',
-//     ne: '$ne',
-//     in: '$in',
-//     nin: '$nin',
-//   }
-
-//   const flattenQuery = (query: any): Record<string, any> => {
-//     const flat: Record<string, any> = {}
-//     for (const key in query) {
-//       const value = query[key]
-//       if (typeof value === 'object' && !Array.isArray(value)) {
-//         for (const subKey in value) {
-//           flat[`${key}[${subKey}]`] = value[subKey]
-//         }
-//       } else {
-//         flat[key] = value
-//       }
-//     }
-//     return flat
-//   }
-
-//   const flatQuery = flattenQuery(req.query)
-
-//   let countryValue: string | null = null
-//   let stateValue: string | null = null
-//   let stateOrValues: string[] = []
-
-//   for (const [key, rawValue] of Object.entries(flatQuery)) {
-//     if (key === 'page' || key === 'page_size' || key === 'ordering') continue
-
-//     const match = key.match(/^(.+)\[(.+)\]$/)
-
-//     if (match) {
-//       const field = match[1]
-//       const op = match[2]
-
-//       if (op === 'or') {
-//         const values = Array.isArray(rawValue) ? rawValue : [rawValue]
-//         values.forEach((val) => {
-//           if (field === 'state') {
-//             // capture state[or] values for special handling
-//             stateOrValues.push(val)
-//           } else {
-//             if (val === 'true') orFilters.push({ [field]: true })
-//             else if (val === 'false') orFilters.push({ [field]: false })
-//             else if (!isNaN(Number(val)))
-//               orFilters.push({ [field]: Number(val) })
-//             else orFilters.push({ [field]: { $regex: val, $options: 'i' } })
-//           }
-//         })
-//       } else if (operators[op]) {
-//         const mongoOp = operators[op]
-//         const value = Array.isArray(rawValue) ? rawValue : [rawValue]
-//         const finalValues = value.map((v) => {
-//           if (typeof v === 'string' && v.includes(',')) {
-//             return v.split(',').map((s) => s.trim())
-//           }
-//           if (v === 'true') return true
-//           if (v === 'false') return false
-//           if (!isNaN(Number(v))) return Number(v)
-//           return v
-//         })
-
-//         if (!filters[field]) filters[field] = {}
-//         filters[field][mongoOp] =
-//           finalValues.length === 1 ? finalValues[0] : finalValues.flat()
-//       }
-//     } else {
-//       const value = Array.isArray(rawValue) ? rawValue : [rawValue]
-//       const normalizedValue = value[0]
-
-//       if (key === 'country') {
-//         countryValue = normalizedValue
-//       } else if (key === 'state') {
-//         stateValue = normalizedValue
-//       } else if (key === 'levelName') {
-//         const namesArray = normalizedValue
-//           .split(',')
-//           .map((name: string) => name.trim())
-//         filters['levelName'] = { $in: namesArray }
-//       } else if (key === 'usernames') {
-//         const namesArray = normalizedValue
-//           .split(',')
-//           .map((name: string) => name.trim())
-//         filters['username'] = { $in: namesArray }
-//       } else if (normalizedValue === '') {
-//         filters[key] = { $exists: false }
-//       } else if (normalizedValue === 'true' || normalizedValue === 'false') {
-//         filters[key] = normalizedValue === 'true'
-//       } else if (!isNaN(Number(normalizedValue))) {
-//         filters[key] = Number(normalizedValue)
-//       } else if (typeof normalizedValue === 'string') {
-//         if (key === 'username' && req.baseUrl.includes('/api/v1/posts')) {
-//           filters[key] = normalizedValue
-//         } else {
-//           filters[key] = { $regex: normalizedValue, $options: 'i' }
-//         }
-//       } else {
-//         filters[key] = normalizedValue
-//       }
-//     }
-//   }
-
-//   // --- Special case: country + state[or] ---
-//   if (countryValue && stateOrValues.length > 0) {
-//     const countryCond = { country: { $regex: countryValue, $options: 'i' } }
-
-//     const orBlock = [
-//       ...stateOrValues.map((val) => ({
-//         ...countryCond,
-//         state: { $regex: val, $options: 'i' },
-//       })),
-//       { ...countryCond, state: { $exists: false } },
-//     ]
-
-//     return { $or: orBlock }
-//   }
-
-//   // --- Special case: country + state (non-or) ---
-//   if (countryValue && stateValue) {
-//     const countryCond = { country: { $regex: countryValue, $options: 'i' } }
-//     const stateCond = { state: { $regex: stateValue, $options: 'i' } }
-//     const noStateCond = { state: { $exists: false } }
-
-//     return {
-//       $or: [
-//         { ...countryCond, ...stateCond },
-//         { ...countryCond, ...noStateCond },
-//       ],
-//     }
-//   }
-
-//   if (countryValue) {
-//     filters['country'] = { $regex: countryValue, $options: 'i' }
-//   }
-
-//   if (orFilters.length > 0) {
-//     if (Object.keys(filters).length > 0) {
-//       return { $and: [filters, { $or: orFilters }] }
-//     } else {
-//       return { $or: orFilters }
-//     }
-//   }
-
-//   return filters
-// }
-
 const buildSortingQuery = (req: Request): Record<string, any> => {
   const sort: Record<string, any> = {}
 
@@ -465,6 +310,8 @@ function buildSearchQuery<T>(req: any): FilterQuery<T> {
     'firstName',
     'middleName',
     'content',
+    'duties',
+    'position',
     'author',
     'lastName',
     'subtitle',
@@ -529,6 +376,51 @@ export const search = async <T>(
     res.json({ results })
   } catch (error) {
     handleError(res, undefined, undefined, error)
+  }
+}
+
+export const searchRecord = async <T>(
+  model: Model<T>,
+  req: Request,
+  res: Response
+): Promise<{ results: T[]; count: number }> => {
+  try {
+    const newSearchQuery = buildSearchQuery(req)
+
+    const page = parseInt(req.query.page as string) || 1
+    const limit = parseInt(req.query.limit as string) || 20
+    const skip = (page - 1) * limit
+
+    const count = await model.countDocuments(newSearchQuery)
+
+    let results = await model
+      .find(newSearchQuery)
+      .skip(skip)
+      .limit(limit)
+      .sort({ createdAt: -1 })
+
+    if (req.query.followerId) {
+      const followings = await Follower.find({
+        followerId: req.query.followerId,
+      })
+
+      const followedUserIds = new Set(
+        followings.map((f: any) => f.userId.toString())
+      )
+
+      results = results.map((item: any) => {
+        const obj = item.toObject()
+        obj.isFollowed = followedUserIds.has(obj._id.toString())
+        return obj
+      })
+    }
+
+    return { results, count }
+  } catch (error) {
+    handleError(res, undefined, undefined, error)
+
+    // ALWAYS return the same shape
+    return { results: [], count: 0 }
   }
 }
 

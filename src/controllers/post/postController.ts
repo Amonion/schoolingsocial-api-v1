@@ -8,6 +8,7 @@ import {
   followAccount,
   search,
   PaginationResult,
+  searchRecord,
 } from '../../utils/query'
 import { Bookmark, Like, View, Hate } from '../../models/users/statModel'
 import { postScore } from '../../utils/computation'
@@ -858,8 +859,20 @@ export const getPostStat = async (req: Request, res: Response) => {
   }
 }
 
-export const searchPosts = (req: Request, res: Response) => {
+export const searchPosts = async (req: Request, res: Response) => {
   return search(Post, req, res)
+}
+
+export const getSearchedPosts = async (req: Request, res: Response) => {
+  try {
+    const { results, count } = await searchRecord(Post, req, res)
+    const followerId = String(req.query.myId)
+    const posts = await processPosts(results, followerId, 'post')
+    res.status(200).json({ results: posts, count })
+  } catch (error: any) {
+    handleError(res, undefined, undefined, error)
+  }
+  // return search(Post, req, res)
 }
 //-----------------FOLLOW USER--------------------//
 export const followUser = async (req: Request, res: Response) => {

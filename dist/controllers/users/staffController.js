@@ -21,19 +21,22 @@ const makeUserStaff = (req, res) => __awaiter(void 0, void 0, void 0, function* 
         for (let i = 0; i < req.body.usersIds.length; i++) {
             const id = req.body.usersIds[i];
             const bioUser = yield bioUser_1.BioUser.findById(id);
-            yield staffModel_1.Staff.findOneAndUpdate({ bioUserId: id }, {
-                firstName: bioUser.firstName,
-                middleName: bioUser.middleName,
-                lastName: bioUser.lastName,
-                bioUserUsername: bioUser.bioUserUsername,
-                bioUserDisplayName: bioUser.bioUserDisplayName,
-                picture: bioUser.bioUserPicture,
-            }, { upsert: true });
-            yield user_1.User.updateMany({ bioUserId: id }, {
-                status: 'Staff',
-            }, {
-                runValidators: false,
-            });
+            if (bioUser) {
+                yield staffModel_1.Staff.findOneAndUpdate({ bioUserId: id }, {
+                    firstName: bioUser.firstName,
+                    bioUserId: id,
+                    middleName: bioUser.middleName,
+                    lastName: bioUser.lastName,
+                    bioUserUsername: bioUser.bioUserUsername,
+                    bioUserDisplayName: bioUser.bioUserDisplayName,
+                    picture: bioUser.bioUserPicture,
+                }, { upsert: true });
+                yield user_1.User.updateMany({ bioUserId: id }, {
+                    status: 'Staff',
+                }, {
+                    runValidators: false,
+                });
+            }
         }
         res.status(200).json({
             message: 'The users have been successfully made staffs.',
@@ -85,16 +88,12 @@ const updateStaff = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
         uploadedFiles.forEach((file) => {
             req.body[file.fieldName] = file.s3Url;
         });
-        const user = yield staffModel_1.Staff.findOneAndUpdate({ username: req.params.username }, req.body, {
-            new: true,
-            runValidators: true,
-        });
-        if (!user) {
-            return res.status(404).json({ message: 'User not found' });
-        }
+        yield staffModel_1.Staff.findByIdAndUpdate(req.params.id, req.body);
+        const result = yield (0, query_1.queryData)(staffModel_1.Staff, req);
         res.status(200).json({
+            count: result.count,
+            results: result.results,
             message: 'The staff profile was updated successfully',
-            data: user,
         });
     }
     catch (error) {

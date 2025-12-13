@@ -13,4 +13,5 @@ router
     .get(staffController_1.getStaffs)
     .patch(upload.any(), staffController_1.makeStaffUser)
     .post(upload.any(), staffController_1.makeUserStaff);
+router.route('/:id').patch(upload.any(), staffController_1.updateStaff);
 exports.default = router;

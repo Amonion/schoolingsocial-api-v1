@@ -36,6 +36,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.Staff = void 0;
 const mongoose_1 = __importStar(require("mongoose"));
 const StaffSchema = new mongoose_1.Schema({
+    bioUserId: { type: String },
     email: { type: String },
     firstName: { type: String },
     middleName: { type: String },
@@ -43,15 +44,16 @@ const StaffSchema = new mongoose_1.Schema({
     phone: { type: String },
     picture: { type: String },
     role: { type: String },
-    positions: { type: Array },
+    position: { type: String },
+    duties: { type: String },
     salary: { type: Number, default: 10000 },
     level: { type: Number, default: 1 },
     bioUserUsername: { type: String },
     bioUserDisplayName: { type: String },
-    residentArea: { type: String },
-    residentState: { type: String },
-    residentCountry: { type: String },
-    residentContinent: { type: String },
+    area: { type: String },
+    state: { type: String },
+    country: { type: String },
+    continent: { type: String },
     isActive: { type: Boolean, default: true },
     createdAt: { type: Date, default: Date.now },
 }, {

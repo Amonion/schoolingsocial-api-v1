@@ -28,6 +28,7 @@ import {
   getUserPosts,
   toggleLikePost,
   toggleBookmarkedPosts,
+  getSearchedPosts,
   // checkNudeMedia,
 } from '../../controllers/post/postController'
 
@@ -38,10 +39,7 @@ import {
   deleteUpload,
   createUpload,
 } from '../../controllers/users/uploadController'
-import {
-  createComment,
-  getComments,
-} from '../../controllers/post/commentController'
+
 import {
   deleteMoment,
   getMoments,
@@ -69,9 +67,9 @@ router
   .get(getBookMarkedPosts)
   .patch(upload.any(), toggleBookmarkedPosts)
 router.route('/search').get(searchPosts)
+router.route('/get').get(getSearchedPosts)
 // router.route('/check-nsfw').post(uploadFile.single('file'), checkNudeMedia)
 
-router.route('/comments').get(getComments).post(upload.any(), createComment)
 router.route('/moments').get(getMoments)
 router.route('/moments/:id').delete(deleteMoment)
 router
