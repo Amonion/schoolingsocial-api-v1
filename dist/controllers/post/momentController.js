@@ -9,7 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.deleteMoment = exports.getMoments = exports.updateMoment = exports.createMoment = void 0;
+exports.deleteMoment = exports.getMoments = exports.updateMomentMedia = exports.updateMoment = exports.createMoment = void 0;
 const app_1 = require("../../app");
 const momentModel_1 = require("../../models/post/momentModel");
 const errorHandler_1 = require("../../utils/errorHandler");
@@ -42,6 +42,18 @@ const updateMoment = (data) => __awaiter(void 0, void 0, void 0, function* () {
     }
 });
 exports.updateMoment = updateMoment;
+const updateMomentMedia = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        yield momentModel_1.Moment.findByIdAndUpdate(req.params.id, {
+            media: req.body.media,
+        }, { new: true });
+        res.status(200);
+    }
+    catch (error) {
+        console.log(error);
+    }
+});
+exports.updateMomentMedia = updateMomentMedia;
 const getMoments = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const followerId = req.query.myId;

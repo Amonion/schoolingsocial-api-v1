@@ -34,6 +34,21 @@ export const updateMoment = async (data: IMoment) => {
   }
 }
 
+export const updateMomentMedia = async (req: Request, res: Response) => {
+  try {
+    await Moment.findByIdAndUpdate(
+      req.params.id,
+      {
+        media: req.body.media,
+      },
+      { new: true }
+    )
+    res.status(200)
+  } catch (error) {
+    console.log(error)
+  }
+}
+
 export const getMoments = async (req: Request, res: Response) => {
   try {
     const followerId = req.query.myId

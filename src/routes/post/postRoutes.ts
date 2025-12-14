@@ -43,6 +43,7 @@ import {
 import {
   deleteMoment,
   getMoments,
+  updateMomentMedia,
 } from '../../controllers/post/momentController'
 
 const router = express.Router()
@@ -71,7 +72,11 @@ router.route('/get').get(getSearchedPosts)
 // router.route('/check-nsfw').post(uploadFile.single('file'), checkNudeMedia)
 
 router.route('/moments').get(getMoments)
-router.route('/moments/:id').delete(deleteMoment)
+router
+  .route('/moments/:id')
+  .delete(deleteMoment)
+  .patch(upload.any(), updateMomentMedia)
+
 router
   .route('/uploads/:id')
   .get(getUploadById)
