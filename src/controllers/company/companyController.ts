@@ -12,6 +12,7 @@ import {
   updateItem,
   createItem,
   deleteItem,
+  search,
 } from '../../utils/query'
 
 export const updateCompany = async (
@@ -165,48 +166,6 @@ export const updateExpenses = async (req: Request, res: Response) => {
   }
 }
 
-//-----------------POSITION--------------------//
-export const createPosition = async (
-  req: Request,
-  res: Response
-): Promise<void> => {
-  createItem(req, res, Position, 'Position was created successfully')
-}
-
-export const getPositionById = async (
-  req: Request,
-  res: Response
-): Promise<Response | void> => {
-  try {
-    const item = await Position.findById(req.params.id)
-    if (!item) {
-      return res.status(404).json({ message: 'Position not found' })
-    }
-    res.status(200).json(item)
-  } catch (error) {
-    handleError(res, undefined, undefined, error)
-  }
-}
-
-export const getPositions = async (req: Request, res: Response) => {
-  try {
-    const result = await queryData<IPosition>(Position, req)
-    res.status(200).json(result)
-  } catch (error) {
-    handleError(res, undefined, undefined, error)
-  }
-}
-
-export const updatePosition = async (req: Request, res: Response) => {
-  try {
-    updateItem(
-      req,
-      res,
-      Position,
-      [],
-      ['Position not found', 'Position was updated successfully']
-    )
-  } catch (error) {
-    handleError(res, undefined, undefined, error)
-  }
+export const searchExpenses = async (req: Request, res: Response) => {
+  return search(Expenses, req, res)
 }

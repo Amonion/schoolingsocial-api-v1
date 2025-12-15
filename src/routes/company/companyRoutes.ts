@@ -10,19 +10,20 @@ import {
   getExpenses,
   updateExpenses,
   createExpenses,
-  getPositionById,
-  getPositions,
-  updatePosition,
-  createPosition,
   createPolicy,
   getPolcies,
   updatePolicy,
   getPolicyById,
   deletePolicy,
+  searchExpenses,
 } from '../../controllers/company/companyController'
 import {
+  createPosition,
   deletePositions,
+  getPositionById,
+  getPositions,
   searchPositions,
+  updatePosition,
 } from '../../controllers/company/positionController'
 
 const router = express.Router()
@@ -30,6 +31,7 @@ const router = express.Router()
 router.route('/').get(getCompany).patch(upload.any(), updateCompany)
 router.route('/policy').get(getPolcies).post(upload.any(), createPolicy)
 router.route('/expenses').get(getExpenses).post(upload.any(), createExpenses)
+router.route('/expenses/search').get(searchExpenses)
 router.route('/positions').get(getPositions).post(upload.any(), createPosition)
 router.route('/positions/mass-delete').patch(deletePositions)
 router.route('/positions/search').get(searchPositions)

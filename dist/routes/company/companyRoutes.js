@@ -12,13 +12,14 @@ const router = express_1.default.Router();
 router.route('/').get(companyController_1.getCompany).patch(upload.any(), companyController_1.updateCompany);
 router.route('/policy').get(companyController_1.getPolcies).post(upload.any(), companyController_1.createPolicy);
 router.route('/expenses').get(companyController_1.getExpenses).post(upload.any(), companyController_1.createExpenses);
-router.route('/positions').get(companyController_1.getPositions).post(upload.any(), companyController_1.createPosition);
+router.route('/expenses/search').get(companyController_1.searchExpenses);
+router.route('/positions').get(positionController_1.getPositions).post(upload.any(), positionController_1.createPosition);
 router.route('/positions/mass-delete').patch(positionController_1.deletePositions);
 router.route('/positions/search').get(positionController_1.searchPositions);
 router
     .route('/positions/:id')
-    .get(companyController_1.getPositionById)
-    .patch(upload.any(), companyController_1.updatePosition);
+    .get(positionController_1.getPositionById)
+    .patch(upload.any(), positionController_1.updatePosition);
 router
     .route('/policy/:id')
     .get(companyController_1.getPolicyById)
