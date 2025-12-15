@@ -1,31 +1,5 @@
 import mongoose, { Schema } from 'mongoose'
-import { IWeekend, IExam, ILeague, IPaper } from '../../utils/teamInterface'
-
-const WeekendSchema: Schema = new Schema(
-  {
-    continent: { type: String },
-    country: { type: String },
-    state: { type: String, default: '' },
-    placeId: { type: String, default: '' },
-    title: { type: String, default: '' },
-    instruction: { type: String, default: '' },
-    answer: { type: String, default: '' },
-    price: { type: Number, default: 0 },
-    levels: { type: String, default: '' },
-    status: { type: String, default: 'Draft' },
-    video: { type: String, default: '' },
-    videoUrl: { type: String, default: '' },
-    picture: { type: String, default: '' },
-    category: { type: String, default: '' },
-    duration: { type: Number, default: 0 },
-    createdAt: { type: Date, default: Date.now },
-    publishedAt: { type: Date, default: Date.now },
-  },
-  {
-    timestamps: true,
-  }
-)
-export const Weekend = mongoose.model<IWeekend>('Weekend', WeekendSchema)
+import { IExam, ILeague, IPaper } from '../../utils/teamInterface'
 
 const PaperSchema: Schema = new Schema(
   {

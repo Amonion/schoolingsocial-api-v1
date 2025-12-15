@@ -34,6 +34,7 @@ import bioUserSchoolRoutes from './routes/users/bioUserSchoolRoutes'
 import userRoutes from './routes/users/userRoutes'
 import transactionRoutes from './routes/finance/transactionRoutes'
 import utilityRoutes from './routes/utility/utilityRoutes'
+import weekendRoutes from './routes/exam/weekendRoutes'
 import aiRoutes from './routes/utility/aiRoutes'
 import {
   checkChatStatus,
@@ -179,6 +180,7 @@ app.use('/api/v1/notifications', notificationRoutes)
 app.use('/api/v1/user-stats', statRoutes)
 app.use('/api/v1/users', userRoutes)
 app.use('/api/v1/transactions', transactionRoutes)
+app.use('/api/v1/weekends', weekendRoutes)
 app.get('/api/v1/user-ip', (req, res) => {
   let ip: string | undefined
   const forwarded = req.headers['x-forwarded-for']

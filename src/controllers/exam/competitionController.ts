@@ -1,62 +1,11 @@
 import { Request, Response } from 'express'
 import { handleError } from '../../utils/errorHandler'
-import {
-  Weekend,
-  Exam,
-  League,
-  Paper,
-} from '../../models/exam/competitionModel'
-import { IWeekend, IExam, ILeague, IPaper } from '../../utils/teamInterface'
+import { Exam, League, Paper } from '../../models/exam/competitionModel'
+import { IExam, ILeague, IPaper } from '../../utils/teamInterface'
 import { queryData, updateItem, createItem, search } from '../../utils/query'
 import { Attempt } from '../../models/users/competitionModel'
 import { uploadFilesToS3 } from '../../utils/fileUpload'
-import { Post } from '../../models/post/postModel'
 import { IObjective, Objective } from '../../models/exam/objectiveModel'
-
-export const createWeekend = async (
-  req: Request,
-  res: Response
-): Promise<void> => {
-  createItem(req, res, Weekend, 'Weekend was created successfully')
-}
-
-export const getWeekendById = async (
-  req: Request,
-  res: Response
-): Promise<Response | void> => {
-  try {
-    const item = await Weekend.findById(req.params.id)
-    if (!item) {
-      return res.status(404).json({ message: 'Weekend not found' })
-    }
-    res.status(200).json(item)
-  } catch (error) {
-    handleError(res, undefined, undefined, error)
-  }
-}
-
-export const getWeekends = async (req: Request, res: Response) => {
-  try {
-    const result = await queryData<IWeekend>(Weekend, req)
-    res.status(200).json(result)
-  } catch (error) {
-    handleError(res, undefined, undefined, error)
-  }
-}
-
-export const updateWeekend = async (req: Request, res: Response) => {
-  try {
-    updateItem(
-      req,
-      res,
-      Weekend,
-      ['video', 'picture'],
-      ['Weekend not found', 'Weekend was updated successfully']
-    )
-  } catch (error) {
-    handleError(res, undefined, undefined, error)
-  }
-}
 
 //-----------------Exam--------------------//
 export const createExam = async (

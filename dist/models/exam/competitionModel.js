@@ -33,30 +33,8 @@ var __importStar = (this && this.__importStar) || (function () {
     };
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.Exam = exports.League = exports.Paper = exports.Weekend = void 0;
+exports.Exam = exports.League = exports.Paper = void 0;
 const mongoose_1 = __importStar(require("mongoose"));
-const WeekendSchema = new mongoose_1.Schema({
-    continent: { type: String },
-    country: { type: String },
-    state: { type: String, default: '' },
-    placeId: { type: String, default: '' },
-    title: { type: String, default: '' },
-    instruction: { type: String, default: '' },
-    answer: { type: String, default: '' },
-    price: { type: Number, default: 0 },
-    levels: { type: String, default: '' },
-    status: { type: String, default: 'Draft' },
-    video: { type: String, default: '' },
-    videoUrl: { type: String, default: '' },
-    picture: { type: String, default: '' },
-    category: { type: String, default: '' },
-    duration: { type: Number, default: 0 },
-    createdAt: { type: Date, default: Date.now },
-    publishedAt: { type: Date, default: Date.now },
-}, {
-    timestamps: true,
-});
-exports.Weekend = mongoose_1.default.model('Weekend', WeekendSchema);
 const PaperSchema = new mongoose_1.Schema({
     continent: { type: String },
     country: { type: String },

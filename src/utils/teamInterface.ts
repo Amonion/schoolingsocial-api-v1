@@ -263,26 +263,6 @@ export interface IUserData {
   visitedAt: Date
 }
 
-export interface IWeekend extends Document {
-  title: string
-  instruction: string
-  country: string
-  videoUrl: string
-  continent: string
-  levels: string
-  answer: string
-  price: number
-  video: string
-  picture: string
-  state: string
-  placeId: number
-  publishedAt: Date
-  duration: number
-  status: string
-  category: string
-  createdAt: Date
-}
-
 export interface IPolicy extends Document {
   _id: string
   name: string

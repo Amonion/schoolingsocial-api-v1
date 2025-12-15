@@ -9,49 +9,13 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.searchExamInfo = exports.getObjectives = exports.createObjective = exports.updatePaper = exports.getPapers = exports.getPaperById = exports.createPaper = exports.updateLeague = exports.getLeagues = exports.getLeagueById = exports.createLeague = exports.updateExam = exports.getExams = exports.getExamById = exports.createExam = exports.updateWeekend = exports.getWeekends = exports.getWeekendById = exports.createWeekend = void 0;
+exports.searchExamInfo = exports.getObjectives = exports.createObjective = exports.updatePaper = exports.getPapers = exports.getPaperById = exports.createPaper = exports.updateLeague = exports.getLeagues = exports.getLeagueById = exports.createLeague = exports.updateExam = exports.getExams = exports.getExamById = exports.createExam = void 0;
 const errorHandler_1 = require("../../utils/errorHandler");
 const competitionModel_1 = require("../../models/exam/competitionModel");
 const query_1 = require("../../utils/query");
 const competitionModel_2 = require("../../models/users/competitionModel");
 const fileUpload_1 = require("../../utils/fileUpload");
 const objectiveModel_1 = require("../../models/exam/objectiveModel");
-const createWeekend = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    (0, query_1.createItem)(req, res, competitionModel_1.Weekend, 'Weekend was created successfully');
-});
-exports.createWeekend = createWeekend;
-const getWeekendById = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    try {
-        const item = yield competitionModel_1.Weekend.findById(req.params.id);
-        if (!item) {
-            return res.status(404).json({ message: 'Weekend not found' });
-        }
-        res.status(200).json(item);
-    }
-    catch (error) {
-        (0, errorHandler_1.handleError)(res, undefined, undefined, error);
-    }
-});
-exports.getWeekendById = getWeekendById;
-const getWeekends = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    try {
-        const result = yield (0, query_1.queryData)(competitionModel_1.Weekend, req);
-        res.status(200).json(result);
-    }
-    catch (error) {
-        (0, errorHandler_1.handleError)(res, undefined, undefined, error);
-    }
-});
-exports.getWeekends = getWeekends;
-const updateWeekend = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    try {
-        (0, query_1.updateItem)(req, res, competitionModel_1.Weekend, ['video', 'picture'], ['Weekend not found', 'Weekend was updated successfully']);
-    }
-    catch (error) {
-        (0, errorHandler_1.handleError)(res, undefined, undefined, error);
-    }
-});
-exports.updateWeekend = updateWeekend;
 //-----------------Exam--------------------//
 const createExam = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     // createItem(req, res, Exam, "Exam was created successfully");

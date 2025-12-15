@@ -49,6 +49,7 @@ const bioUserSchoolRoutes_1 = __importDefault(require("./routes/users/bioUserSch
 const userRoutes_1 = __importDefault(require("./routes/users/userRoutes"));
 const transactionRoutes_1 = __importDefault(require("./routes/finance/transactionRoutes"));
 const utilityRoutes_1 = __importDefault(require("./routes/utility/utilityRoutes"));
+const weekendRoutes_1 = __importDefault(require("./routes/exam/weekendRoutes"));
 const aiRoutes_1 = __importDefault(require("./routes/utility/aiRoutes"));
 const chatController_1 = require("./controllers/message/chatController");
 const postController_1 = require("./controllers/post/postController");
@@ -173,6 +174,7 @@ app.use('/api/v1/notifications', notificationRoutes_1.default);
 app.use('/api/v1/user-stats', statRoutes_1.default);
 app.use('/api/v1/users', userRoutes_1.default);
 app.use('/api/v1/transactions', transactionRoutes_1.default);
+app.use('/api/v1/weekends', weekendRoutes_1.default);
 app.get('/api/v1/user-ip', (req, res) => {
     var _a;
     let ip;
