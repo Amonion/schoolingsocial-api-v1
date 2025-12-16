@@ -14,6 +14,7 @@ router.route('/search').get(placeController_1.searchPlace);
 router.route('/find').get(placeController_1.searchPlaces);
 router.route('/countries').get(placeController_1.getUniquePlaces);
 router.route('/state').get(placeController_1.getUniquePlaces);
+router.route('/state/:id').patch(upload.any(), placeController_1.updateState);
 router.route('/area').get(placeController_1.getUniquePlaces);
 router.route('/clean').patch(upload.any(), placeController_1.cleanPlaces);
 router

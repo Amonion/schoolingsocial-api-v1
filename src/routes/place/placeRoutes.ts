@@ -11,6 +11,7 @@ import {
   searchPlace,
   searchPlaces,
   updatePlace,
+  updateState,
 } from '../../controllers/place/placeController'
 const upload = multer()
 
@@ -22,6 +23,7 @@ router.route('/search').get(searchPlace)
 router.route('/find').get(searchPlaces)
 router.route('/countries').get(getUniquePlaces)
 router.route('/state').get(getUniquePlaces)
+router.route('/state/:id').patch(upload.any(), updateState)
 router.route('/area').get(getUniquePlaces)
 router.route('/clean').patch(upload.any(), cleanPlaces)
 router

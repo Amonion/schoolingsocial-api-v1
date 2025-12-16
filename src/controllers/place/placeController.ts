@@ -215,6 +215,34 @@ export const updatePlace = async (req: Request, res: Response) => {
   }
 }
 
+export const updateState = async (req: Request, res: Response) => {
+  try {
+    if (req.files?.length || req.file) {
+      const uploadedFiles = await uploadFilesToS3(req)
+      uploadedFiles.forEach((file) => {
+        req.body[file.fieldName] = file.s3Url
+      })
+    }
+
+    const place = await Place.findById(req.params.id)
+    const state = await Place.findByIdAndUpdate(req.params.id, req.body, {
+      new: true,
+    })
+    await Place.updateMany({ state: place?.state }, { $set: req.body })
+
+    const item = await queryData<IPlace>(Place, req)
+    const { count, results } = item
+    res.status(200).json({
+      message: 'The state was updated successfully',
+      results,
+      count,
+      state,
+    })
+  } catch (error) {
+    handleError(res, undefined, undefined, error)
+  }
+}
+
 export const deletePlace = async (req: Request, res: Response) => {
   const result = await Place.findById(req.params.id)
   const existingPlaces = await Place.find({

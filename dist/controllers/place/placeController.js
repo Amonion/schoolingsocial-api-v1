@@ -9,7 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getUniquePlaces = exports.searchPlaces = exports.searchPlace = exports.deletePlaces = exports.deletePlace = exports.updatePlace = exports.getAllPlaces = exports.getPlaces = exports.getPlaceById = exports.createPlace = exports.cleanPlaces = void 0;
+exports.getUniquePlaces = exports.searchPlaces = exports.searchPlace = exports.deletePlaces = exports.deletePlace = exports.updateState = exports.updatePlace = exports.getAllPlaces = exports.getPlaces = exports.getPlaceById = exports.createPlace = exports.cleanPlaces = void 0;
 const placeModel_1 = require("../../models/place/placeModel");
 const errorHandler_1 = require("../../utils/errorHandler");
 const query_1 = require("../../utils/query");
@@ -208,6 +208,34 @@ const updatePlace = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
     }
 });
 exports.updatePlace = updatePlace;
+const updateState = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    var _a;
+    try {
+        if (((_a = req.files) === null || _a === void 0 ? void 0 : _a.length) || req.file) {
+            const uploadedFiles = yield (0, fileUpload_1.uploadFilesToS3)(req);
+            uploadedFiles.forEach((file) => {
+                req.body[file.fieldName] = file.s3Url;
+            });
+        }
+        const place = yield placeModel_1.Place.findById(req.params.id);
+        const state = yield placeModel_1.Place.findByIdAndUpdate(req.params.id, req.body, {
+            new: true,
+        });
+        yield placeModel_1.Place.updateMany({ state: place === null || place === void 0 ? void 0 : place.state }, { $set: req.body });
+        const item = yield (0, query_1.queryData)(placeModel_1.Place, req);
+        const { count, results } = item;
+        res.status(200).json({
+            message: 'The state was updated successfully',
+            results,
+            count,
+            state,
+        });
+    }
+    catch (error) {
+        (0, errorHandler_1.handleError)(res, undefined, undefined, error);
+    }
+});
+exports.updateState = updateState;
 const deletePlace = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const result = yield placeModel_1.Place.findById(req.params.id);
     const existingPlaces = yield placeModel_1.Place.find({

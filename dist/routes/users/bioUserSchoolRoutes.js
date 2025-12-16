@@ -10,10 +10,10 @@ const bioUserController_1 = require("../../controllers/users/bioUserController")
 const router = express_1.default.Router();
 router.route('/').get(bioUserController_1.getBioUsers);
 router.route('/search').get(bioUserController_1.searchBioUsersSchool);
-router.route('/:username').get(bioUserController_1.getBioUserSchoolByUsername);
 router.route('/').get(bioUserController_1.searchBioUserSchoolInfo);
 router
     .route('/schools/:username')
     .get(bioUserController_1.getBioUserPastSchools)
     .patch(upload.any(), bioUserController_1.updateBioUserSchool);
+router.route('/:username').get(bioUserController_1.getBioUserSchoolByUsername);
 exports.default = router;
