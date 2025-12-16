@@ -15,12 +15,12 @@ const router = express.Router()
 router.route('/').get(getBioUsers)
 
 router.route('/search').get(searchBioUsersSchool)
+router.route('/:username').get(getBioUserSchoolByUsername)
 router.route('/').get(searchBioUserSchoolInfo)
 
 router
-  .route('/schools/:username')
+  .route('/schools/:id')
   .get(getBioUserPastSchools)
   .patch(upload.any(), updateBioUserSchool)
-router.route('/:username').get(getBioUserSchoolByUsername)
 
 export default router
