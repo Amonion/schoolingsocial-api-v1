@@ -482,7 +482,7 @@ exports.getBioUsers = getBioUsers;
 const getBioUserPastSchools = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const pastSchools = yield bioUserSchoolInfo_1.PastSchool.find({
-            bioUserUsername: req.params.username,
+            bioUserId: req.params.id,
         });
         res.status(200).json({ pastSchools });
     }

@@ -594,7 +594,7 @@ export const getBioUserPastSchools = async (
 ): Promise<void> => {
   try {
     const pastSchools = await PastSchool.find({
-      bioUserUsername: req.params.username,
+      bioUserId: req.params.id,
     })
     res.status(200).json({ pastSchools })
   } catch (error) {
