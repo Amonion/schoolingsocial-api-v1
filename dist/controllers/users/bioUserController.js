@@ -258,6 +258,17 @@ const updateBioUserSchool = (req, res) => __awaiter(void 0, void 0, void 0, func
                         app_1.io.emit('team', { action: 'new', type: 'school', newSchools });
                     }
                 }
+                if (!req.body.inSchool) {
+                    const latestPast = pasts.reduce((latest, current) => {
+                        if (!latest)
+                            return current;
+                        return new Date(current.graduatedAt) >
+                            new Date(latest.graduatedAt)
+                            ? current
+                            : latest;
+                    }, null);
+                    yield bioUserSchoolInfo_1.BioUserSchoolInfo.findOneAndUpdate({ bioUserId: req.params.id }, { $set: Object.assign({}, latestPast) });
+                }
             }
             (0, exports.updateBioSchool)(req, res);
             break;

@@ -38,8 +38,6 @@ const mongoose_1 = __importStar(require("mongoose"));
 const BioUserSchoolInfoSchema = new mongoose_1.Schema({
     admittedAt: { type: Date },
     bioUserDisplayName: { type: String },
-    bioUserIntro: { type: String },
-    bioUserMedia: { type: String },
     bioUserPicture: { type: String },
     bioUserUsername: { type: String },
     bioUserId: { type: String },
@@ -50,7 +48,8 @@ const BioUserSchoolInfoSchema = new mongoose_1.Schema({
     isAdvanced: { type: Boolean },
     isSchoolVerified: { type: Boolean },
     isVerified: { type: Boolean },
-    schoolAcademicLevel: { type: Object },
+    schoolLevel: { type: Object },
+    schoolLevelName: { type: Object },
     schoolArea: { type: String },
     schoolArm: { type: String },
     schoolCertificate: { type: String },
@@ -81,8 +80,6 @@ exports.BioUserSchoolInfo = mongoose_1.default.model('BioUserSchoolInfo', BioUse
 const PastSchoolSchema = new mongoose_1.Schema({
     admittedAt: { type: Date },
     bioUserDisplayName: { type: String },
-    bioUserIntro: { type: String },
-    bioUserMedia: { type: String },
     bioUserPicture: { type: String },
     bioUserUsername: { type: String },
     bioUserId: { type: String },

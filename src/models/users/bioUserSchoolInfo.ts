@@ -44,11 +44,10 @@ const BioUserSchoolInfoSchema: Schema = new Schema(
   {
     admittedAt: { type: Date },
     bioUserDisplayName: { type: String },
-    bioUserIntro: { type: String },
-    bioUserMedia: { type: String },
     bioUserPicture: { type: String },
     bioUserUsername: { type: String },
     bioUserId: { type: String },
+
     createdAt: { type: Date, default: Date.now },
     graduatedAt: { type: Date },
     inSchool: { type: Boolean },
@@ -56,7 +55,9 @@ const BioUserSchoolInfoSchema: Schema = new Schema(
     isAdvanced: { type: Boolean },
     isSchoolVerified: { type: Boolean },
     isVerified: { type: Boolean },
-    schoolAcademicLevel: { type: Object },
+
+    schoolLevel: { type: Object },
+    schoolLevelName: { type: Object },
     schoolArea: { type: String },
     schoolArm: { type: String },
     schoolCertificate: { type: String },
@@ -92,15 +93,17 @@ export const BioUserSchoolInfo = mongoose.model<IBioUserSchoolInfo>(
 )
 
 export interface IPastSchool {
-  admittedAt: Date | null
+  admittedAt: Date
   bioUserId: string
   bioUserPassport: string
   bioUserUsername: string
   bioUserDisplayName: string
-  graduatedAt: Date | null
+
+  graduatedAt: Date
   isAdvanced: boolean
-  isNew: boolean
   isSchoolVerified: boolean
+  isVerified: boolean
+
   schoolArea: string
   schoolArm: string
   schoolLevel: number
@@ -130,16 +133,16 @@ const PastSchoolSchema: Schema = new Schema(
   {
     admittedAt: { type: Date },
     bioUserDisplayName: { type: String },
-    bioUserIntro: { type: String },
-    bioUserMedia: { type: String },
     bioUserPicture: { type: String },
     bioUserUsername: { type: String },
     bioUserId: { type: String },
+
     createdAt: { type: Date, default: Date.now },
     graduatedAt: { type: Date },
     isAdvanced: { type: Boolean },
     isSchoolVerified: { type: Boolean },
     isVerified: { type: Boolean },
+
     schoolArea: { type: String },
     schoolArm: { type: String },
     schoolCertificate: { type: String },

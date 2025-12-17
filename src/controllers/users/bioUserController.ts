@@ -7,6 +7,7 @@ import { handleError } from '../../utils/errorHandler'
 import { School } from '../../models/school/schoolModel'
 import {
   BioUserSchoolInfo,
+  IPastSchool,
   PastSchool,
 } from '../../models/users/bioUserSchoolInfo'
 import { AcademicLevel } from '../../models/school/academicLevelModel'
@@ -284,6 +285,23 @@ export const updateBioUserSchool = async (
             const newSchools = await School.countDocuments({ isNew: true })
             io.emit('team', { action: 'new', type: 'school', newSchools })
           }
+        }
+
+        if (!req.body.inSchool) {
+          const latestPast = pasts.reduce(
+            (latest: IPastSchool, current: IPastSchool) => {
+              if (!latest) return current
+              return new Date(current.graduatedAt) >
+                new Date(latest.graduatedAt)
+                ? current
+                : latest
+            },
+            null
+          )
+          await BioUserSchoolInfo.findOneAndUpdate(
+            { bioUserId: req.params.id },
+            { $set: { ...latestPast } }
+          )
         }
       }
       updateBioSchool(req, res)
