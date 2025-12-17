@@ -167,19 +167,16 @@ exports.updateBio = updateBio;
 const updateBioUserSchool = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     switch (req.body.action) {
         case 'Education':
-            if (req.body.schoolAcademicLevel) {
-                req.body.schoolAcademicLevel = JSON.parse(req.body.schoolAcademicLevel);
-            }
             req.body.isEducation = true;
             if (req.body.isNew && req.body.inSchool) {
-                const academicLevel = req.body.schoolAcademicLevel;
+                const schoolLevelName = req.body.schoolLevelName;
                 const result = yield schoolModel_1.School.findOne({
                     isNew: true,
                     name: req.body.schoolName,
                 });
                 const level = yield academicLevelModel_1.AcademicLevel.findOne({
                     country: req.body.schoolCountry,
-                    levelName: academicLevel.levelName,
+                    levelName: schoolLevelName,
                 });
                 const form = {
                     institutions: [level === null || level === void 0 ? void 0 : level.institution],
@@ -194,9 +191,8 @@ const updateBioUserSchool = (req, res) => __awaiter(void 0, void 0, void 0, func
                 };
                 if (!result) {
                     const school = yield schoolModel_1.School.create(form);
-                    if (academicLevel &&
-                        !academicLevel.levelName.includes('Primary') &&
-                        !academicLevel.levelName.includes('Secondary') &&
+                    if (!schoolLevelName.includes('Primary') &&
+                        !schoolLevelName.includes('Secondary') &&
                         req.body.inSchool === 'Yes') {
                         const facultyForm = {
                             schoolId: school._id,
@@ -223,7 +219,7 @@ const updateBioUserSchool = (req, res) => __awaiter(void 0, void 0, void 0, func
             (0, exports.updateBioSchool)(req, res);
             break;
         case 'EducationHistory':
-            if (req.body.hasPastSchool) {
+            if (req.body.pastSchools) {
                 req.body.pastSchools = JSON.parse(req.body.pastSchools);
                 const pasts = req.body.pastSchools;
                 for (let i = 0; i < pasts.length; i++) {

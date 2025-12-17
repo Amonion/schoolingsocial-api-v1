@@ -185,13 +185,9 @@ export const updateBioUserSchool = async (
 ): Promise<void> => {
   switch (req.body.action) {
     case 'Education':
-      if (req.body.schoolAcademicLevel) {
-        req.body.schoolAcademicLevel = JSON.parse(req.body.schoolAcademicLevel)
-      }
-
       req.body.isEducation = true
       if (req.body.isNew && req.body.inSchool) {
-        const academicLevel = req.body.schoolAcademicLevel
+        const schoolLevelName = req.body.schoolLevelName
         const result = await School.findOne({
           isNew: true,
           name: req.body.schoolName,
@@ -199,7 +195,7 @@ export const updateBioUserSchool = async (
 
         const level = await AcademicLevel.findOne({
           country: req.body.schoolCountry,
-          levelName: academicLevel.levelName,
+          levelName: schoolLevelName,
         })
 
         const form = {
@@ -217,9 +213,8 @@ export const updateBioUserSchool = async (
         if (!result) {
           const school = await School.create(form)
           if (
-            academicLevel &&
-            !academicLevel.levelName.includes('Primary') &&
-            !academicLevel.levelName.includes('Secondary') &&
+            !schoolLevelName.includes('Primary') &&
+            !schoolLevelName.includes('Secondary') &&
             req.body.inSchool === 'Yes'
           ) {
             const facultyForm = {
@@ -247,7 +242,7 @@ export const updateBioUserSchool = async (
       updateBioSchool(req, res)
       break
     case 'EducationHistory':
-      if (req.body.hasPastSchool) {
+      if (req.body.pastSchools) {
         req.body.pastSchools = JSON.parse(req.body.pastSchools)
         const pasts = req.body.pastSchools
         for (let i = 0; i < pasts.length; i++) {
