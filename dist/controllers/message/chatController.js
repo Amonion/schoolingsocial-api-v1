@@ -15,7 +15,6 @@ const errorHandler_1 = require("../../utils/errorHandler");
 const query_1 = require("../../utils/query");
 const fileUpload_1 = require("../../utils/fileUpload");
 const app_1 = require("../../app");
-const usersStatMode_1 = require("../../models/users/usersStatMode");
 const expo_server_sdk_1 = require("expo-server-sdk");
 const sendNotification_1 = require("../../utils/sendNotification");
 const socialNotificationModel_1 = require("../../models/message/socialNotificationModel");
@@ -531,9 +530,6 @@ const createChatMobile = (req, res) => __awaiter(void 0, void 0, void 0, functio
             post = yield chatModel_1.Chat.create(data);
             sendCreatedChat(post, false);
             const newNotification = yield (0, sendNotification_1.sendPersonalNotification)('friend_request', data);
-            const onlineUser = yield usersStatMode_1.UserStat.findOne({
-                username: data.receiverUsername,
-            });
             app_1.io.emit(data.receiverUsername, newNotification);
         }
         res.status(200).json(post);

@@ -12,109 +12,33 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.getSchoolStat = exports.getUsersStat = exports.updateVisit = void 0;
 const usersStatMode_1 = require("../../models/users/usersStatMode");
 const app_1 = require("../../app");
-const chatModel_1 = require("../../models/message/chatModel");
 const errorHandler_1 = require("../../utils/errorHandler");
 const date_fns_1 = require("date-fns");
 const user_1 = require("../../models/users/user");
 const schoolModel_1 = require("../../models/school/schoolModel");
 const bioUserState_1 = require("../../models/users/bioUserState");
+const bioUser_1 = require("../../models/users/bioUser");
+const bioUserSchoolInfo_1 = require("../../models/users/bioUserSchoolInfo");
 //-----------------USERS--------------------//
 const updateVisit = (data) => __awaiter(void 0, void 0, void 0, function* () {
     if (!data.ip || data.ip === '') {
         return;
     }
-    if (data.username) {
-        let userStatus = yield usersStatMode_1.UserStatus.findOne({ username: data.username });
-        // Step 2: Create new doc if not exists
-        if (!userStatus) {
-            userStatus = new usersStatMode_1.UserStatus({
-                username: data.username,
-                visitedAt: data.visitedAt,
-                online: data.online,
-                country: data.country,
-                countryCode: data.countryCode,
-                bioUserId: data.bioUserId,
-                userId: data.userId,
-                ips: [data.ip], // start with IP
-            });
-        }
-        else {
-            // Step 3: Normalize ips to an array
-            if (!Array.isArray(userStatus.ips)) {
-                userStatus.ips = userStatus.ips ? [String(userStatus.ips)] : [];
-            }
-            // Step 4: Add IP if not present
-            if (!userStatus.ips.includes(data.ip)) {
-                userStatus.ips.push(data.ip);
-            }
-            // Step 5: Update other fields
-            userStatus.visitedAt = data.visitedAt;
-            userStatus.online = data.online;
-            userStatus.country = data.country;
-            userStatus.countryCode = data.countryCode;
-            userStatus.bioUserId = data.bioUserId;
-            userStatus.userId = data.userId;
-        }
-        yield userStatus.save();
-    }
-    else {
-        // Case where username is not provided
-        let userStatus = yield usersStatMode_1.UserStatus.findOne({ ips: { $in: [data.ip] } });
-        if (!userStatus) {
-            userStatus = new usersStatMode_1.UserStatus({
-                visitedAt: new Date(),
-                online: true,
-                country: data.country,
-                countryCode: data.countryCode,
-                username: data.username,
-                bioUserId: data.bioUserId,
-                userId: data.userId,
-                ips: [data.ip],
-            });
-        }
-        else {
-            if (!Array.isArray(userStatus.ips)) {
-                userStatus.ips = userStatus.ips ? [String(userStatus.ips)] : [];
-            }
-            if (!userStatus.ips.includes(data.ip)) {
-                userStatus.ips.push(data.ip);
-            }
-            userStatus.visitedAt = new Date();
-            userStatus.online = true;
-            userStatus.country = data.country;
-            userStatus.countryCode = data.countryCode;
-            userStatus.username = data.username;
-            userStatus.bioUserId = data.bioUserId;
-            userStatus.userId = data.userId;
-        }
-        yield userStatus.save();
-    }
-    if (data.bioUserId) {
-        updateOnlineStatus(data.bioUserId, data.visitedAt, bioUserState_1.BioUserState);
-    }
-    if (data.userId) {
-        updateOnlineStatus(data.userId, data.visitedAt, user_1.User);
-    }
-    const visitors = yield usersStatMode_1.UserStatus.countDocuments({ online: true });
     const bioUserState = yield bioUserState_1.BioUserState.findOne({ bioUserId: data.bioUserId });
-    if (bioUserState) {
-        app_1.io.emit(`update_state_${bioUserState.bioUserUsername}`, { bioUserState });
+    const bioUser = yield bioUser_1.BioUser.findById(data.bioUserId);
+    const bioUserSchoolInfo = yield bioUserSchoolInfo_1.BioUserSchoolInfo.findOne({
+        bioUserId: data.bioUserId,
+    });
+    yield usersStatMode_1.UserStatus.create(data);
+    if (bioUser) {
+        app_1.io.emit(`update_state_${bioUser._id}`, {
+            bioUserState,
+            bioUser,
+            bioUserSchoolInfo,
+        });
     }
 });
 exports.updateVisit = updateVisit;
-const updateOnlineStatus = (userId, visitedAt, model) => __awaiter(void 0, void 0, void 0, function* () {
-    yield model.findOneAndUpdate({ _id: userId, online: false }, {
-        visitedAt: visitedAt,
-        online: true,
-    });
-    const chats = yield chatModel_1.Chat.find({
-        connection: { $regex: userId },
-    });
-    for (let i = 0; i < chats.length; i++) {
-        const el = chats[i];
-        app_1.io.emit(el.connection, { action: 'visit' });
-    }
-});
 const getUsersStat = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const now = new Date();

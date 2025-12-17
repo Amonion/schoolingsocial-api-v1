@@ -1,47 +1,33 @@
 import mongoose, { Schema } from 'mongoose'
-import { IUserStat } from '../../utils/userInterface'
 
-const UserStatSchema: Schema = new Schema(
-  {
-    country: { type: String },
-    countryCode: { type: String },
-    ips: { type: Array, default: [] },
-    username: { type: String },
-    bioId: { type: String },
-    online: { type: Boolean, default: false },
-    leftAt: { type: Date, default: Date.now },
-    visitedAt: { type: Date, default: Date.now },
-    createdAt: { type: Date, default: Date.now },
-  },
-  {
-    timestamps: true,
-  }
-)
-export const UserStat = mongoose.model<IUserStat>('UserStat', UserStatSchema)
+export interface IUserStat extends Document {
+  online: boolean
+  userId: string
+  bioUserId: string
+  country: string
+  countryCode: string
+  ips: string[]
+  username: string
+  visitedAt: Date
+}
 
 const UserStatusSchema: Schema = new Schema(
   {
     country: { type: String },
     countryCode: { type: String },
-    ips: { type: [String], default: [] },
+    ip: { type: String },
     username: { type: String },
     bioUserId: { type: String },
+    pathname: { type: String },
     online: { type: Boolean, default: false },
-    leftAt: { type: Date, default: Date.now },
-    visitedAt: { type: Date, default: Date.now },
-    createdAt: { type: Date, default: Date.now },
+    leftAt: { type: Date },
+    visitedAt: { type: Date },
   },
   {
     timestamps: true,
   }
 )
 
-UserStatusSchema.pre('save', function (next) {
-  if (!Array.isArray(this.ips)) {
-    this.ips = this.ips ? [String(this.ips)] : []
-  }
-  next()
-})
 export const UserStatus = mongoose.model<IUserStat>(
   'UserStatus',
   UserStatusSchema

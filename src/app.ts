@@ -50,6 +50,7 @@ import { geoipMiddleware } from './middlewares/geoipMiddleware'
 import { UsersSocket } from './routes/socket/usersSocket'
 import { createMoment, updateMoment } from './controllers/post/momentController'
 import { getTotalVerifyingUsers } from './controllers/users/bioUserController'
+import { updateVisit } from './controllers/users/userStatController'
 
 dotenv.config()
 
@@ -133,8 +134,10 @@ io.on('connection', (socket) => {
       case 'users':
         await UsersSocket(data)
         break
+      case 'online':
+        // await updateVisit(data)
+        break
       case 'verifying_users':
-        // console.log(data)
         await getTotalVerifyingUsers(data.user)
         break
       default:

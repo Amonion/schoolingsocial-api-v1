@@ -33,39 +33,19 @@ var __importStar = (this && this.__importStar) || (function () {
     };
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.UserStatus = exports.UserStat = void 0;
+exports.UserStatus = void 0;
 const mongoose_1 = __importStar(require("mongoose"));
-const UserStatSchema = new mongoose_1.Schema({
-    country: { type: String },
-    countryCode: { type: String },
-    ips: { type: Array, default: [] },
-    username: { type: String },
-    bioId: { type: String },
-    online: { type: Boolean, default: false },
-    leftAt: { type: Date, default: Date.now },
-    visitedAt: { type: Date, default: Date.now },
-    createdAt: { type: Date, default: Date.now },
-}, {
-    timestamps: true,
-});
-exports.UserStat = mongoose_1.default.model('UserStat', UserStatSchema);
 const UserStatusSchema = new mongoose_1.Schema({
     country: { type: String },
     countryCode: { type: String },
-    ips: { type: [String], default: [] },
+    ip: { type: String },
     username: { type: String },
     bioUserId: { type: String },
+    pathname: { type: String },
     online: { type: Boolean, default: false },
-    leftAt: { type: Date, default: Date.now },
-    visitedAt: { type: Date, default: Date.now },
-    createdAt: { type: Date, default: Date.now },
+    leftAt: { type: Date },
+    visitedAt: { type: Date },
 }, {
     timestamps: true,
-});
-UserStatusSchema.pre('save', function (next) {
-    if (!Array.isArray(this.ips)) {
-        this.ips = this.ips ? [String(this.ips)] : [];
-    }
-    next();
 });
 exports.UserStatus = mongoose_1.default.model('UserStatus', UserStatusSchema);

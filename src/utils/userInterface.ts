@@ -300,17 +300,6 @@ export interface IUserSettings {
   updatedAt?: Date
 }
 
-export interface IUserStat extends Document {
-  online: boolean
-  userId: string
-  bioUserId: string
-  country: string
-  countryCode: string
-  ips: string[]
-  username: string
-  visitedAt: Date
-}
-
 interface File {
   name: string
   data: string

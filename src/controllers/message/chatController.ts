@@ -4,7 +4,6 @@ import { handleError } from '../../utils/errorHandler'
 import { queryData } from '../../utils/query'
 import { deleteFileFromS3 } from '../../utils/fileUpload'
 import { io } from '../../app'
-import { UserStat } from '../../models/users/usersStatMode'
 import { Expo } from 'expo-server-sdk'
 import {
   sendPersonalNotification,
@@ -664,9 +663,6 @@ export const createChatMobile = async (req: Request, res: Response) => {
         'friend_request',
         data
       )
-      const onlineUser = await UserStat.findOne({
-        username: data.receiverUsername,
-      })
       io.emit(data.receiverUsername, newNotification)
     }
 

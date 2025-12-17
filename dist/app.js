@@ -129,8 +129,10 @@ io.on('connection', (socket) => {
             case 'users':
                 yield (0, usersSocket_1.UsersSocket)(data);
                 break;
+            case 'online':
+                // await updateVisit(data)
+                break;
             case 'verifying_users':
-                // console.log(data)
                 yield (0, bioUserController_1.getTotalVerifyingUsers)(data.user);
                 break;
             default:
