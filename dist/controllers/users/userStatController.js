@@ -19,20 +19,28 @@ const schoolModel_1 = require("../../models/school/schoolModel");
 const bioUserState_1 = require("../../models/users/bioUserState");
 const bioUser_1 = require("../../models/users/bioUser");
 const bioUserSchoolInfo_1 = require("../../models/users/bioUserSchoolInfo");
+const staffModel_1 = require("../../models/users/staffModel");
 //-----------------USERS--------------------//
 const updateVisit = (data) => __awaiter(void 0, void 0, void 0, function* () {
     if (!data.ip || data.ip === '') {
         return;
     }
+    const user = yield user_1.User.findOne({ username: data.username });
     const bioUserState = yield bioUserState_1.BioUserState.findOne({ bioUserId: data.bioUserId });
     const bioUser = yield bioUser_1.BioUser.findById(data.bioUserId);
     const bioUserSchoolInfo = yield bioUserSchoolInfo_1.BioUserSchoolInfo.findOne({
         bioUserId: data.bioUserId,
     });
+    let staff = null;
+    if (data.status === 'Staff' && bioUser) {
+        staff = yield staffModel_1.Staff.findOne({ bioUserUsername: bioUser.bioUserUsername });
+    }
     yield usersStatMode_1.UserStatus.create(data);
     if (bioUser) {
         app_1.io.emit(`update_state_${bioUser._id}`, {
             bioUserState,
+            staff,
+            user,
             bioUser,
             bioUserSchoolInfo,
         });

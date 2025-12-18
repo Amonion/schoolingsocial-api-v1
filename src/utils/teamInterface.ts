@@ -222,18 +222,6 @@ export interface ITransaction extends Document {
   createdAt: Date
 }
 
-export interface ISocketData {
-  to: string
-  action: string
-  type: string
-  postId: string
-  data: IUserData
-  content: string
-  createdAt: Date
-  media: File[]
-  types: string[]
-}
-
 export interface ISchoolPayment extends Document {
   name: string
   amount: number
@@ -249,18 +237,6 @@ export interface ISchoolPayment extends Document {
   currency: string
   currencySymbol: string
   createdAt: Date
-}
-
-export interface IUserData {
-  ip: string
-  bioUserId: string
-  country: string
-  countryCode: string
-  online: boolean
-  userId: string
-  username: string
-  leftAt: Date
-  visitedAt: Date
 }
 
 export interface IPolicy extends Document {

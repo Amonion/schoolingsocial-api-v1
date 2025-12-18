@@ -1,16 +1,27 @@
 import { Request, Response } from 'express'
 import { UserStatus } from '../../models/users/usersStatMode'
 import { io } from '../../app'
-import { IUserData } from '../../utils/teamInterface'
-import { Chat } from '../../models/message/chatModel'
 import { handleError } from '../../utils/errorHandler'
 import { startOfMonth, subMonths } from 'date-fns'
-import { Model } from 'mongoose'
 import { User } from '../../models/users/user'
 import { School } from '../../models/school/schoolModel'
 import { BioUserState } from '../../models/users/bioUserState'
 import { BioUser } from '../../models/users/bioUser'
 import { BioUserSchoolInfo } from '../../models/users/bioUserSchoolInfo'
+import { Staff } from '../../models/users/staffModel'
+
+export interface IUserData {
+  ip: string
+  bioUserId: string
+  country: string
+  countryCode: string
+  status: string
+  online: boolean
+  userId: string
+  username: string
+  leftAt: Date
+  visitedAt: Date
+}
 
 //-----------------USERS--------------------//
 export const updateVisit = async (data: IUserData) => {
@@ -18,17 +29,25 @@ export const updateVisit = async (data: IUserData) => {
     return
   }
 
+  const user = await User.findOne({ username: data.username })
   const bioUserState = await BioUserState.findOne({ bioUserId: data.bioUserId })
   const bioUser = await BioUser.findById(data.bioUserId)
   const bioUserSchoolInfo = await BioUserSchoolInfo.findOne({
     bioUserId: data.bioUserId,
   })
 
+  let staff = null
+  if (data.status === 'Staff' && bioUser) {
+    staff = await Staff.findOne({ bioUserUsername: bioUser.bioUserUsername })
+  }
+
   await UserStatus.create(data)
 
   if (bioUser) {
     io.emit(`update_state_${bioUser._id}`, {
       bioUserState,
+      staff,
+      user,
       bioUser,
       bioUserSchoolInfo,
     })
