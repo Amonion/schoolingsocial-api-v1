@@ -1,5 +1,16 @@
 import mongoose, { Schema } from 'mongoose'
-import { IAdCategory, IBank, IDocument } from '../../utils/teamInterface'
+import { IAdCategory, IBank } from '../../utils/teamInterface'
+
+export interface IDocument extends Document {
+  picture: string
+  name: string
+  description: string
+  country: string
+  countryFlag: string
+  placeId: string
+  required: boolean
+  createdAt: Date
+}
 
 export interface IPlace extends Document {
   continent: string
@@ -21,20 +32,20 @@ export interface IPlace extends Document {
 
 const PlaceSchema: Schema = new Schema(
   {
-    landmark: { type: String, default: '' },
+    landmark: { type: String },
     area: { type: String },
-    state: { type: String, default: '' },
-    country: { type: String, default: '' },
-    countryCapital: { type: String, default: '' },
-    stateCapital: { type: String, default: '' },
-    stateLogo: { type: String, default: '' },
-    continent: { type: String, default: '' },
-    countryFlag: { type: String, default: '' },
-    zipCode: { type: String, default: '' },
-    countryCode: { type: String, default: '' },
-    countrySymbol: { type: String, default: '' },
-    currency: { type: String, default: '' },
-    currencySymbol: { type: String, default: '' },
+    state: { type: String },
+    country: { type: String },
+    countryCapital: { type: String },
+    stateCapital: { type: String },
+    stateLogo: { type: String },
+    continent: { type: String },
+    countryFlag: { type: String },
+    zipCode: { type: String },
+    countryCode: { type: String },
+    countrySymbol: { type: String },
+    currency: { type: String },
+    currencySymbol: { type: String },
     createdAt: { type: Date, default: Date.now },
   },
   {
@@ -45,19 +56,19 @@ export const Place = mongoose.model<IPlace>('Place', PlaceSchema)
 
 const AdCategorySchema: Schema = new Schema(
   {
-    category: { type: String, default: '' },
-    picture: { type: String, default: '' },
-    name: { type: String, default: '' },
-    description: { type: String, default: '' },
+    category: { type: String },
+    picture: { type: String },
+    name: { type: String },
+    description: { type: String },
     price: { type: Number, default: 0 },
     duration: { type: Number, default: 0 },
     postNumber: { type: Number, default: 0 },
-    continent: { type: String, default: '' },
-    country: { type: String, default: '' },
-    currency: { type: String, default: '' },
-    currencySymbol: { type: String, default: '' },
-    countrySymbol: { type: String, default: '' },
-    placeId: { type: String, default: '' },
+    continent: { type: String },
+    country: { type: String },
+    currency: { type: String },
+    currencySymbol: { type: String },
+    countrySymbol: { type: String },
+    placeId: { type: String },
     createdAt: { type: Date, default: Date.now },
   },
   {
@@ -71,15 +82,15 @@ export const AdCategory = mongoose.model<IAdCategory>(
 
 const BankSchema: Schema = new Schema(
   {
-    category: { type: String, default: '' },
-    picture: { type: String, default: '' },
-    name: { type: String, default: '' },
-    description: { type: String, default: '' },
-    username: { type: String, default: '' },
-    continent: { type: String, default: '' },
-    country: { type: String, default: '' },
-    countryFlag: { type: String, default: '' },
-    placeId: { type: String, default: '' },
+    category: { type: String },
+    picture: { type: String },
+    name: { type: String },
+    description: { type: String },
+    username: { type: String },
+    continent: { type: String },
+    country: { type: String },
+    countryFlag: { type: String },
+    placeId: { type: String },
     createdAt: { type: Date, default: Date.now },
   },
   {
@@ -90,13 +101,13 @@ export const Bank = mongoose.model<IBank>('Bank', BankSchema)
 
 const DocumentSchema: Schema = new Schema(
   {
-    name: { type: String, default: '' },
-    picture: { type: String, default: '' },
+    name: { type: String },
+    picture: { type: String },
     required: { type: Boolean, default: false },
-    country: { type: String, default: '' },
-    placeId: { type: String, default: '' },
-    countryFlag: { type: String, default: '' },
-    description: { type: String, default: '' },
+    country: { type: String },
+    placeId: { type: String },
+    countryFlag: { type: String },
+    description: { type: String },
     createdAt: { type: Date, default: Date.now },
   },
   {

@@ -34,17 +34,6 @@ export interface IDepartment extends Document {
   description: string
 }
 
-export interface IDocument extends Document {
-  picture: string
-  name: string
-  description: string
-  country: string
-  countryFlag: string
-  placeId: string
-  required: boolean
-  createdAt: Date
-}
-
 export interface IExam extends Document {
   title: string
   instruction: string
