@@ -20,7 +20,7 @@ var __rest = (this && this.__rest) || function (s, e) {
     return t;
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.searchBioUserState = exports.searchBioUserSchoolInfo = exports.checkIsUserVerified = exports.getBioUsersState = exports.getBioUserSchoolByUsername = exports.getBioUserByUsername = exports.searchBioUsersSchool = exports.getTotalVerifyingUsers = exports.getBioUserPastSchools = exports.getBioUsers = exports.getBioUser = exports.getBioUserBank = exports.approveUser = exports.updateBioUserBank = exports.updateBioUserSettings = exports.updateBioSchool = exports.updateBioUserSchool = exports.updateBio = exports.updateBioUser = void 0;
+exports.searchBioUserState = exports.searchBioUserSchoolInfo = exports.checkIsUserVerified = exports.getBioUsersState = exports.getBioUserSchoolByUsername = exports.getBioUserByUsername = exports.searchBioUsersSchool = exports.getTotalVerifyingUsers = exports.getBioUserPastSchools = exports.getBioUsersSchool = exports.getBioUsers = exports.getBioUser = exports.getBioUserBank = exports.approveUser = exports.updateBioUserBank = exports.updateBioUserSettings = exports.updateBioSchool = exports.updateBioUserSchool = exports.updateBio = exports.updateBioUser = void 0;
 const bioUser_1 = require("../../models/users/bioUser");
 const fileUpload_1 = require("../../utils/fileUpload");
 const app_1 = require("../../app");
@@ -486,6 +486,16 @@ const getBioUsers = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
     }
 });
 exports.getBioUsers = getBioUsers;
+const getBioUsersSchool = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const result = yield (0, query_1.queryData)(bioUserSchoolInfo_1.BioUserSchoolInfo, req);
+        res.status(200).json(result);
+    }
+    catch (error) {
+        (0, errorHandler_1.handleError)(res, undefined, undefined, error);
+    }
+});
+exports.getBioUsersSchool = getBioUsersSchool;
 const getBioUserPastSchools = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const pastSchools = yield bioUserSchoolInfo_1.PastSchool.find({

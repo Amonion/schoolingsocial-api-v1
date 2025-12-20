@@ -4,15 +4,15 @@ const upload = multer()
 
 import {
   getBioUserPastSchools,
-  getBioUsers,
   getBioUserSchoolByUsername,
+  getBioUsersSchool,
   searchBioUserSchoolInfo,
   searchBioUsersSchool,
   updateBioUserSchool,
 } from '../../controllers/users/bioUserController'
 
 const router = express.Router()
-router.route('/').get(getBioUsers)
+router.route('/').get(getBioUsersSchool)
 
 router.route('/search').get(searchBioUsersSchool)
 router.route('/:username').get(getBioUserSchoolByUsername)

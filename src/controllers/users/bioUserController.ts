@@ -7,6 +7,7 @@ import { handleError } from '../../utils/errorHandler'
 import { School } from '../../models/school/schoolModel'
 import {
   BioUserSchoolInfo,
+  IBioUserSchoolInfo,
   IPastSchool,
   PastSchool,
 } from '../../models/users/bioUserSchoolInfo'
@@ -595,6 +596,18 @@ export const getBioUsers = async (
 ): Promise<void> => {
   try {
     const result = await queryData<IBioUser>(BioUser, req)
+    res.status(200).json(result)
+  } catch (error) {
+    handleError(res, undefined, undefined, error)
+  }
+}
+
+export const getBioUsersSchool = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
+  try {
+    const result = await queryData<IBioUserSchoolInfo>(BioUserSchoolInfo, req)
     res.status(200).json(result)
   } catch (error) {
     handleError(res, undefined, undefined, error)
