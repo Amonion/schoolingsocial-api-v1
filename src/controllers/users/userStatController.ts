@@ -29,28 +29,49 @@ export const updateVisit = async (data: IUserData) => {
     return
   }
 
-  const user = await User.findOne({ username: data.username })
   const bioUserState = await BioUserState.findOne({ bioUserId: data.bioUserId })
   const bioUser = await BioUser.findById(data.bioUserId)
-  const bioUserSchoolInfo = await BioUserSchoolInfo.findOne({
-    bioUserId: data.bioUserId,
-  })
 
   let staff = null
   if (data.status === 'Staff' && bioUser) {
     staff = await Staff.findOne({ bioUserUsername: bioUser.bioUserUsername })
   }
-
   await UserStatus.create(data)
-
   if (bioUser) {
     io.emit(`update_state_${bioUser._id}`, {
       bioUserState,
       staff,
-      user,
-      bioUser,
-      bioUserSchoolInfo,
     })
+  }
+}
+
+export const getUserDetails = async (
+  req: Request,
+  res: Response
+): Promise<Response | void> => {
+  try {
+    const user = await User.findOne({ bioUserId: req.params.id })
+    const bioUserState = await BioUserState.findOne({
+      bioUserId: req.params.id,
+    })
+    const bioUserSchoolInfo = await BioUserSchoolInfo.findOne({
+      bioUserId: req.params.id,
+    })
+    const bioUser = await BioUser.findById(req.params.id)
+    let staff = null
+    if (user.status === 'Staff' && bioUser) {
+      staff = await Staff.findOne({ bioUserUsername: bioUser.bioUserUsername })
+    }
+
+    res.status(200).json({
+      user,
+      bioUserState,
+      bioUserSchoolInfo,
+      bioUser,
+      staff,
+    })
+  } catch (error) {
+    handleError(res, undefined, undefined, error)
   }
 }
 
@@ -154,7 +175,6 @@ export const getUsersStat = async (
   }
 }
 
-//-----------------Schools--------------------//
 export const getSchoolStat = async (
   req: Request,
   res: Response

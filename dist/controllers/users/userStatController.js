@@ -9,7 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getSchoolStat = exports.getUsersStat = exports.updateVisit = void 0;
+exports.getSchoolStat = exports.getUsersStat = exports.getUserDetails = exports.updateVisit = void 0;
 const usersStatMode_1 = require("../../models/users/usersStatMode");
 const app_1 = require("../../app");
 const errorHandler_1 = require("../../utils/errorHandler");
@@ -25,12 +25,8 @@ const updateVisit = (data) => __awaiter(void 0, void 0, void 0, function* () {
     if (!data.ip || data.ip === '') {
         return;
     }
-    const user = yield user_1.User.findOne({ username: data.username });
     const bioUserState = yield bioUserState_1.BioUserState.findOne({ bioUserId: data.bioUserId });
     const bioUser = yield bioUser_1.BioUser.findById(data.bioUserId);
-    const bioUserSchoolInfo = yield bioUserSchoolInfo_1.BioUserSchoolInfo.findOne({
-        bioUserId: data.bioUserId,
-    });
     let staff = null;
     if (data.status === 'Staff' && bioUser) {
         staff = yield staffModel_1.Staff.findOne({ bioUserUsername: bioUser.bioUserUsername });
@@ -40,13 +36,37 @@ const updateVisit = (data) => __awaiter(void 0, void 0, void 0, function* () {
         app_1.io.emit(`update_state_${bioUser._id}`, {
             bioUserState,
             staff,
-            user,
-            bioUser,
-            bioUserSchoolInfo,
         });
     }
 });
 exports.updateVisit = updateVisit;
+const getUserDetails = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const user = yield user_1.User.findOne({ bioUserId: req.params.id });
+        const bioUserState = yield bioUserState_1.BioUserState.findOne({
+            bioUserId: req.params.id,
+        });
+        const bioUserSchoolInfo = yield bioUserSchoolInfo_1.BioUserSchoolInfo.findOne({
+            bioUserId: req.params.id,
+        });
+        const bioUser = yield bioUser_1.BioUser.findById(req.params.id);
+        let staff = null;
+        if (user.status === 'Staff' && bioUser) {
+            staff = yield staffModel_1.Staff.findOne({ bioUserUsername: bioUser.bioUserUsername });
+        }
+        res.status(200).json({
+            user,
+            bioUserState,
+            bioUserSchoolInfo,
+            bioUser,
+            staff,
+        });
+    }
+    catch (error) {
+        (0, errorHandler_1.handleError)(res, undefined, undefined, error);
+    }
+});
+exports.getUserDetails = getUserDetails;
 const getUsersStat = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const now = new Date();
@@ -142,7 +162,6 @@ const getUsersStat = (req, res) => __awaiter(void 0, void 0, void 0, function* (
     }
 });
 exports.getUsersStat = getUsersStat;
-//-----------------Schools--------------------//
 const getSchoolStat = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const now = new Date();

@@ -20,6 +20,7 @@ import {
   suspendUsers,
   unSuspendUsers,
 } from '../../controllers/users/userController'
+import { getUserDetails } from '../../controllers/users/userStatController'
 
 const router = express.Router()
 router.route('/create-account').post(upload.any(), createUserAccount)
@@ -36,6 +37,7 @@ router
   .get(getUserSettings)
   .patch(upload.any(), updateUserSettings)
 
+router.route('/details/:id').get(getUserDetails)
 router.route('/accounts').get(searchAccounts)
 router.route('/:username').get(getAUser).patch(upload.any(), updateUser)
 router.route('/').get(getUsers).post(upload.any(), createUser)
