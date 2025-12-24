@@ -67,15 +67,15 @@ const createComment = (req, res) => __awaiter(void 0, void 0, void 0, function* 
         else {
             const post = yield postModel_1.Post.findById(data.postId);
             const score = (0, computation_1.postScore)('comments', post.score);
-            if (data.replyToId) {
-                yield postModel_1.Post.updateOne({ _id: data.replyToId }, {
-                    $inc: { replies: 1, score: 3 },
-                });
-            }
-            else if (data.replyToId !== data.postId) {
-                yield postModel_1.Post.findByIdAndUpdate(data.postId, {
+            if (data.replyToId !== data.postId) {
+                yield commentModel_1.Comment.findByIdAndUpdate(data.replyToId, {
                     $inc: { replies: 1 },
                     $set: { score: score },
+                });
+            }
+            else {
+                yield postModel_1.Post.updateOne({ _id: data.replyToId }, {
+                    $inc: { replies: 1, score: 3 },
                 });
             }
             yield statModel_1.View.create({

@@ -62,18 +62,18 @@ export const createComment = async (req: Request, res: Response) => {
       const post = await Post.findById(data.postId)
       const score = postScore('comments', post.score)
 
-      if (data.replyToId) {
+      if (data.replyToId !== data.postId) {
+        await Comment.findByIdAndUpdate(data.replyToId, {
+          $inc: { replies: 1 },
+          $set: { score: score },
+        })
+      } else {
         await Post.updateOne(
           { _id: data.replyToId },
           {
             $inc: { replies: 1, score: 3 },
           }
         )
-      } else if (data.replyToId !== data.postId) {
-        await Post.findByIdAndUpdate(data.postId, {
-          $inc: { replies: 1 },
-          $set: { score: score },
-        })
       }
       await View.create({
         postId: post._id,
