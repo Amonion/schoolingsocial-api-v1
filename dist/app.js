@@ -58,6 +58,7 @@ const geoipMiddleware_1 = require("./middlewares/geoipMiddleware");
 const usersSocket_1 = require("./routes/socket/usersSocket");
 const momentController_1 = require("./controllers/post/momentController");
 const bioUserController_1 = require("./controllers/users/bioUserController");
+const competitionController_1 = require("./controllers/users/competitionController");
 dotenv_1.default.config();
 const app = (0, express_1.default)();
 exports.app = app;
@@ -97,7 +98,7 @@ const io = new socket_io_1.Server(server, {
 });
 exports.io = io;
 io.on('connection', (socket) => {
-    console.log(`✅ User connected: ${socket.id}`);
+    // console.log(`✅ User connected: ${socket.id}`)
     socket.on('message', (data) => __awaiter(void 0, void 0, void 0, function* () {
         switch (data.to) {
             case 'chat':
@@ -129,8 +130,8 @@ io.on('connection', (socket) => {
             case 'users':
                 yield (0, usersSocket_1.UsersSocket)(data);
                 break;
-            case 'online':
-                // await updateVisit(data)
+            case 'test':
+                yield (0, competitionController_1.selectAnswer)(data);
                 break;
             case 'verifying_users':
                 yield (0, bioUserController_1.getTotalVerifyingUsers)(data.user);

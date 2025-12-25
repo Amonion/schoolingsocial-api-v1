@@ -33,23 +33,24 @@ var __importStar = (this && this.__importStar) || (function () {
     };
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.Attempt = exports.Participant = exports.UserObjective = exports.UserTestExam = void 0;
+exports.Participant = exports.LastUserObjective = exports.UserObjective = exports.UserTestExam = void 0;
 const mongoose_1 = __importStar(require("mongoose"));
 const UserTestExamSchema = new mongoose_1.Schema({
     bioUserUsername: { type: String },
     bioUserId: { type: String },
-    bioUserPicture: { type: String, default: '' },
-    paperId: { type: String, default: '' },
-    bioUserDisplayName: { type: String, default: '' },
-    title: { type: String, default: '' },
-    instruction: { type: String, default: '' },
-    type: { type: String, default: '' },
+    bioUserPicture: { type: String },
+    paperId: { type: String },
+    bioUserDisplayName: { type: String },
+    title: { type: String },
+    instruction: { type: String },
+    type: { type: String },
     questions: { type: Number, default: 0 },
     rate: { type: Number, default: 0 },
     accuracy: { type: Number, default: 0 },
     metric: { type: Number, default: 0 },
     attempts: { type: Number, default: 0 },
     isFirstTime: { type: Boolean, default: false },
+    isActive: { type: Boolean, default: false },
     attemptedQuestions: { type: Number, default: 0 },
     totalCorrectAnswer: { type: Number, default: 0 },
     started: { type: Number, default: 0 },
@@ -62,7 +63,9 @@ exports.UserTestExam = mongoose_1.default.model('UserTestExam', UserTestExamSche
 const UserObjectiveSchema = new mongoose_1.Schema({
     bioUserId: { type: String },
     paperId: { type: String },
+    objectiveId: { type: String },
     isClicked: { type: Boolean, default: false },
+    isCorrect: { type: Boolean, default: false },
     question: { type: String },
     options: { type: Array, default: [] },
     createdAt: { type: Date, default: Date.now },
@@ -70,6 +73,18 @@ const UserObjectiveSchema = new mongoose_1.Schema({
     timestamps: true,
 });
 exports.UserObjective = mongoose_1.default.model('UserObjective', UserObjectiveSchema);
+const LastUserObjectiveSchema = new mongoose_1.Schema({
+    bioUserId: { type: String },
+    paperId: { type: String },
+    objectiveId: { type: String },
+    isClicked: { type: Boolean, default: false },
+    question: { type: String },
+    options: { type: Array, default: [] },
+    createdAt: { type: Date, default: Date.now },
+}, {
+    timestamps: true,
+});
+exports.LastUserObjective = mongoose_1.default.model('LastUserObjective', LastUserObjectiveSchema);
 const ParticipantSchema = new mongoose_1.Schema({
     bioUserId: { type: String },
     bioUserUsername: { type: String },
@@ -82,13 +97,3 @@ const ParticipantSchema = new mongoose_1.Schema({
     timestamps: true,
 });
 exports.Participant = mongoose_1.default.model('Participant', ParticipantSchema);
-const AttemptSchema = new mongoose_1.Schema({
-    userId: { type: String },
-    paperId: { type: String, default: '' },
-    username: { type: String, default: false },
-    attempts: { type: Number, default: 0 },
-    createdAt: { type: Date, default: Date.now },
-}, {
-    timestamps: true,
-});
-exports.Attempt = mongoose_1.default.model('Attempt', AttemptSchema);

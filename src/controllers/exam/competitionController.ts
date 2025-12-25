@@ -3,7 +3,6 @@ import { handleError } from '../../utils/errorHandler'
 import { Exam, League, Paper } from '../../models/exam/competitionModel'
 import { IExam, ILeague, IPaper } from '../../utils/teamInterface'
 import { queryData, updateItem, createItem, search } from '../../utils/query'
-import { Attempt } from '../../models/users/competitionModel'
 import { uploadFilesToS3 } from '../../utils/fileUpload'
 import { IObjective, Objective } from '../../models/exam/objectiveModel'
 
@@ -70,15 +69,11 @@ export const getExamById = async (
 ): Promise<Response | void> => {
   try {
     const item = await Exam.findById(req.params.id)
-    const attempt = await Attempt.findOne({
-      paperId: req.params.id,
-      userId: req.query.userId,
-    })
 
     if (!item) {
       return res.status(404).json({ message: 'Exam not found' })
     }
-    res.status(200).json({ exam: item, attempt: attempt?.attempts })
+    res.status(200).json({ exam: item })
   } catch (error) {
     handleError(res, undefined, undefined, error)
   }

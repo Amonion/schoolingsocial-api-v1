@@ -51,6 +51,7 @@ import { UsersSocket } from './routes/socket/usersSocket'
 import { createMoment, updateMoment } from './controllers/post/momentController'
 import { getTotalVerifyingUsers } from './controllers/users/bioUserController'
 import { updateVisit } from './controllers/users/userStatController'
+import { selectAnswer } from './controllers/users/competitionController'
 
 dotenv.config()
 
@@ -101,7 +102,7 @@ const io = new Server(server, {
 })
 
 io.on('connection', (socket) => {
-  console.log(`✅ User connected: ${socket.id}`)
+  // console.log(`✅ User connected: ${socket.id}`)
 
   socket.on('message', async (data) => {
     switch (data.to) {
@@ -134,8 +135,8 @@ io.on('connection', (socket) => {
       case 'users':
         await UsersSocket(data)
         break
-      case 'online':
-        // await updateVisit(data)
+      case 'test':
+        await selectAnswer(data)
         break
       case 'verifying_users':
         await getTotalVerifyingUsers(data.user)

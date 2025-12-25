@@ -9,7 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.searchExamInfo = exports.updateExam = exports.getExams = exports.getUserExam = exports.getExamById = exports.initExam = exports.submitTest = void 0;
+exports.searchExamInfo = exports.updateExam = exports.getExams = exports.getUserExam = exports.getExamById = exports.initExam = exports.selectAnswer = exports.submitTest = void 0;
 const errorHandler_1 = require("../../utils/errorHandler");
 const competitionModel_1 = require("../../models/exam/competitionModel");
 const query_1 = require("../../utils/query");
@@ -17,84 +17,34 @@ const competitionModel_2 = require("../../models/users/competitionModel");
 const user_1 = require("../../models/users/user");
 const objectiveModel_1 = require("../../models/exam/objectiveModel");
 const bioUserState_1 = require("../../models/users/bioUserState");
+const app_1 = require("../../app");
 //-----------------Exam--------------------//
 const submitTest = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const paperId = req.body.paperId;
         const bioUserId = req.body.bioUserId;
-        const bioUserUsername = req.body.bioUserUsername;
-        const bioUserPicture = req.body.bioUserPicture;
-        const bioUserDisplayName = req.body.bioUserDisplayName;
-        const started = Number(req.body.started);
         const ended = Number(req.body.ended);
-        // const attempts = Number(req.body.attempts);
-        const instruction = req.body.instruction;
-        const questions = req.body.questions ? JSON.parse(req.body.questions) : [];
+        const started = Number(req.body.started);
+        const questions = yield competitionModel_2.UserObjective.find({ paperId, bioUserId });
         const rate = (1000 * questions.length) / (ended - started);
-        let mainObjective = yield objectiveModel_1.Objective.find({ paperId: paperId });
         const paper = yield competitionModel_2.UserTestExam.findOne({
             paperId: paperId,
             bioUserId: bioUserId,
         });
         const attempts = !paper || (paper === null || paper === void 0 ? void 0 : paper.isFirstTime) ? 1 : Number(paper === null || paper === void 0 ? void 0 : paper.attempts) + 1;
-        let correctAnswer = 0;
-        for (let i = 0; i < questions.length; i++) {
-            const el = questions[i];
-            for (let x = 0; x < el.options.length; x++) {
-                const opt = el.options[x];
-                if (opt.isSelected === opt.isClicked &&
-                    opt.isSelected &&
-                    opt.isClicked) {
-                    correctAnswer++;
-                }
-            }
-        }
-        const accuracy = correctAnswer / mainObjective.length;
+        const correctAnswer = questions.filter((item) => item.isCorrect).length;
+        const accuracy = correctAnswer / questions.length;
         const metric = accuracy * rate;
-        const updatedQuestions = [];
-        for (let i = 0; i < mainObjective.length; i++) {
-            const el = mainObjective[i];
-            const objIndex = questions.findIndex((obj) => obj._id == el._id);
-            if (objIndex !== -1) {
-                const obj = {
-                    isClicked: questions[objIndex].isClicked,
-                    paperId: paperId,
-                    bioUserId: bioUserId,
-                    question: el.question,
-                    options: questions[objIndex].options,
-                };
-                updatedQuestions.push(obj);
-            }
-            else {
-                const obj = {
-                    isClicked: false,
-                    paperId: paperId,
-                    bioUserId: bioUserId,
-                    question: el.question,
-                    options: el.options,
-                };
-                updatedQuestions.push(obj);
-            }
-        }
         const exam = yield competitionModel_2.UserTestExam.findOneAndUpdate({
             paperId,
             bioUserId,
         }, {
             $set: {
-                paperId,
-                bioUserId,
-                bioUserUsername,
-                bioUserDisplayName,
-                bioUserPicture,
-                started,
                 ended,
                 attempts,
                 rate,
                 accuracy,
                 metric,
-                instruction,
-                isFirstTime: false,
-                questions: mainObjective.length,
                 attemptedQuestions: questions.length,
                 totalCorrectAnswer: correctAnswer,
             },
@@ -102,20 +52,27 @@ const submitTest = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
             new: true,
             upsert: true,
         });
-        const bioUserState = yield bioUserState_1.BioUserState.findOneAndUpdate({ bioUserId: bioUserId }, { $inc: { examAttempts: (paper === null || paper === void 0 ? void 0 : paper.isFirstTime) ? 0 : 1 } }, { new: true, upsert: true });
-        yield competitionModel_2.UserObjective.deleteMany({ bioUserId: bioUserId, paperId: paperId });
-        yield competitionModel_2.UserObjective.insertMany(updatedQuestions);
-        if (!paper) {
-            yield competitionModel_1.Exam.updateOne({ _id: paperId }, {
-                $inc: {
-                    participants: 1,
-                },
+        const docs = yield competitionModel_2.UserObjective.find({ paperId, bioUserId });
+        if (docs.length) {
+            const bulk = docs.map((doc) => {
+                const newQuestions = doc.options.map((q) => (Object.assign(Object.assign({}, q), { isClicked: false, isSelected: false })));
+                return {
+                    updateOne: {
+                        filter: { _id: doc._id },
+                        update: { $set: { questions: newQuestions } },
+                    },
+                };
             });
+            yield competitionModel_2.UserObjective.bulkWrite(bulk);
         }
-        const result = yield (0, query_1.queryData)(competitionModel_2.UserObjective, req);
+        yield competitionModel_2.LastUserObjective.deleteMany({
+            bioUserId: bioUserId,
+            paperId: paperId,
+        });
+        yield competitionModel_2.LastUserObjective.insertMany(questions);
+        const result = yield (0, query_1.queryData)(competitionModel_2.LastUserObjective, req);
         const data = {
             exam,
-            bioUserState,
             attempt: Number(exam === null || exam === void 0 ? void 0 : exam.attempts),
             results: result.results,
             message: 'Exam submitted successfull',
@@ -128,36 +85,44 @@ const submitTest = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
     }
 });
 exports.submitTest = submitTest;
+const selectAnswer = (body) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        let mainObjective = yield objectiveModel_1.Objective.findById(body.questionId);
+        if (mainObjective) {
+            let selectedOption = body.option;
+            const options = mainObjective.options.map((item) => item.index === selectedOption.index
+                ? Object.assign(Object.assign({}, selectedOption), { isSelected: item.isSelected, isClicked: item.value === selectedOption.value, objectiveId: body.questionId }) : item);
+            const paper = yield competitionModel_2.UserObjective.findOneAndUpdate({ objectiveId: body.questionId }, { $set: { options: options } }, { new: true, upsert: true });
+            app_1.io.emit(`test_${body.bioUserId}`, {
+                paper,
+            });
+        }
+    }
+    catch (error) {
+        console.log(error);
+    }
+});
+exports.selectAnswer = selectAnswer;
 const initExam = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const paperId = req.body.paperId;
-        const userId = req.body.userId;
-        const username = req.body.username;
-        const picture = req.body.picture;
-        const displayName = req.body.displayName;
-        const started = Number(req.body.started);
-        const instruction = req.body.instruction;
-        let questions = yield objectiveModel_1.Objective.countDocuments({ paperId: paperId });
-        yield competitionModel_2.UserTestExam.findOneAndUpdate({
-            paperId,
-            userId,
-        }, {
-            $set: {
-                paperId,
-                userId,
-                username,
-                displayName,
-                picture,
-                started,
-                attempts: 1,
-                isFirstTime: true,
-                rate: 0,
-                accuracy: 0,
-                instruction,
-                questions: questions,
-                attemptedQuestions: 0,
-                totalCorrectAnswer: 0,
+        const bioUserId = req.body.bioUserId;
+        const questions = yield objectiveModel_1.Objective.find({ paperId });
+        const ops = questions.map((el) => ({
+            updateOne: {
+                filter: { paperId, bioUserId, objectiveId: el._id },
+                update: {
+                    $set: Object.assign(Object.assign({}, el.toObject()), { bioUserId: bioUserId, objectiveId: el._id }),
+                },
+                upsert: true,
             },
+        }));
+        yield competitionModel_2.UserObjective.bulkWrite(ops);
+        const exam = yield competitionModel_2.UserTestExam.findOneAndUpdate({
+            paperId,
+            bioUserId,
+        }, {
+            $set: req.body,
         }, {
             new: true,
             upsert: true,
@@ -167,9 +132,9 @@ const initExam = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
                 participants: 1,
             },
         });
-        yield bioUserState_1.BioUserState.findByIdAndUpdate(userId, { $inc: { examAttempts: 1 } }, { new: true, upsert: true });
-        yield user_1.User.updateMany({ userId: userId }, { $inc: { totalAttempts: 1 } });
-        res.status(200).json({ message: 'Exam is initialized' });
+        yield bioUserState_1.BioUserState.findByIdAndUpdate({ bioUserId: bioUserId }, { $inc: { examAttempts: 1 } }, { new: true, upsert: true });
+        yield user_1.User.updateMany({ bioUserId: bioUserId }, { $inc: { totalAttempts: 1 } });
+        res.status(200).json({ exam });
     }
     catch (error) {
         console.log(error);

@@ -1,12 +1,5 @@
 import mongoose, { Schema } from 'mongoose'
 
-export interface IAttempt extends Document {
-  username: string
-  userId: string
-  paperId: string
-  attempts: number
-}
-
 interface Option {
   index: number
   value: string
@@ -38,18 +31,19 @@ const UserTestExamSchema: Schema = new Schema(
   {
     bioUserUsername: { type: String },
     bioUserId: { type: String },
-    bioUserPicture: { type: String, default: '' },
-    paperId: { type: String, default: '' },
-    bioUserDisplayName: { type: String, default: '' },
-    title: { type: String, default: '' },
-    instruction: { type: String, default: '' },
-    type: { type: String, default: '' },
+    bioUserPicture: { type: String },
+    paperId: { type: String },
+    bioUserDisplayName: { type: String },
+    title: { type: String },
+    instruction: { type: String },
+    type: { type: String },
     questions: { type: Number, default: 0 },
     rate: { type: Number, default: 0 },
     accuracy: { type: Number, default: 0 },
     metric: { type: Number, default: 0 },
     attempts: { type: Number, default: 0 },
     isFirstTime: { type: Boolean, default: false },
+    isActive: { type: Boolean, default: false },
     attemptedQuestions: { type: Number, default: 0 },
     totalCorrectAnswer: { type: Number, default: 0 },
     started: { type: Number, default: 0 },
@@ -69,7 +63,9 @@ export interface IUserObjective extends Document {
   _id: string
   bioUserId: string
   paperId: string
+  objectiveId: string
   isClicked: boolean
+  isCorrect: boolean
   question: string
   options: Option[]
 }
@@ -78,7 +74,9 @@ const UserObjectiveSchema: Schema = new Schema(
   {
     bioUserId: { type: String },
     paperId: { type: String },
+    objectiveId: { type: String },
     isClicked: { type: Boolean, default: false },
+    isCorrect: { type: Boolean, default: false },
     question: { type: String },
     options: { type: Array, default: [] },
     createdAt: { type: Date, default: Date.now },
@@ -90,6 +88,24 @@ const UserObjectiveSchema: Schema = new Schema(
 export const UserObjective = mongoose.model<IUserObjective>(
   'UserObjective',
   UserObjectiveSchema
+)
+const LastUserObjectiveSchema: Schema = new Schema(
+  {
+    bioUserId: { type: String },
+    paperId: { type: String },
+    objectiveId: { type: String },
+    isClicked: { type: Boolean, default: false },
+    question: { type: String },
+    options: { type: Array, default: [] },
+    createdAt: { type: Date, default: Date.now },
+  },
+  {
+    timestamps: true,
+  }
+)
+export const LastUserObjective = mongoose.model<IUserObjective>(
+  'LastUserObjective',
+  LastUserObjectiveSchema
 )
 
 export interface IParticipant extends Document {
@@ -120,17 +136,3 @@ export const Participant = mongoose.model<IParticipant>(
   'Participant',
   ParticipantSchema
 )
-
-const AttemptSchema: Schema = new Schema(
-  {
-    userId: { type: String },
-    paperId: { type: String, default: '' },
-    username: { type: String, default: false },
-    attempts: { type: Number, default: 0 },
-    createdAt: { type: Date, default: Date.now },
-  },
-  {
-    timestamps: true,
-  }
-)
-export const Attempt = mongoose.model<IAttempt>('Attempt', AttemptSchema)

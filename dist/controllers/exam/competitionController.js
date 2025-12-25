@@ -13,7 +13,6 @@ exports.searchExamInfo = exports.getObjectives = exports.createObjective = expor
 const errorHandler_1 = require("../../utils/errorHandler");
 const competitionModel_1 = require("../../models/exam/competitionModel");
 const query_1 = require("../../utils/query");
-const competitionModel_2 = require("../../models/users/competitionModel");
 const fileUpload_1 = require("../../utils/fileUpload");
 const objectiveModel_1 = require("../../models/exam/objectiveModel");
 //-----------------Exam--------------------//
@@ -71,14 +70,10 @@ exports.createExam = createExam;
 const getExamById = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const item = yield competitionModel_1.Exam.findById(req.params.id);
-        const attempt = yield competitionModel_2.Attempt.findOne({
-            paperId: req.params.id,
-            userId: req.query.userId,
-        });
         if (!item) {
             return res.status(404).json({ message: 'Exam not found' });
         }
-        res.status(200).json({ exam: item, attempt: attempt === null || attempt === void 0 ? void 0 : attempt.attempts });
+        res.status(200).json({ exam: item });
     }
     catch (error) {
         (0, errorHandler_1.handleError)(res, undefined, undefined, error);
