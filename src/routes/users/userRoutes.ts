@@ -19,6 +19,7 @@ import {
   getChatUser,
   suspendUsers,
   unSuspendUsers,
+  getAccounts,
 } from '../../controllers/users/userController'
 import { getUserDetails } from '../../controllers/users/userStatController'
 
@@ -38,7 +39,8 @@ router
   .patch(upload.any(), updateUserSettings)
 
 router.route('/details/:id').get(getUserDetails)
-router.route('/accounts').get(searchAccounts)
+router.route('/accounts').get(getAccounts)
+router.route('/accounts/search').get(searchAccounts)
 router.route('/:username').get(getAUser).patch(upload.any(), updateUser)
 router.route('/').get(getUsers).post(upload.any(), createUser)
 ///////////// NEW USER ROUTES ////////////////

@@ -12,7 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.followUserAccount = exports.getChatUser = exports.getExistingUsername = exports.deleteUser = exports.getUsers = exports.deleteMyData = exports.searchAccounts = exports.getUserSettings = exports.updateUserSettings = exports.unSuspendUsers = exports.suspendUsers = exports.updateUser = exports.getAUser = exports.createUserAccount = exports.createUser = void 0;
+exports.followUserAccount = exports.getChatUser = exports.getExistingUsername = exports.deleteUser = exports.getUsers = exports.deleteMyData = exports.searchAccounts = exports.getUserSettings = exports.updateUserSettings = exports.unSuspendUsers = exports.suspendUsers = exports.updateUser = exports.getAccounts = exports.getAUser = exports.createUserAccount = exports.createUser = void 0;
 const errorHandler_1 = require("../../utils/errorHandler");
 const query_1 = require("../../utils/query");
 const fileUpload_1 = require("../../utils/fileUpload");
@@ -147,6 +147,44 @@ const getAUser = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     }
 });
 exports.getAUser = getAUser;
+const getAccounts = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const followerId = req.query.myId;
+        delete req.query.myId;
+        const response = yield (0, query_1.queryData)(user_1.User, req);
+        const users = response.results;
+        const count = response.count;
+        const usersIds = users.map((user) => user._id.toString());
+        const userObjects = usersIds.map((userId) => ({ userId, followerId }));
+        const queryConditions = userObjects.map(({ userId, followerId }) => ({
+            userId,
+            followerId,
+        }));
+        const follows = yield postStateModel_1.Follower.find({ $or: queryConditions });
+        let updatedUsers = [];
+        if (follows.length) {
+            for (let i = 0; i < users.length; i++) {
+                const el = users[i];
+                for (let x = 0; x < follows.length; x++) {
+                    const f = follows[x];
+                    if (f.followerId === followerId && f.userId === el._id.toString()) {
+                        el.followed = true;
+                    }
+                }
+                updatedUsers.push(el);
+            }
+        }
+        else {
+            updatedUsers = users;
+        }
+        res.status(200).json({ results: updatedUsers, count });
+    }
+    catch (error) {
+        console.log(error);
+        (0, errorHandler_1.handleError)(res, undefined, undefined, error);
+    }
+});
+exports.getAccounts = getAccounts;
 const updateUser = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const uploadedFiles = yield (0, fileUpload_1.uploadFilesToS3)(req);

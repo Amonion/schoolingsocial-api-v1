@@ -161,6 +161,51 @@ export const getAUser = async (
   }
 }
 
+export const getAccounts = async (
+  req: Request,
+  res: Response
+): Promise<Response | void> => {
+  try {
+    const followerId = req.query.myId
+    delete req.query.myId
+    const response = await queryData(User, req)
+
+    const users = response.results
+    const count = response.count
+    const usersIds = users.map((user) => user._id.toString())
+
+    const userObjects = usersIds.map((userId) => ({ userId, followerId }))
+    const queryConditions = userObjects.map(({ userId, followerId }) => ({
+      userId,
+      followerId,
+    }))
+
+    const follows = await Follower.find({ $or: queryConditions })
+
+    let updatedUsers = []
+
+    if (follows.length) {
+      for (let i = 0; i < users.length; i++) {
+        const el = users[i]
+        for (let x = 0; x < follows.length; x++) {
+          const f = follows[x]
+          if (f.followerId === followerId && f.userId === el._id.toString()) {
+            el.followed = true
+          }
+        }
+        updatedUsers.push(el)
+      }
+    } else {
+      updatedUsers = users
+    }
+
+    res.status(200).json({ results: updatedUsers, count })
+  } catch (error) {
+    console.log(error)
+    handleError(res, undefined, undefined, error)
+  }
+}
+
 export const updateUser = async (req: Request, res: Response) => {
   try {
     const uploadedFiles = await uploadFilesToS3(req)
@@ -332,6 +377,7 @@ export const getExistingUsername = async (
     handleError(res, undefined, undefined, error)
   }
 }
+
 export const getChatUser = async (
   req: Request,
   res: Response

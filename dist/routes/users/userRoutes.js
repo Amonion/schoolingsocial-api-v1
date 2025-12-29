@@ -23,7 +23,8 @@ router
     .get(userController_1.getUserSettings)
     .patch(upload.any(), userController_1.updateUserSettings);
 router.route('/details/:id').get(userStatController_1.getUserDetails);
-router.route('/accounts').get(userController_1.searchAccounts);
+router.route('/accounts').get(userController_1.getAccounts);
+router.route('/accounts/search').get(userController_1.searchAccounts);
 router.route('/:username').get(userController_1.getAUser).patch(upload.any(), userController_1.updateUser);
 router.route('/').get(userController_1.getUsers).post(upload.any(), userController_1.createUser);
 ///////////// NEW USER ROUTES ////////////////
