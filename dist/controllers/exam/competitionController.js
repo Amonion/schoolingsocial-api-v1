@@ -15,6 +15,7 @@ const competitionModel_1 = require("../../models/exam/competitionModel");
 const query_1 = require("../../utils/query");
 const fileUpload_1 = require("../../utils/fileUpload");
 const objectiveModel_1 = require("../../models/exam/objectiveModel");
+const competitionModel_2 = require("../../models/users/competitionModel");
 //-----------------Exam--------------------//
 const createExam = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     // createItem(req, res, Exam, "Exam was created successfully");
@@ -216,8 +217,11 @@ const createObjective = (req, res) => __awaiter(void 0, void 0, void 0, function
 exports.createObjective = createObjective;
 const getObjectives = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
+        const lastQuestions = yield (0, query_1.queryData)(competitionModel_2.LastUserObjective, req);
+        const { results } = lastQuestions;
+        delete req.query.bioUserId;
         const result = yield (0, query_1.queryData)(objectiveModel_1.Objective, req);
-        res.status(200).json(result);
+        res.status(200).json(Object.assign(Object.assign({}, result), { lastQuestions: results }));
     }
     catch (error) {
         (0, errorHandler_1.handleError)(res, undefined, undefined, error);

@@ -162,9 +162,11 @@ const getUserExam = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
             paperId: req.query.paperId,
         });
         const result = yield (0, query_1.queryData)(competitionModel_2.UserObjective, req);
+        const last = yield (0, query_1.queryData)(competitionModel_2.LastUserObjective, req);
         const data = {
             exam,
             results: result.results,
+            last: result.results,
         };
         res.status(200).json(data);
     }

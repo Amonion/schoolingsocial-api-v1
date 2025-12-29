@@ -5,6 +5,10 @@ import { IExam, ILeague, IPaper } from '../../utils/teamInterface'
 import { queryData, updateItem, createItem, search } from '../../utils/query'
 import { uploadFilesToS3 } from '../../utils/fileUpload'
 import { IObjective, Objective } from '../../models/exam/objectiveModel'
+import {
+  IUserObjective,
+  LastUserObjective,
+} from '../../models/users/competitionModel'
 
 //-----------------Exam--------------------//
 export const createExam = async (
@@ -248,8 +252,14 @@ export const createObjective = async (
 
 export const getObjectives = async (req: Request, res: Response) => {
   try {
+    const lastQuestions = await queryData<IUserObjective>(
+      LastUserObjective,
+      req
+    )
+    const { results } = lastQuestions
+    delete req.query.bioUserId
     const result = await queryData<IObjective>(Objective, req)
-    res.status(200).json(result)
+    res.status(200).json({ ...result, lastQuestions: results })
   } catch (error) {
     handleError(res, undefined, undefined, error)
   }

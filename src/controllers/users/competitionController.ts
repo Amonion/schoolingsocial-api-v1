@@ -233,9 +233,11 @@ export const getUserExam = async (req: Request, res: Response) => {
       paperId: req.query.paperId,
     })
     const result = await queryData<IUserObjective>(UserObjective, req)
+    const last = await queryData<IUserObjective>(LastUserObjective, req)
     const data = {
       exam,
       results: result.results,
+      last: result.results,
     }
     res.status(200).json(data)
   } catch (error) {
