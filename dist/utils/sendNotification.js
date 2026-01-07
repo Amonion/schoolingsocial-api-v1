@@ -21,11 +21,11 @@ const sendSocialNotification = (templateName, data) => __awaiter(void 0, void 0,
         throw new Error(`Notification template '${templateName}' not found.`);
     }
     const click_here = templateName === 'friend_request'
-        ? `<a href="/friends/chat/${data.senderUsername}" class="text-[var(--custom)]">click here</a>`
+        ? `<a href="/chat/${data.senderUsername}" class="text-[var(--custom)]">click here</a>`
         : '';
     const content = notificationTemp.content
         .replace('{{receiver_name}}', data.receiverName)
-        .replace('{{receiverer_username}}', data.receiverUsername)
+        .replace('{{receiver_username}}', data.receiverUsername)
         .replace('{{sender_username}}', data.senderUsername)
         .replace('{{sender_name}}', data.senderName)
         .replace('{{gender}}', data.gender)

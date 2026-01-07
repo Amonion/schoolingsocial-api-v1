@@ -39,6 +39,7 @@ const postModel_1 = require("../../models/post/postModel");
 const sendNotification_1 = require("../../utils/sendNotification");
 const placeModel_1 = require("../../models/place/placeModel");
 const officeModel_1 = require("../../models/utility/officeModel");
+const chatModel_1 = require("../../models/message/chatModel");
 const updateBioUser = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     var _a, _b;
     switch (req.body.action) {
@@ -366,6 +367,31 @@ const approveUser = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
             bioUserId: bioUser._id,
             isVerified: true,
         });
+        yield chatModel_1.Friend.updateMany({
+            $or: [
+                { senderBioUserId: bioUser._id },
+                { receiverBioUserId: bioUser._id },
+            ],
+        }, [
+            {
+                $set: {
+                    isSenderVerified: {
+                        $cond: [
+                            { $eq: ['$senderBioUserId', bioUser._id] },
+                            true,
+                            '$isSenderVerified',
+                        ],
+                    },
+                    isReceiverVerified: {
+                        $cond: [
+                            { $eq: ['$receiverBioUserId', bioUser._id] },
+                            true,
+                            '$isReceiverVerified',
+                        ],
+                    },
+                },
+            },
+        ]);
         yield postModel_1.Post.updateMany({ bioUserId: bioUser._id }, req.body);
         const bioUserSchoolInfo = yield bioUserSchoolInfo_1.BioUserSchoolInfo.findOneAndUpdate({ bioUserUsername: req.params.username }, req.body, {
             new: true,

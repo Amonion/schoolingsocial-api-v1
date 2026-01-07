@@ -6,6 +6,7 @@ import {
   createChatWithFile,
   deleteChats,
   getChats,
+  getFriend,
   getFriends,
   updateChatWithFile,
 } from '../../controllers/message/chatController'
@@ -18,6 +19,7 @@ router
   .post(upload.any(), createChatWithFile)
   .patch(upload.any(), updateChatWithFile)
 router.route('/friends').get(getFriends)
+router.route('/friends/:username').get(getFriend)
 
 router.route('/mass-delete').post(upload.any(), deleteChats)
 

@@ -14,5 +14,6 @@ router
     .post(upload.any(), chatController_1.createChatWithFile)
     .patch(upload.any(), chatController_1.updateChatWithFile);
 router.route('/friends').get(chatController_1.getFriends);
+router.route('/friends/:username').get(chatController_1.getFriend);
 router.route('/mass-delete').post(upload.any(), chatController_1.deleteChats);
 exports.default = router;

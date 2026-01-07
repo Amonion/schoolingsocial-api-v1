@@ -400,6 +400,8 @@ export const getChatUser = async (
           username: user.username,
           picture: user.picture,
           displayName: user.displayName,
+          bioUserId: user.bioUserId,
+          isVerified: user.isVerified,
           _id: user._id,
         },
       })

@@ -7,8 +7,8 @@ interface NotificationData {
   receiverUsername: string
   senderPicture: string
   receiverPicture: string
-  senderName: string
-  receiverName: string
+  senderName?: string
+  receiverName?: string
   content?: string
   gender?: string
   from?: string
@@ -29,12 +29,12 @@ export const sendSocialNotification = async (
 
   const click_here =
     templateName === 'friend_request'
-      ? `<a href="/friends/chat/${data.senderUsername}" class="text-[var(--custom)]">click here</a>`
+      ? `<a href="/chat/${data.senderUsername}" class="text-[var(--custom)]">click here</a>`
       : ''
 
   const content = notificationTemp.content
     .replace('{{receiver_name}}', data.receiverName)
-    .replace('{{receiverer_username}}', data.receiverUsername)
+    .replace('{{receiver_username}}', data.receiverUsername)
     .replace('{{sender_username}}', data.senderUsername)
     .replace('{{sender_name}}', data.senderName)
     .replace('{{gender}}', data.gender)

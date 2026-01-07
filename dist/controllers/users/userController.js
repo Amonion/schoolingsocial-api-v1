@@ -356,6 +356,8 @@ const getChatUser = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
                     username: user.username,
                     picture: user.picture,
                     displayName: user.displayName,
+                    bioUserId: user.bioUserId,
+                    isVerified: user.isVerified,
                     _id: user._id,
                 },
             });

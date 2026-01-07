@@ -26,6 +26,7 @@ export interface IChat extends Document {
   from: string
   content: string
   status: string
+  friendChat: IFriend
   isReadUsernames: string[]
   isSavedUsernames: string[]
   action: string
@@ -83,57 +84,42 @@ const ChatSchema: Schema = new Schema(
 )
 export const Chat = mongoose.model<IChat>('Chat', ChatSchema)
 
-interface UnreadMessage {
-  username: string
-  unread: number
-}
-
 export interface IFriend extends Document {
   _id: string
   content: string
-  senderUsername: string
-  senderDisplayName: string
-  senderPicture: string
-  receiverDisplayName: string
-  receiverUsername: string
-  receiverPicture: string
+  username: string
+  bioUserId: string
+  displayName: string
+  picture: string
   isFriends: boolean
-  senderOnline: boolean
-  receiverOnline: boolean
+  isOnline: boolean
+  isVerified: boolean
   connection: string
   status: string
   contentType: string
-  senderTime: Date
-  receiverTime: Date
+  time: Date
   createdAt: Date
-  updatedAt: Date
   timeNumber: number
-  unreadMessages: UnreadMessage[]
-  totalUnread: number
-  unreadSender: number
-  unreadReceiver: number
+  unread: number
 }
 
 const FriendSchema: Schema = new Schema(
   {
-    senderUsername: { type: String },
-    senderDisplayName: { type: String },
-    senderPicture: { type: String },
-    receiverDisplayName: { type: String },
-    receiverUsername: { type: String },
-    receiverPicture: { type: String },
+    username: { type: String },
+    bioUserId: { type: String },
+    displayName: { type: String },
+    picture: { type: String },
     isFriends: { type: Boolean, default: false },
-    senderOnline: { type: Boolean, default: false },
-    receiverOnline: { type: Boolean, default: false },
+    isOnline: { type: Boolean, default: false },
+    isVerified: { type: Boolean, default: false },
     connection: { type: String },
     status: { type: String },
     content: { type: String },
     contentType: { type: String },
     timeNumber: { type: Number },
+    unread: { type: Number, default: 0 },
     media: { type: Array },
-    unreadMessages: { type: Array },
-    receiverTime: { type: Date, default: Date.now },
-    senderTime: { type: Date, default: Date.now },
+    time: { type: Date, default: Date.now },
     createdAt: { type: Date, default: Date.now },
   },
   {

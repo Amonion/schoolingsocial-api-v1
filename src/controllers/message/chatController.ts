@@ -74,24 +74,6 @@ const sendCreatedChat = async (
         friend,
       })
     }
-  } else {
-    const notification = await SocialNotification.findOne({
-      senderUsername: post.senderUsername,
-      receiverName: post.receiverUsername,
-      name: 'friend_request',
-    })
-    if (!notification) {
-      const response = await sendSocialNotification('friend_request', {
-        senderUsername: friend.senderUsername,
-        receiverUsername: friend.receiverUsername,
-        senderPicture: friend.senderPicture,
-        receiverPicture: friend.receiverPicture,
-        senderName: friend.senderDisplayName,
-        receiverName: friend.receiverDisplayName,
-      })
-
-      io.emit(`social_notification_${post.receiverUsername}`, response)
-    }
   }
 
   /////////////// WHEN USER IS NOT IN THE APP //////////////
@@ -135,53 +117,17 @@ export const sendChatPushNotification = async (chatData: ChatData) => {
 
 export const createChat = async (data: IChat, isFile: boolean = false) => {
   try {
+    // CHECK IF THEY ARE FRIENDS
     const connection = data.connection
-    const prev = await Chat.findOne({
+    const friendChat = data.friendChat
+    const prevChat = await Chat.findOne({
       connection: connection,
-    }).sort({ createdAt: -1 })
+      senderUsername: friendChat.username,
+    })
 
-    if (
-      prev &&
-      !data.isFriends &&
-      prev.receiverUsername === data.senderUsername
-    ) {
-      await Friend.findOneAndUpdate(
-        { connection: connection },
-        { isFriends: true }
-      )
-      data.isFriends = true
-    }
-
-    data.status = 'sent'
-    const createFriend = await Friend.findOneAndUpdate(
-      { connection: data.connection },
-      data,
-      {
-        new: true,
-        upsert: true,
-      }
-    )
-
-    if (createFriend.unreadMessages.length === 0) {
-      await Friend.findOneAndUpdate(
-        { connection },
-        {
-          $addToSet: {
-            unreadMessages: {
-              $each: [
-                { username: data.senderUsername, unread: 0 },
-                { username: data.receiverUsername, unread: 1 },
-              ],
-            },
-          },
-        },
-        { new: true, upsert: true }
-      )
-    }
-
-    if (prev) {
-      const lastTime = new Date(prev.createdAt).getTime()
-      const lastReceiverTime = new Date(prev.receiverTime).getTime()
+    if (data.isFriends) {
+      const lastTime = new Date(prevChat.createdAt).getTime()
+      const lastReceiverTime = new Date(prevChat.receiverTime).getTime()
       const currentTime = new Date().getTime()
       const receiverTime = new Date(currentTime - lastTime + lastReceiverTime)
       data.receiverTime = receiverTime
@@ -196,22 +142,41 @@ export const createChat = async (data: IChat, isFile: boolean = false) => {
       })
       sendCreatedChat(post, connection, isFile, totalUread)
     } else {
+      data.status = 'sent'
       await Friend.findOneAndUpdate(
-        { connection },
+        { connection: connection, username: friendChat.username },
+        { $set: { ...friendChat, status: 'sent' } },
         {
-          $addToSet: {
-            unreadMessages: {
-              $each: [
-                { username: data.senderUsername, unread: 0 },
-                { username: data.receiverUsername, unread: 1 },
-              ],
-            },
-          },
-        },
-        { new: true, upsert: true }
+          new: true,
+          upsert: true,
+        }
       )
-      const post = await Chat.create(data)
-      sendCreatedChat(post, connection, isFile)
+
+      if (!prevChat) {
+        await Friend.updateMany(
+          { connection: connection },
+          { $set: { isVerified: true } }
+        )
+      }
+
+      const chat = await Chat.create(data)
+      sendCreatedChat(chat, connection, isFile)
+      const notification = await SocialNotification.findOne({
+        senderUsername: chat.senderUsername,
+        receiverName: chat.receiverUsername,
+        name: 'friend_request',
+      })
+
+      if (!notification) {
+        const response = await sendSocialNotification('friend_request', {
+          senderUsername: chat.senderUsername,
+          receiverUsername: chat.receiverUsername,
+          senderPicture: chat.senderPicture,
+          receiverPicture: chat.receiverPicture,
+        })
+
+        io.emit(`social_notification_${chat.receiverUsername}`, response)
+      }
     }
   } catch (error) {
     console.log(error)
@@ -395,6 +360,19 @@ export const getFriends = async (req: Request, res: Response) => {
       count: total,
       results: friends,
     })
+  } catch (error) {
+    handleError(res, undefined, undefined, error)
+  }
+}
+
+export const getFriend = async (req: Request, res: Response) => {
+  try {
+    const friend = await Friend.findOne({
+      username: req.params.username,
+      connection: req.query.connection,
+    })
+
+    res.status(200).json({ friend })
   } catch (error) {
     handleError(res, undefined, undefined, error)
   }

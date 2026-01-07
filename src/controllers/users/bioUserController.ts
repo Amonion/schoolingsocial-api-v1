@@ -22,6 +22,7 @@ import { Post } from '../../models/post/postModel'
 import { sendPersonalNotification } from '../../utils/sendNotification'
 import { Place } from '../../models/place/placeModel'
 import { Office } from '../../models/utility/officeModel'
+import { Friend } from '../../models/message/chatModel'
 
 export const updateBioUser = async (
   req: Request,
@@ -441,6 +442,35 @@ export const approveUser = async (
       bioUserId: bioUser._id,
       isVerified: true,
     })
+
+    await Friend.updateMany(
+      {
+        $or: [
+          { senderBioUserId: bioUser._id },
+          { receiverBioUserId: bioUser._id },
+        ],
+      },
+      [
+        {
+          $set: {
+            isSenderVerified: {
+              $cond: [
+                { $eq: ['$senderBioUserId', bioUser._id] },
+                true,
+                '$isSenderVerified',
+              ],
+            },
+            isReceiverVerified: {
+              $cond: [
+                { $eq: ['$receiverBioUserId', bioUser._id] },
+                true,
+                '$isReceiverVerified',
+              ],
+            },
+          },
+        },
+      ]
+    )
 
     await Post.updateMany({ bioUserId: bioUser._id }, req.body)
 

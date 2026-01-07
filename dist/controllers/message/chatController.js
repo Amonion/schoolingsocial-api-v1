@@ -9,7 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.addSearchedChats = exports.unSaveChats = exports.pinChats = exports.saveChats = exports.getSaveChats = exports.friendsChats = exports.searchFavChats = exports.searchChats = exports.createChatMobile = exports.deleteChat = exports.deleteChats = exports.checkChatStatus = exports.readChats = exports.getFriends = exports.getChats = exports.sendPendingChats = exports.updateDeliveredChat = exports.updateChatWithFile = exports.createChatWithFile = exports.createChat = exports.sendChatPushNotification = void 0;
+exports.addSearchedChats = exports.unSaveChats = exports.pinChats = exports.saveChats = exports.getSaveChats = exports.friendsChats = exports.searchFavChats = exports.searchChats = exports.createChatMobile = exports.deleteChat = exports.deleteChats = exports.checkChatStatus = exports.readChats = exports.getFriend = exports.getFriends = exports.getChats = exports.sendPendingChats = exports.updateDeliveredChat = exports.updateChatWithFile = exports.createChatWithFile = exports.createChat = exports.sendChatPushNotification = void 0;
 const chatModel_1 = require("../../models/message/chatModel");
 const errorHandler_1 = require("../../utils/errorHandler");
 const query_1 = require("../../utils/query");
@@ -46,24 +46,6 @@ const sendCreatedChat = (post, connection, isFile, totalUnread) => __awaiter(voi
                 isFriends: friend.isFriends,
                 friend,
             });
-        }
-    }
-    else {
-        const notification = yield socialNotificationModel_1.SocialNotification.findOne({
-            senderUsername: post.senderUsername,
-            receiverName: post.receiverUsername,
-            name: 'friend_request',
-        });
-        if (!notification) {
-            const response = yield (0, sendNotification_1.sendSocialNotification)('friend_request', {
-                senderUsername: friend.senderUsername,
-                receiverUsername: friend.receiverUsername,
-                senderPicture: friend.senderPicture,
-                receiverPicture: friend.receiverPicture,
-                senderName: friend.senderDisplayName,
-                receiverName: friend.receiverDisplayName,
-            });
-            app_1.io.emit(`social_notification_${post.receiverUsername}`, response);
         }
     }
     /////////////// WHEN USER IS NOT IN THE APP //////////////
@@ -105,36 +87,16 @@ const sendChatPushNotification = (chatData) => __awaiter(void 0, void 0, void 0,
 exports.sendChatPushNotification = sendChatPushNotification;
 const createChat = (data_1, ...args_1) => __awaiter(void 0, [data_1, ...args_1], void 0, function* (data, isFile = false) {
     try {
+        // CHECK IF THEY ARE FRIENDS
         const connection = data.connection;
-        const prev = yield chatModel_1.Chat.findOne({
+        const friendChat = data.friendChat;
+        const prevChat = yield chatModel_1.Chat.findOne({
             connection: connection,
-        }).sort({ createdAt: -1 });
-        if (prev &&
-            !data.isFriends &&
-            prev.receiverUsername === data.senderUsername) {
-            yield chatModel_1.Friend.findOneAndUpdate({ connection: connection }, { isFriends: true });
-            data.isFriends = true;
-        }
-        data.status = 'sent';
-        const createFriend = yield chatModel_1.Friend.findOneAndUpdate({ connection: data.connection }, data, {
-            new: true,
-            upsert: true,
+            senderUsername: friendChat.username,
         });
-        if (createFriend.unreadMessages.length === 0) {
-            yield chatModel_1.Friend.findOneAndUpdate({ connection }, {
-                $addToSet: {
-                    unreadMessages: {
-                        $each: [
-                            { username: data.senderUsername, unread: 0 },
-                            { username: data.receiverUsername, unread: 1 },
-                        ],
-                    },
-                },
-            }, { new: true, upsert: true });
-        }
-        if (prev) {
-            const lastTime = new Date(prev.createdAt).getTime();
-            const lastReceiverTime = new Date(prev.receiverTime).getTime();
+        if (data.isFriends) {
+            const lastTime = new Date(prevChat.createdAt).getTime();
+            const lastReceiverTime = new Date(prevChat.receiverTime).getTime();
             const currentTime = new Date().getTime();
             const receiverTime = new Date(currentTime - lastTime + lastReceiverTime);
             data.receiverTime = receiverTime;
@@ -146,18 +108,30 @@ const createChat = (data_1, ...args_1) => __awaiter(void 0, [data_1, ...args_1],
             sendCreatedChat(post, connection, isFile, totalUread);
         }
         else {
-            yield chatModel_1.Friend.findOneAndUpdate({ connection }, {
-                $addToSet: {
-                    unreadMessages: {
-                        $each: [
-                            { username: data.senderUsername, unread: 0 },
-                            { username: data.receiverUsername, unread: 1 },
-                        ],
-                    },
-                },
-            }, { new: true, upsert: true });
-            const post = yield chatModel_1.Chat.create(data);
-            sendCreatedChat(post, connection, isFile);
+            data.status = 'sent';
+            yield chatModel_1.Friend.findOneAndUpdate({ connection: connection, username: friendChat.username }, { $set: Object.assign(Object.assign({}, friendChat), { status: 'sent' }) }, {
+                new: true,
+                upsert: true,
+            });
+            if (!prevChat) {
+                yield chatModel_1.Friend.updateMany({ connection: connection }, { $set: { isVerified: true } });
+            }
+            const chat = yield chatModel_1.Chat.create(data);
+            sendCreatedChat(chat, connection, isFile);
+            const notification = yield socialNotificationModel_1.SocialNotification.findOne({
+                senderUsername: chat.senderUsername,
+                receiverName: chat.receiverUsername,
+                name: 'friend_request',
+            });
+            if (!notification) {
+                const response = yield (0, sendNotification_1.sendSocialNotification)('friend_request', {
+                    senderUsername: chat.senderUsername,
+                    receiverUsername: chat.receiverUsername,
+                    senderPicture: chat.senderPicture,
+                    receiverPicture: chat.receiverPicture,
+                });
+                app_1.io.emit(`social_notification_${chat.receiverUsername}`, response);
+            }
         }
     }
     catch (error) {
@@ -315,6 +289,19 @@ const getFriends = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
     }
 });
 exports.getFriends = getFriends;
+const getFriend = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const friend = yield chatModel_1.Friend.findOne({
+            username: req.params.username,
+            connection: req.query.connection,
+        });
+        res.status(200).json({ friend });
+    }
+    catch (error) {
+        (0, errorHandler_1.handleError)(res, undefined, undefined, error);
+    }
+});
+exports.getFriend = getFriend;
 const readChats = (data) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const connection = data.connection;
