@@ -19,52 +19,6 @@ const expo_server_sdk_1 = require("expo-server-sdk");
 const sendNotification_1 = require("../../utils/sendNotification");
 const socialNotificationModel_1 = require("../../models/message/socialNotificationModel");
 const expo = new expo_server_sdk_1.Expo();
-const sendCreatedChat = (post, connection, isFile, totalUnread) => __awaiter(void 0, void 0, void 0, function* () {
-    const friend = yield chatModel_1.Friend.findOneAndUpdate({
-        connection,
-        'unreadMessages.username': post.receiverUsername,
-    }, {
-        $set: {
-            'unreadMessages.$.unread': totalUnread,
-        },
-    }, { new: true });
-    /////////////// SEND TO UPDATE PENDING ROOM CHAT //////////////
-    app_1.io.emit(`updatePendingChat${post.senderUsername}`, {
-        connection,
-        chat: post,
-        friend,
-        pending: true,
-        isFriends: friend.isFriends,
-    });
-    if (friend && friend.isFriends) {
-        /////////////// WHEN USER IS IN CHAT ROOM OR NOT //////////////
-        if (!isFile) {
-            app_1.io.emit(`addCreatedChat${post.receiverUsername}`, {
-                connection,
-                chat: post,
-                pending: true,
-                isFriends: friend.isFriends,
-                friend,
-            });
-        }
-    }
-    /////////////// WHEN USER IS NOT IN THE APP //////////////
-    // const onlineUser = await UserStatus.findOne({
-    //   username: post.receiverUsername,
-    // })
-    // if (!onlineUser?.online) {
-    //   const user = await User.findOne({
-    //     username: post.receiverUsername,
-    //   })
-    //   const userInfo = await BioUser.findById(user?.bioUserId)
-    //   if (!userInfo) return
-    //   sendChatPushNotification({
-    //     username: post.senderUsername,
-    //     message: post.content,
-    //     token: userInfo?.notificationToken,
-    //   })
-    // }
-});
 const sendChatPushNotification = (chatData) => __awaiter(void 0, void 0, void 0, function* () {
     const { username, message, token } = chatData;
     const cleanContent = message.replace(/<[^>]*>?/gm, '').trim();
@@ -92,8 +46,9 @@ const createChat = (data_1, ...args_1) => __awaiter(void 0, [data_1, ...args_1],
         const friendChat = data.friendChat;
         const prevChat = yield chatModel_1.Chat.findOne({
             connection: connection,
-            senderUsername: friendChat.username,
+            senderUsername: friendChat.senderUsername,
         });
+        const prevChats = yield chatModel_1.Chat.countDocuments({ connection: connection });
         if (data.isFriends) {
             const lastTime = new Date(prevChat.createdAt).getTime();
             const lastReceiverTime = new Date(prevChat.receiverTime).getTime();
@@ -109,15 +64,20 @@ const createChat = (data_1, ...args_1) => __awaiter(void 0, [data_1, ...args_1],
         }
         else {
             data.status = 'sent';
-            yield chatModel_1.Friend.findOneAndUpdate({ connection: connection, username: friendChat.username }, { $set: Object.assign(Object.assign({}, friendChat), { status: 'sent' }) }, {
+            yield chatModel_1.Friend.findOneAndUpdate({ connection: connection, username: friendChat.senderUsername }, { $set: Object.assign(Object.assign({}, friendChat), { status: 'sent' }) }, {
                 new: true,
                 upsert: true,
             });
-            if (!prevChat) {
-                yield chatModel_1.Friend.updateMany({ connection: connection }, { $set: { isVerified: true } });
+            if (!prevChat && prevChats > 0) {
+                yield chatModel_1.Friend.updateMany({ connection: connection }, { $set: { isFriends: true } });
             }
             const chat = yield chatModel_1.Chat.create(data);
-            sendCreatedChat(chat, connection, isFile);
+            const totalUnread = yield chatModel_1.Chat.countDocuments({
+                connection: connection,
+                receiverUsername: data.receiverUsername,
+                status: { $ne: 'read' },
+            });
+            sendCreatedChat(chat, connection, isFile, totalUnread);
             const notification = yield socialNotificationModel_1.SocialNotification.findOne({
                 senderUsername: chat.senderUsername,
                 receiverName: chat.receiverUsername,
@@ -127,8 +87,8 @@ const createChat = (data_1, ...args_1) => __awaiter(void 0, [data_1, ...args_1],
                 const response = yield (0, sendNotification_1.sendSocialNotification)('friend_request', {
                     senderUsername: chat.senderUsername,
                     receiverUsername: chat.receiverUsername,
-                    senderPicture: chat.senderPicture,
-                    receiverPicture: chat.receiverPicture,
+                    senderPicture: data.senderPicture,
+                    receiverPicture: data.receiverPicture,
                 });
                 app_1.io.emit(`social_notification_${chat.receiverUsername}`, response);
             }
@@ -139,6 +99,53 @@ const createChat = (data_1, ...args_1) => __awaiter(void 0, [data_1, ...args_1],
     }
 });
 exports.createChat = createChat;
+const sendCreatedChat = (post, connection, isFile, totalUnread) => __awaiter(void 0, void 0, void 0, function* () {
+    const senderFriend = yield chatModel_1.Friend.findOne({
+        senderUsername: post.senderUsername,
+        connection,
+    });
+    const receiverFriend = yield chatModel_1.Friend.findOneAndUpdate({ connection, senderUsername: post.receiverUsername }, {
+        $set: {
+            unread: totalUnread,
+        },
+    }, { new: true });
+    /////////////// SEND TO UPDATE PENDING ROOM CHAT //////////////
+    app_1.io.emit(`updatePendingChat${post.senderUsername}`, {
+        connection,
+        chat: post,
+        friend: senderFriend,
+        pending: true,
+        isFriends: senderFriend.isFriends,
+    });
+    if (receiverFriend && receiverFriend.isFriends) {
+        /////////////// WHEN USER IS IN CHAT ROOM OR NOT //////////////
+        if (!isFile) {
+            app_1.io.emit(`addCreatedChat${post.receiverUsername}`, {
+                connection,
+                chat: post,
+                pending: true,
+                isFriends: receiverFriend.isFriends,
+                friend: receiverFriend,
+            });
+        }
+    }
+    /////////////// WHEN USER IS NOT IN THE APP //////////////
+    // const onlineUser = await UserStatus.findOne({
+    //   username: post.receiverUsername,
+    // })
+    // if (!onlineUser?.online) {
+    //   const user = await User.findOne({
+    //     username: post.receiverUsername,
+    //   })
+    //   const userInfo = await BioUser.findById(user?.bioUserId)
+    //   if (!userInfo) return
+    //   sendChatPushNotification({
+    //     username: post.senderUsername,
+    //     message: post.content,
+    //     token: userInfo?.notificationToken,
+    //   })
+    // }
+});
 const createChatWithFile = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         (0, exports.createChat)(req.body, true);
@@ -265,24 +272,8 @@ const getChats = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
 exports.getChats = getChats;
 const getFriends = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const username = String(req.query.username);
-        const page = parseInt(req.query.page) || 1;
-        const limit = parseInt(req.query.page_size) || 10;
-        const skip = (page - 1) * limit;
-        const friends = yield chatModel_1.Friend.find({
-            connection: { $regex: username, $options: 'i' },
-        })
-            .skip(skip)
-            .limit(limit)
-            .select('-__v')
-            .lean();
-        const total = yield chatModel_1.Friend.countDocuments({
-            connection: { $regex: username, $options: 'i' },
-        });
-        res.status(200).json({
-            count: total,
-            results: friends,
-        });
+        const result = yield (0, query_1.queryData)(chatModel_1.Friend, req);
+        res.status(200).json(result);
     }
     catch (error) {
         (0, errorHandler_1.handleError)(res, undefined, undefined, error);

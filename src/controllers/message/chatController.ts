@@ -1,5 +1,5 @@
 import { Request, Response } from 'express'
-import { Chat, Friend, IChat } from '../../models/message/chatModel'
+import { Chat, Friend, IChat, IFriend } from '../../models/message/chatModel'
 import { handleError } from '../../utils/errorHandler'
 import { queryData } from '../../utils/query'
 import { deleteFileFromS3 } from '../../utils/fileUpload'
@@ -29,70 +29,11 @@ interface Receive {
   senderDisplayName: string
   connection: string
 }
+
 interface ChatData {
   token: string
   message: string
   username: string
-}
-
-const sendCreatedChat = async (
-  post: IChat,
-  connection: string,
-  isFile?: boolean,
-  totalUnread?: number
-) => {
-  const friend = await Friend.findOneAndUpdate(
-    {
-      connection,
-      'unreadMessages.username': post.receiverUsername,
-    },
-    {
-      $set: {
-        'unreadMessages.$.unread': totalUnread,
-      },
-    },
-    { new: true }
-  )
-
-  /////////////// SEND TO UPDATE PENDING ROOM CHAT //////////////
-  io.emit(`updatePendingChat${post.senderUsername}`, {
-    connection,
-    chat: post,
-    friend,
-    pending: true,
-    isFriends: friend.isFriends,
-  })
-
-  if (friend && friend.isFriends) {
-    /////////////// WHEN USER IS IN CHAT ROOM OR NOT //////////////
-    if (!isFile) {
-      io.emit(`addCreatedChat${post.receiverUsername}`, {
-        connection,
-        chat: post,
-        pending: true,
-        isFriends: friend.isFriends,
-        friend,
-      })
-    }
-  }
-
-  /////////////// WHEN USER IS NOT IN THE APP //////////////
-  // const onlineUser = await UserStatus.findOne({
-  //   username: post.receiverUsername,
-  // })
-
-  // if (!onlineUser?.online) {
-  //   const user = await User.findOne({
-  //     username: post.receiverUsername,
-  //   })
-  //   const userInfo = await BioUser.findById(user?.bioUserId)
-  //   if (!userInfo) return
-  //   sendChatPushNotification({
-  //     username: post.senderUsername,
-  //     message: post.content,
-  //     token: userInfo?.notificationToken,
-  //   })
-  // }
 }
 
 export const sendChatPushNotification = async (chatData: ChatData) => {
@@ -122,8 +63,9 @@ export const createChat = async (data: IChat, isFile: boolean = false) => {
     const friendChat = data.friendChat
     const prevChat = await Chat.findOne({
       connection: connection,
-      senderUsername: friendChat.username,
+      senderUsername: friendChat.senderUsername,
     })
+    const prevChats = await Chat.countDocuments({ connection: connection })
 
     if (data.isFriends) {
       const lastTime = new Date(prevChat.createdAt).getTime()
@@ -144,7 +86,7 @@ export const createChat = async (data: IChat, isFile: boolean = false) => {
     } else {
       data.status = 'sent'
       await Friend.findOneAndUpdate(
-        { connection: connection, username: friendChat.username },
+        { connection: connection, username: friendChat.senderUsername },
         { $set: { ...friendChat, status: 'sent' } },
         {
           new: true,
@@ -152,15 +94,21 @@ export const createChat = async (data: IChat, isFile: boolean = false) => {
         }
       )
 
-      if (!prevChat) {
+      if (!prevChat && prevChats > 0) {
         await Friend.updateMany(
           { connection: connection },
-          { $set: { isVerified: true } }
+          { $set: { isFriends: true } }
         )
       }
 
       const chat = await Chat.create(data)
-      sendCreatedChat(chat, connection, isFile)
+      const totalUnread = await Chat.countDocuments({
+        connection: connection,
+        receiverUsername: data.receiverUsername,
+        status: { $ne: 'read' },
+      })
+
+      sendCreatedChat(chat, connection, isFile, totalUnread)
       const notification = await SocialNotification.findOne({
         senderUsername: chat.senderUsername,
         receiverName: chat.receiverUsername,
@@ -171,8 +119,8 @@ export const createChat = async (data: IChat, isFile: boolean = false) => {
         const response = await sendSocialNotification('friend_request', {
           senderUsername: chat.senderUsername,
           receiverUsername: chat.receiverUsername,
-          senderPicture: chat.senderPicture,
-          receiverPicture: chat.receiverPicture,
+          senderPicture: data.senderPicture,
+          receiverPicture: data.receiverPicture,
         })
 
         io.emit(`social_notification_${chat.receiverUsername}`, response)
@@ -181,6 +129,68 @@ export const createChat = async (data: IChat, isFile: boolean = false) => {
   } catch (error) {
     console.log(error)
   }
+}
+
+const sendCreatedChat = async (
+  post: IChat,
+  connection: string,
+  isFile?: boolean,
+  totalUnread?: number
+) => {
+  const senderFriend = await Friend.findOne({
+    senderUsername: post.senderUsername,
+    connection,
+  })
+
+  const receiverFriend = await Friend.findOneAndUpdate(
+    { connection, senderUsername: post.receiverUsername },
+    {
+      $set: {
+        unread: totalUnread,
+      },
+    },
+    { new: true }
+  )
+
+  /////////////// SEND TO UPDATE PENDING ROOM CHAT //////////////
+  io.emit(`updatePendingChat${post.senderUsername}`, {
+    connection,
+    chat: post,
+    friend: senderFriend,
+    pending: true,
+    isFriends: senderFriend.isFriends,
+  })
+
+  if (receiverFriend && receiverFriend.isFriends) {
+    /////////////// WHEN USER IS IN CHAT ROOM OR NOT //////////////
+    if (!isFile) {
+      io.emit(`addCreatedChat${post.receiverUsername}`, {
+        connection,
+        chat: post,
+        pending: true,
+        isFriends: receiverFriend.isFriends,
+        friend: receiverFriend,
+      })
+    }
+  }
+
+  /////////////// WHEN USER IS NOT IN THE APP //////////////
+  // const onlineUser = await UserStatus.findOne({
+  //   username: post.receiverUsername,
+  // })
+
+  // if (!onlineUser?.online) {
+  //   const user = await User.findOne({
+  //     username: post.receiverUsername,
+  //   })
+  //   const userInfo = await BioUser.findById(user?.bioUserId)
+  //   if (!userInfo) return
+  //   sendChatPushNotification({
+  //     username: post.senderUsername,
+  //     message: post.content,
+  //     token: userInfo?.notificationToken,
+  //   })
+  // }
 }
 
 export const createChatWithFile = async (req: Request, res: Response) => {
@@ -339,27 +349,8 @@ export const getChats = async (req: Request, res: Response) => {
 
 export const getFriends = async (req: Request, res: Response) => {
   try {
-    const username = String(req.query.username)
-    const page = parseInt(req.query.page as string) || 1
-    const limit = parseInt(req.query.page_size as string) || 10
-    const skip = (page - 1) * limit
-
-    const friends = await Friend.find({
-      connection: { $regex: username, $options: 'i' },
-    })
-      .skip(skip)
-      .limit(limit)
-      .select('-__v')
-      .lean()
-
-    const total = await Friend.countDocuments({
-      connection: { $regex: username, $options: 'i' },
-    })
-
-    res.status(200).json({
-      count: total,
-      results: friends,
-    })
+    const result = await queryData<IFriend>(Friend, req)
+    res.status(200).json(result)
   } catch (error) {
     handleError(res, undefined, undefined, error)
   }

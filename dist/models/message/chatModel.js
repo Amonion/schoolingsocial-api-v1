@@ -58,6 +58,7 @@ const ChatSchema = new mongoose_1.Schema({
 });
 exports.Chat = mongoose_1.default.model('Chat', ChatSchema);
 const FriendSchema = new mongoose_1.Schema({
+    senderUsername: { type: String },
     username: { type: String },
     bioUserId: { type: String },
     displayName: { type: String },

@@ -87,6 +87,7 @@ export const Chat = mongoose.model<IChat>('Chat', ChatSchema)
 export interface IFriend extends Document {
   _id: string
   content: string
+  senderUsername: string
   username: string
   bioUserId: string
   displayName: string
@@ -105,6 +106,7 @@ export interface IFriend extends Document {
 
 const FriendSchema: Schema = new Schema(
   {
+    senderUsername: { type: String },
     username: { type: String },
     bioUserId: { type: String },
     displayName: { type: String },
